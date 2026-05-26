@@ -1,0 +1,14 @@
+{
+  "name": "@innate/innate-executable-integration",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Integration entry for innate-executable playground within innate-desktop-mono",
+  "scripts": {
+    "dev": "cd playground && pnpm dev",
+    "build": "cd playground && pnpm build",
+    "desktop:dev": "cd playground/apps/desktop && pnpm tauri dev",
+    "desktop:build": "cd playground/apps/desktop && pnpm tauri build",
+    "clean": "cd playground && pnpm clean",
+    "lint": "cd playground && pnpm lint"
+  }
+}
