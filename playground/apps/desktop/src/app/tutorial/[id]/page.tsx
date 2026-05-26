@@ -1,11 +1,11 @@
-import TutorialDetailClient from "./client";
-import { getBuiltinSkillsSync } from "@/lib/tutorial-scanner";
+import TutorialContent from "./TutorialContent";
+import { getBuiltinTutorialsSync } from "@/lib/tutorial-scanner";
 
 export function generateStaticParams() {
-  return getBuiltinSkillsSync().map((skill) => ({ id: skill.slug }));
+  return getBuiltinTutorialsSync().map((tutorial) => ({ id: tutorial.slug }));
 }
 
 export default async function TutorialDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <TutorialDetailClient id={id} />;
+  return <TutorialContent id={id} />;
 }

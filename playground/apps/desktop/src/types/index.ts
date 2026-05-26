@@ -1,4 +1,4 @@
-export interface Skill {
+export interface Tutorial {
   id: string;
   title: string;
   description: string;
@@ -15,7 +15,7 @@ export interface Skill {
   localPath?: string;
 }
 
-export interface SkillSection {
+export interface TutorialSection {
   id: string;
   type: 'text' | 'code' | 'executable' | 'image' | 'video';
   content: string;
@@ -33,12 +33,12 @@ export interface ExecutableBlock {
   expectedOutput?: string;
 }
 
-export interface CourseSkill {
+export interface SeriesTutorial {
   slug: string;
   order: number;
 }
 
-export interface Course {
+export interface Series {
   id: string;
   title: string;
   description: string;
@@ -46,14 +46,14 @@ export interface Course {
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
   icon?: string;
   color?: string;
-  skills: CourseSkill[];
+  tutorials: SeriesTutorial[];
   author?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Progress {
-  skillId: string;
+  tutorialId: string;
   completed: boolean;
   lastSection?: string;
   completedSections: string[];

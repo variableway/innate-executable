@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Innate Playground",
-  description: "可执行、可交付的技能练习平台 — 边做边学，所见即所得",
+  description: "可执行、可交付的教程练习平台 — 边做边学，所见即所得",
 };
 
 export default function RootLayout({

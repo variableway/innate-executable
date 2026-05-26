@@ -40,7 +40,7 @@ import {
 
 const adminItems = [
   { title: "Workspace", href: "/admin/workspace", icon: FolderKanban },
-  { title: "课程中心", href: "/admin/courses", icon: GraduationCap },
+  { title: "系列中心", href: "/admin/series", icon: GraduationCap },
   { title: "设置", href: "/settings", icon: Settings },
 ];
 
@@ -49,11 +49,11 @@ export function AppSidebar() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [platform, setPlatform] = useState("detecting...");
-  const { discoveredSkills, discoveredCourses, scanContent } = useAppStore();
-  const currentCourseId = pathname === "/courses/detail" ? searchParams.get("id") : null;
+  const { discoveredTutorials, discoveredSeries, scanContent } = useAppStore();
+  const currentSeriesId = pathname === "/series/detail" ? searchParams.get("id") : null;
 
   // Track which courses are expanded
-  const [expandedCourses, setExpandedCourses] = useState<Record<string, boolean>>({});
+  const [expandedSeries, setExpandedSeries] = useState<Record<string, boolean>>({});
   // Track which sidebar groups are collapsed
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
@@ -65,17 +65,17 @@ export function AppSidebar() {
   useEffect(() => {
     const currentSlug = pathname.startsWith("/tutorial/") ? pathname.split("/tutorial/")[1] : null;
     if (currentSlug) {
-      const course = discoveredCourses.find((c) =>
+      const course = discoveredSeries.find((c) =>
         c.skills?.some((cs) => cs.slug === currentSlug)
       );
       if (course) {
-        setExpandedCourses((prev) => ({ ...prev, [course.id]: true }));
+        setExpandedSeries((prev) => ({ ...prev, [course.id]: true }));
       }
     }
-  }, [pathname, discoveredCourses]);
+  }, [pathname, discoveredSeries]);
 
-  const toggleCourse = (courseId: string) => {
-    setExpandedCourses((prev) => ({ ...prev, [courseId]: !prev[courseId] }));
+  const toggleSeries = (seriesId: string) => {
+    setExpandedSeries((prev) => ({ ...prev, [seriesId]: !prev[seriesId] }));
   };
 
   const toggleGroup = (groupId: string) => {
@@ -83,22 +83,22 @@ export function AppSidebar() {
   };
 
   // Courses with skills
-  const coursesWithSkills = discoveredCourses
+  const coursesWithSkills = discoveredSeries
     .filter((c) => c.skills && c.skills.length > 0)
     .map((c) => ({
       ...c,
       resolvedSkills: c.skills!
         .sort((a, b) => a.order - b.order)
-        .map((cs) => discoveredSkills.find((s) => s.slug === cs.slug))
+        .map((cs) => discoveredTutorials.find((s) => s.slug === cs.slug))
         .filter((s): s is NonNullable<typeof s> => !!s),
     }))
     .filter((c) => c.resolvedSkills.length > 0);
 
   // Skills not in any course
   const allCourseSlugs = new Set(
-    discoveredCourses.flatMap((c) => c.skills?.map((cs) => cs.slug) || [])
+    discoveredSeries.flatMap((c) => c.skills?.map((cs) => cs.slug) || [])
   );
-  const ungroupedSkills = discoveredSkills.filter((s) => !allCourseSlugs.has(s.slug));
+  const ungroupedSkills = discoveredTutorials.filter((s) => !allCourseSlugs.has(s.slug));
 
   useEffect(() => {
     if ("__TAURI_INTERNALS__" in window) {
@@ -187,9 +187,9 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupLabel
             className="cursor-pointer select-none"
-            onClick={() => toggleGroup("courses")}
+            onClick={() => toggleGroup("series")}
           >
-            课程
+            系列
             <ChevronRight className={`ml-auto size-3 transition-transform duration-200 ${collapsedGroups["courses"] ? "" : "rotate-90"}`} />
           </SidebarGroupLabel>
           {!collapsedGroups["courses"] && (
@@ -198,20 +198,20 @@ export function AppSidebar() {
               {coursesWithSkills.map((course) => (
                 <Collapsible
                   key={course.id}
-                  open={expandedCourses[course.id] ?? false}
-                  onOpenChange={() => toggleCourse(course.id)}
+                  open={expandedSeries[course.id] ?? false}
+                  onOpenChange={() => toggleSeries(course.id)}
                   asChild
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton
                         tooltip={course.title}
-                        isActive={currentCourseId === course.id}
+                        isActive={currentSeriesId === course.id}
                       >
                         <span className="text-sm">{course.icon || "📘"}</span>
                         <span>{course.title}</span>
                         <ChevronRight className={`ml-auto size-4 transition-transform duration-200 ${
-                          expandedCourses[course.id] ? "rotate-90" : ""
+                          expandedSeries[course.id] ? "rotate-90" : ""
                         }`} />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>

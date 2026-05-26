@@ -20,10 +20,10 @@ import {
   X,
 } from "lucide-react";
 import {
-  addSkillToCourse,
-  removeSkillFromCourse,
-  reorderCourseSkills,
-  loadSkillContent,
+  addTutorialToSeries,
+  removeTutorialFromSeries,
+  reorderSeriesTutorials,
+  loadTutorialContent,
 } from "@/lib/tutorial-scanner";
 
 interface CourseDetailClientProps {
@@ -33,18 +33,18 @@ interface CourseDetailClientProps {
 export default function CourseDetailClient({ id }: CourseDetailClientProps) {
   const router = useRouter();
 
-  const { discoveredCourses, discoveredSkills, progress, scanContent, currentWorkspace, workspaces, defaultWorkspaceId, courseSkillOrder, saveCourseSkillOrder } = useAppStore();
+  const { discoveredSeries, discoveredTutorials, progress, scanContent, currentWorkspace, workspaces, defaultWorkspaceId, seriesTutorialOrder, saveSeriesTutorialOrder } = useAppStore();
 
-  const currentCourse = discoveredCourses.find((c) => c.id === id);
+  const currentCourse = discoveredSeries.find((c) => c.id === id);
   const courseSkillSlugs = new Set(currentCourse?.skills?.map((cs) => cs.slug) || []);
 
   // Build skill list: use saved order if available, otherwise manifest order
-  const savedOrder = courseSkillOrder[id];
+  const savedOrder = seriesTutorialOrder[id];
   const baseSkills = currentCourse?.skills
     ? currentCourse.skills
         .sort((a, b) => a.order - b.order)
         .map((cs) => {
-          const s = discoveredSkills.find((sk) => sk.slug === cs.slug);
+          const s = discoveredTutorials.find((sk) => sk.slug === cs.slug);
           return s ? { ...s, order: cs.order } : null;
         })
         .filter((s): s is NonNullable<typeof s> => !!s)
@@ -56,7 +56,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
         .filter((s): s is NonNullable<typeof s> => !!s)
     : baseSkills;
 
-  const availableSkills = discoveredSkills.filter((s) => !courseSkillSlugs.has(s.slug));
+  const availableSkills = discoveredTutorials.filter((s) => !courseSkillSlugs.has(s.slug));
 
   const [showAddSkill, setShowAddSkill] = useState(false);
   const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set());
@@ -70,10 +70,10 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
   if (!currentCourse) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4">
-        <p className="text-muted-foreground">课程不存在</p>
-        <Button variant="outline" onClick={() => router.push("/courses")}>
+        <p className="text-muted-foreground">系列不存在</p>
+        <Button variant="outline" onClick={() => router.push("/series")}>
           <ArrowLeft className="mr-2" size={16} />
-          返回课程列表
+          返回系列列表
         </Button>
       </div>
     );
@@ -91,7 +91,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
 
     const slugs = courseSkills.map((s) => s.slug);
     [slugs[fromIdx], slugs[toIdx]] = [slugs[toIdx], slugs[fromIdx]];
-    saveCourseSkillOrder(id, slugs);
+    saveSeriesTutorialOrder(id, slugs);
   };
 
   // Multi-select add
@@ -110,9 +110,9 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
       const slugs = Array.from(selectedSlugs);
       const startOrder = courseSkills.length + 1;
       for (let i = 0; i < slugs.length; i++) {
-        const result = await loadSkillContent(slugs[i], workspacePath);
+        const result = await loadTutorialContent(slugs[i], workspacePath);
         if (!result) continue;
-        await addSkillToCourse(workspacePath, id, slugs[i], result.content, startOrder + i);
+        await addTutorialToSeries(workspacePath, id, slugs[i], result.content, startOrder + i);
       }
       setSelectedSlugs(new Set());
       setShowAddSkill(false);
@@ -128,7 +128,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
     if (!workspacePath) return;
     setRemovingSlug(slug);
     try {
-      await removeSkillFromCourse(workspacePath, id, slug);
+      await removeTutorialFromSeries(workspacePath, id, slug);
       await scanContent();
     } catch (err) {
       console.error("Failed to remove skill:", err);
@@ -141,9 +141,9 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
     <div className="flex flex-col h-full overflow-auto">
       {/* Hero Header */}
       <div className="relative px-8 pt-6 pb-4 border-b bg-card">
-        <Button variant="ghost" onClick={() => router.push("/courses")} className="mb-4">
+        <Button variant="ghost" onClick={() => router.push("/series")} className="mb-4">
           <ArrowLeft className="mr-2" size={16} />
-          返回课程列表
+          返回系列列表
         </Button>
         <div className="flex flex-col md:flex-row md:items-start gap-6">
           <div
@@ -155,7 +155,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-3 mb-2">
               <Badge className="text-white bg-gradient-to-r from-primary to-secondary">
-                {courseSkills.length} 个技能
+                {courseSkills.length} 个教程
               </Badge>
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Clock size={14} />
@@ -192,7 +192,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
             {progressPercent === 100 && courseSkills.length > 0 && (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-md text-sm">
                 <Trophy size={16} />
-                <span className="font-medium">恭喜！你已完成本课程所有技能</span>
+                <span className="font-medium">恭喜！你已完成本系列所有教程</span>
               </div>
             )}
           </div>
@@ -207,7 +207,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
               <Sparkles className="text-primary-foreground" size={20} />
             </div>
             <div>
-              <h2 className="text-xl font-bold">技能列表</h2>
+              <h2 className="text-xl font-bold">教程列表</h2>
               <p className="text-sm text-muted-foreground">
                 用 ↑ ↓ 按钮调整顺序，自动保存
               </p>
@@ -217,7 +217,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
             {canEdit && (
               <Button size="sm" onClick={() => { setShowAddSkill(!showAddSkill); setSelectedSlugs(new Set()); }} className="gap-2">
                 <Plus size={16} />
-                添加技能
+                添加教程
               </Button>
             )}
           </div>
@@ -229,8 +229,8 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">
                 {availableSkills.length > 0
-                  ? `选择要添加的技能 (已选 ${selectedSlugs.size}/${availableSkills.length})`
-                  : "没有可添加的技能"}
+                  ? `选择要添加的教程 (已选 ${selectedSlugs.size}/${availableSkills.length})`
+                  : "没有可添加的教程"}
               </h3>
               {availableSkills.length > 0 && (
                 <div className="flex gap-2">
@@ -262,7 +262,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
                 </div>
                 <div className="flex items-center justify-between pt-3 border-t">
                   <span className="text-sm text-muted-foreground">
-                    {selectedSlugs.size > 0 ? `已选择 ${selectedSlugs.size} 个技能` : "请选择技能"}
+                    {selectedSlugs.size > 0 ? `已选择 ${selectedSlugs.size} 个教程` : "请选择教程"}
                   </span>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => { setShowAddSkill(false); setSelectedSlugs(new Set()); }}>取消</Button>
@@ -368,7 +368,7 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
                         className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7"
                         onClick={async (e) => { e.stopPropagation(); await handleRemoveSkill(skill.slug); }}
                         disabled={removingSlug === skill.slug}
-                        title="从课程中移除"
+                        title="从系列中移除"
                       >
                         {removingSlug === skill.slug ? (
                           <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -386,8 +386,8 @@ export default function CourseDetailClient({ id }: CourseDetailClientProps) {
         ) : (
           <div className="text-center py-16 bg-card rounded-2xl border border-dashed">
             <BookOpen size={64} className="mx-auto mb-4 text-muted-foreground opacity-30" />
-            <p className="text-muted-foreground text-lg">该课程暂无技能</p>
-            <p className="text-sm text-muted-foreground mt-1">点击上方"添加技能"按钮开始</p>
+            <p className="text-muted-foreground text-lg">该系列暂无教程</p>
+            <p className="text-sm text-muted-foreground mt-1">点击上方"添加教程"按钮开始</p>
           </div>
         )}
       </div>

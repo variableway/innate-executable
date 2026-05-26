@@ -20,7 +20,7 @@ import {
 function TutorialsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { discoveredSkills, discoveredCourses, progress, scanContent, getCoursesForSkill } = useAppStore();
+  const { discoveredTutorials, discoveredSeries, progress, scanContent, getSeriesForTutorial } = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -47,12 +47,12 @@ function TutorialsContent() {
     );
   }
 
-  const filtered = discoveredSkills.filter((skill) => {
+  const filtered = discoveredTutorials.filter((skill) => {
     const matchesSearch = !searchQuery ||
       skill.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       skill.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCourse = !selectedCourse ||
-      discoveredCourses
+      discoveredSeries
         .find((c) => c.id === selectedCourse)
         ?.skills?.some((cs) => cs.slug === skill.slug);
     return matchesSearch && matchesCourse;
@@ -85,9 +85,9 @@ function TutorialsContent() {
               <BookOpen className="text-primary" size={20} />
             </div>
             <div>
-              <h1 className="text-xl font-bold">技能中心</h1>
+              <h1 className="text-xl font-bold">教程中心</h1>
               <p className="text-sm text-muted-foreground">
-                {discoveredSkills.length} 个技能 · {discoveredCourses.length} 个课程
+                {discoveredTutorials.length} 个教程 · {discoveredSeries.length} 个系列
               </p>
             </div>
           </div>
@@ -99,7 +99,7 @@ function TutorialsContent() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
             <Input
               type="text"
-              placeholder="搜索技能..."
+              placeholder="搜索教程..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -113,8 +113,8 @@ function TutorialsContent() {
             >
               全部
             </Button>
-            {discoveredCourses.map((c) => {
-              const count = discoveredSkills.filter((skill) =>
+            {discoveredSeries.map((c) => {
+              const count = discoveredTutorials.filter((skill) =>
                 c.skills?.some((cs) => cs.slug === skill.slug)
               ).length;
               if (count === 0) return null;
@@ -142,7 +142,7 @@ function TutorialsContent() {
             {uniqueFiltered.map((skill) => {
               const isCompleted = progress[skill.slug]?.completed;
               const diff = getDifficultyConfig(skill.difficulty);
-              const coursesForSkill = getCoursesForSkill(skill.slug);
+              const coursesForSkill = getSeriesForTutorial(skill.slug);
               const courseInfo = coursesForSkill.length > 0 ? coursesForSkill[0] : null;
 
               return (
@@ -225,7 +225,7 @@ function TutorialsContent() {
           <div className="text-center py-16 bg-card rounded-2xl border border-dashed">
             <FileText size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
             <p className="text-muted-foreground">
-              {searchQuery || selectedCourse ? "没有找到匹配的技能" : uniqueFiltered.length === 0 && discoveredSkills.length === 0 ? "暂无技能" : "没有找到匹配的技能"}
+              {searchQuery || selectedCourse ? "没有找到匹配的教程" : uniqueFiltered.length === 0 && discoveredTutorials.length === 0 ? "暂无教程" : "没有找到匹配的教程"}
             </p>
             {(searchQuery || selectedCourse) && (
               <Button

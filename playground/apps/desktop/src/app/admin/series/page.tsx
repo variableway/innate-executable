@@ -17,28 +17,28 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
-  saveSkillToWorkspace,
-  saveCourseToWorkspace,
-  deleteSkillFromWorkspace,
-  deleteCourseFromWorkspace,
-  generateSkillMDX,
-  CourseFile,
-  SkillFile,
+  saveTutorialToWorkspace,
+  saveSeriesToWorkspace,
+  deleteTutorialFromWorkspace,
+  deleteSeriesFromWorkspace,
+  generateTutorialMDX,
+  SeriesFile,
+  TutorialFile,
 } from "@/lib/tutorial-scanner";
 
-type Tab = "courses" | "skills";
+type Tab = "series" | "tutorials";
 
 export default function CoursesManagerPage() {
   const {
-    discoveredSkills,
-    discoveredCourses,
+    discoveredTutorials,
+    discoveredSeries,
     scanContent,
     currentWorkspace,
     workspaces,
     defaultWorkspaceId,
   } = useAppStore();
 
-  const [tab, setTab] = useState<Tab>("courses");
+  const [tab, setTab] = useState<Tab>("series");
   const [showCreateCourse, setShowCreateCourse] = useState(false);
   const [showCreateSkill, setShowCreateSkill] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -65,9 +65,9 @@ export default function CoursesManagerPage() {
             <GraduationCap className="text-primary" size={20} />
           </div>
           <div>
-            <h1 className="text-xl font-bold">课程中心</h1>
+            <h1 className="text-xl font-bold">系列中心</h1>
             <p className="text-sm text-muted-foreground">
-              {discoveredSkills.length} 个技能, {discoveredCourses.length} 个课程
+              {discoveredTutorials.length} 个教程, {discoveredSeries.length} 个系列
             </p>
           </div>
         </div>
@@ -82,35 +82,35 @@ export default function CoursesManagerPage() {
       {/* Tabs */}
       <div className="flex border-b shrink-0">
         <button
-          onClick={() => setTab("courses")}
+          onClick={() => setTab("series")}
           className={`px-6 py-3 text-sm font-medium transition-colors ${
-            tab === "courses"
+            tab === "series"
               ? "border-b-2 border-primary text-primary"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <FolderPlus className="size-4 inline mr-2" />
-          课程 ({discoveredCourses.length})
+          系列 ({discoveredSeries.length})
         </button>
         <button
-          onClick={() => setTab("skills")}
+          onClick={() => setTab("tutorials")}
           className={`px-6 py-3 text-sm font-medium transition-colors ${
-            tab === "skills"
+            tab === "tutorials"
               ? "border-b-2 border-primary text-primary"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
           <BookOpen className="size-4 inline mr-2" />
-          技能 ({discoveredSkills.length})
+          教程 ({discoveredTutorials.length})
         </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
-        {tab === "courses" ? (
+        {tab === "series" ? (
           <CourseTab
-            courses={discoveredCourses}
-            skills={discoveredSkills}
+            series={discoveredSeries}
+            tutorials={discoveredTutorials}
             workspacePath={workspacePath}
             showCreate={showCreateCourse}
             setShowCreate={setShowCreateCourse}
@@ -118,8 +118,8 @@ export default function CoursesManagerPage() {
           />
         ) : (
           <SkillsTab
-            skills={discoveredSkills}
-            courses={discoveredCourses}
+            tutorials={discoveredTutorials}
+            series={discoveredSeries}
             workspacePath={workspacePath}
             showCreate={showCreateSkill}
             setShowCreate={setShowCreateSkill}
@@ -134,15 +134,15 @@ export default function CoursesManagerPage() {
 // ─── Course Tab ────────────────────────────────────────────────────────
 
 function CourseTab({
-  courses,
-  skills,
+  series,
+  tutorials,
   workspacePath,
   showCreate,
   setShowCreate,
   onRefresh,
 }: {
-  courses: CourseFile[];
-  skills: SkillFile[];
+  series: SeriesFile[];
+  tutorials: TutorialFile;
   workspacePath?: string;
   showCreate: boolean;
   setShowCreate: (v: boolean) => void;
@@ -153,10 +153,10 @@ function CourseTab({
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">所有课程</h2>
+        <h2 className="text-lg font-semibold">所有系列</h2>
         <Button size="sm" onClick={() => setShowCreate(true)} className="gap-2">
           <Plus size={16} />
-          创建课程
+          创建系列
         </Button>
       </div>
 
@@ -172,19 +172,19 @@ function CourseTab({
       )}
 
       <div className="space-y-3">
-        {courses.map((c) => {
-          const courseSkills = c.skills
-            ? c.skills
+        {series.map((c) => {
+          const seriesTutorials = c.tutorials
+            ? c.tutorials
                 .sort((a, b) => a.order - b.order)
-                .map((cs) => skills.find((s) => s.slug === cs.slug))
-                .filter((s): s is SkillFile => !!s)
+                .map((cs) => tutorials.find((s) => s.slug === cs.slug))
+                .filter((s): s is TutorialFile => !!s)
             : [];
 
           return (
             <div
               key={c.id}
               className="border rounded-lg p-4 cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all group"
-              onClick={() => router.push(`/courses/detail?id=${c.id}`)}
+              onClick={() => router.push(`/series/detail?id=${c.id}`)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -204,7 +204,7 @@ function CourseTab({
                       size="icon"
                       onClick={async (e) => {
                         e.stopPropagation();
-                        await deleteCourseFromWorkspace(workspacePath, c.id);
+                        await deleteSeriesFromWorkspace(workspacePath, c.id);
                         await onRefresh();
                       }}
                     >
@@ -216,9 +216,9 @@ function CourseTab({
               </div>
               <div className="mt-3 pl-11">
                 <p className="text-xs text-muted-foreground mb-2">
-                  {courseSkills.length} 个技能
+                  {seriesTutorials.length} 个教程
                 </p>
-                {courseSkills.map((s) => (
+                {seriesTutorials.map((s) => (
                   <div key={s.slug} className="flex items-center gap-2 py-1 text-sm text-muted-foreground">
                     <FileText size={14} />
                     <span>{s.title}</span>
@@ -237,26 +237,26 @@ function CourseTab({
 // ─── Skills Tab ─────────────────────────────────────────────────────
 
 function SkillsTab({
-  skills,
-  courses,
+  tutorials,
+  series,
   workspacePath,
   showCreate,
   setShowCreate,
   onRefresh,
 }: {
-  skills: SkillFile[];
-  courses: CourseFile[];
+  tutorials: TutorialFile[];
+  series: SeriesFile[];
   workspacePath?: string;
   showCreate: boolean;
   setShowCreate: (v: boolean) => void;
   onRefresh: () => void;
 }) {
   const router = useRouter();
-  const { getCoursesForSkill } = useAppStore();
+  const { getSeriesForTutorial } = useAppStore();
 
-  // Deduplicate skills by slug (keep first occurrence)
+  // Deduplicate tutorials by slug (keep first occurrence)
   const seenSlugs = new Set<string>();
-  const uniqueSkills = skills.filter((s) => {
+  const uniqueTutorials = tutorials.filter((s) => {
     if (seenSlugs.has(s.slug)) return false;
     seenSlugs.add(s.slug);
     return true;
@@ -281,7 +281,7 @@ function SkillsTab({
       const fileName = filePath.split('/').pop() || 'imported';
       const slug = fileName.replace(/\.(mdx|md)$/, '');
 
-      await saveSkillToWorkspace(workspacePath, slug, content);
+      await saveTutorialToWorkspace(workspacePath, slug, content);
       await onRefresh();
     } catch (err) {
       console.error('Failed to import file:', err);
@@ -291,7 +291,7 @@ function SkillsTab({
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold">所有技能</h2>
+        <h2 className="text-lg font-semibold">所有教程</h2>
         <div className="flex gap-2">
           {workspacePath && (
             <Button size="sm" variant="outline" onClick={handleImport} className="gap-2">
@@ -301,14 +301,14 @@ function SkillsTab({
           )}
           <Button size="sm" onClick={() => setShowCreate(true)} className="gap-2">
             <Plus size={16} />
-            创建技能
+            创建教程
           </Button>
         </div>
       </div>
 
       {showCreate && (
-        <CreateSkillForm
-          courses={courses}
+        <CreateTutorialForm
+          series={series}
           workspacePath={workspacePath}
           onCancel={() => setShowCreate(false)}
           onSave={async () => {
@@ -319,8 +319,8 @@ function SkillsTab({
       )}
 
       <div className="space-y-2">
-        {uniqueSkills.map((s) => {
-          const relatedCourses = getCoursesForSkill(s.slug);
+        {uniqueTutorials.map((s) => {
+          const relatedCourses = getSeriesForTutorial(s.slug);
           return (
             <div key={s.slug} className="flex items-center justify-between border rounded-lg p-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -353,7 +353,7 @@ function SkillsTab({
                     variant="ghost"
                     size="icon"
                     onClick={async () => {
-                      await deleteSkillFromWorkspace(workspacePath, s.slug);
+                      await deleteTutorialFromWorkspace(workspacePath, s.slug);
                       await onRefresh();
                     }}
                   >
@@ -462,14 +462,14 @@ function CreateCourseForm({
 
     setSaving(true);
     try {
-      await saveCourseToWorkspace(workspacePath || '', {
+      await saveSeriesToWorkspace(workspacePath || '', {
         id,
         title: title.trim(),
         description: description.trim(),
         icon,
         color,
         source: 'local',
-        skills: [],
+        tutorials: [],
       });
       onSave();
     } catch (err) {
@@ -483,7 +483,7 @@ function CreateCourseForm({
   if (!workspacePath) {
     return (
       <div className="border rounded-lg p-4 mb-4 bg-muted/30">
-        <p className="text-sm text-muted-foreground">请先创建工作区以保存自定义课程。</p>
+        <p className="text-sm text-muted-foreground">请先创建工作区以保存自定义系列。</p>
         <Button variant="outline" size="sm" onClick={onCancel} className="mt-2">取消</Button>
       </div>
     );
@@ -491,7 +491,7 @@ function CreateCourseForm({
 
   return (
     <form onSubmit={handleSubmit} className="border rounded-lg p-4 mb-4 bg-muted/30 space-y-3">
-      <h3 className="font-semibold">创建新课程</h3>
+      <h3 className="font-semibold">创建新系列</h3>
       {error && (
         <div className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded px-3 py-2">
           保存失败: {error}
@@ -521,7 +521,7 @@ function CreateCourseForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="w-full px-3 py-2 bg-background border rounded-md text-sm"
-          placeholder="简短描述课程内容"
+          placeholder="简短描述系列内容"
         />
       </div>
       <div>
@@ -539,22 +539,22 @@ function CreateCourseForm({
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onCancel} size="sm">取消</Button>
         <Button type="submit" size="sm" disabled={!title.trim() || saving}>
-          {saving ? '保存中...' : '创建课程'}
+          {saving ? '保存中...' : '创建系列'}
         </Button>
       </div>
     </form>
   );
 }
 
-// ─── Create Skill Form ──────────────────────────────────────────────
+// ─── Create Tutorial Form ──────────────────────────────────────────────
 
-function CreateSkillForm({
-  courses,
+function CreateTutorialForm({
+  series,
   workspacePath,
   onCancel,
   onSave,
 }: {
-  courses: CourseFile[];
+  series: SeriesFile[];
   workspacePath?: string;
   onCancel: () => void;
   onSave: () => void;
@@ -574,7 +574,7 @@ function CreateSkillForm({
     setSaving(true);
     try {
       const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const mdx = generateSkillMDX({
+      const mdx = generateTutorialMDX({
         title: title.trim(),
         description: description.trim(),
         difficulty,
@@ -583,7 +583,7 @@ function CreateSkillForm({
         tags: [],
         content,
       });
-      await saveSkillToWorkspace(workspacePath, slug, mdx);
+      await saveTutorialToWorkspace(workspacePath, slug, mdx);
       onSave();
     } catch (err) {
       console.error('Failed to create skill:', err);
@@ -595,7 +595,7 @@ function CreateSkillForm({
   if (!workspacePath) {
     return (
       <div className="border rounded-lg p-4 mb-4 bg-muted/30">
-        <p className="text-sm text-muted-foreground">请先创建工作区以保存自定义技能。</p>
+        <p className="text-sm text-muted-foreground">请先创建工作区以保存自定义教程。</p>
         <Button variant="outline" size="sm" onClick={onCancel} className="mt-2">取消</Button>
       </div>
     );
@@ -603,7 +603,7 @@ function CreateSkillForm({
 
   return (
     <form onSubmit={handleSubmit} className="border rounded-lg p-4 mb-4 bg-muted/30 space-y-3">
-      <h3 className="font-semibold">创建新技能</h3>
+      <h3 className="font-semibold">创建新教程</h3>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium mb-1">标题</label>
@@ -673,7 +673,7 @@ function CreateSkillForm({
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onCancel} size="sm">取消</Button>
         <Button type="submit" size="sm" disabled={!title.trim() || saving}>
-          {saving ? '保存中...' : '创建技能'}
+          {saving ? '保存中...' : '创建教程'}
         </Button>
       </div>
     </form>

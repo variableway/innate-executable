@@ -1,0 +1,266 @@
+---
+title: "如何编写例子"
+description: "演示如何在教程中标注内容来源，包括外部文章、官方文档、书籍和视频"
+difficulty: beginner
+duration: 8
+category: general
+tags: ["来源", "引用", "规范", "示例"]
+sources:
+  - name: "Markdown 官方教程"
+    url: "https://www.markdownguide.org/"
+    author: "Matt Cone"
+    license: "CC-BY-SA-4.0"
+  - name: "MDX 官方文档"
+    url: "https://mdxjs.com/docs/"
+    author: "MDX Team"
+    license: "MIT"
+  - name: "Shiki 语法高亮文档"
+    url: "https://shiki.style/"
+    author: "Pine Wu & Anthony Fu"
+    license: "MIT"
+  - name: "示例视频教程"
+    url: "https://www.youtube.com/watch?v=example"
+    author: "Tech Channel"
+    type: "video"
+    note: "第 3-15 分钟与本教程内容相关"
+---
+
+# 教材来源标注示例
+
+> 本教程演示如何在 Innate Desktop 的教程系统中标注内容来源。良好的来源标注不仅是学术诚信的体现，也能帮助读者追溯更深入的资料。
+
+---
+
+## 1. 为什么要标注来源
+
+教程内容往往来自多种渠道：
+
+- **官方文档** — 软件/工具的官方说明
+- **技术博客** — 社区专家的经验分享
+- **书籍章节** — 系统化的知识整理
+- **视频教程** — 多媒体学习内容
+- **团队内部** — 组织沉淀的知识资产
+
+标注来源的好处：
+
+1. **尊重原创** — 认可原作者的劳动成果
+2. **可追溯性** — 读者可以查看原始资料获取更详细信息
+3. **时效性维护** — 原始资料更新时，可以跟进修订教程
+4. **可信度** — 有出处的信息更容易被信任
+
+---
+
+## 2. 来源标注方式
+
+### 2.1 Frontmatter 中的 `sources` 字段
+
+推荐在 frontmatter 中使用结构化的 `sources` 数组：
+
+```yaml
+---
+sources:
+  - name: "资料名称"
+    url: "https://example.com"
+    author: "作者名"
+    license: "CC-BY-4.0"
+    type: "article"     # article | video | book | doc
+    note: "补充说明"
+---
+```
+
+**字段说明：**
+
+| 字段 | 必填 | 说明 |
+|------|------|------|
+| `name` | 是 | 资料名称/标题 |
+| `url` | 否 | 原始链接 |
+| `author` | 否 | 作者或组织 |
+| `license` | 否 | 许可证类型 |
+| `type` | 否 | 资料类型：`article`, `video`, `book`, `doc` |
+| `note` | 否 | 补充说明，如相关章节、时间段等 |
+
+### 2.2 正文中的引用标注
+
+在正文中引用外部资料时，使用 Markdown 链接：
+
+根据 [MDX 官方文档](https://mdxjs.com/docs/) 的说明，MDX 允许在 Markdown 中嵌入 JSX 组件。
+
+或者使用脚注风格：
+
+> 引用内容...
+> —— 摘自 [原作者文章标题](https://example.com)
+
+---
+
+## 3. 不同来源类型的标注示例
+
+### 3.1 官方文档
+
+当教程基于某个工具的官方文档编写时：
+
+> 本节的安装步骤基于 Node.js 官方文档整理。如果你遇到问题，建议查阅 [Node.js 官方安装指南](https://nodejs.org/en/download) 获取最新信息。
+
+Frontmatter 记录：
+
+```yaml
+sources:
+  - name: "Node.js 官方安装文档"
+    url: "https://nodejs.org/en/download"
+    author: "OpenJS Foundation"
+    license: "MIT"
+    type: "doc"
+```
+
+### 3.2 技术博客
+
+当内容改编或翻译自技术博客时：
+
+> 这个配置技巧最初由 [作者名](https://example.com) 在其博客文章中分享，本教程做了适应性修改。
+
+Frontmatter 记录：
+
+```yaml
+sources:
+  - name: "如何配置 xxx"
+    url: "https://example.com/blog/post"
+    author: "作者名"
+    license: "CC-BY-4.0"
+    type: "article"
+    note: "本文第 2 节改编自此文章"
+```
+
+### 3.3 书籍
+
+当内容参考书籍时：
+
+> 关于设计模式的更详细解释，推荐阅读 *《设计模式：可复用面向对象软件的基础》*（GoF 著）。
+
+Frontmatter 记录：
+
+```yaml
+sources:
+  - name: "设计模式：可复用面向对象软件的基础"
+    url: "https://book.douban.com/subject/1052241/"
+    author: "Erich Gamma 等"
+    type: "book"
+    note: "第 3 章 创建型模式"
+```
+
+### 3.4 视频教程
+
+当内容参考视频时：
+
+> 如果你对某个概念不熟悉，建议观看这个 [10 分钟讲解视频](https://youtube.com/watch?v=example)（从 3:15 开始）。
+
+Frontmatter 记录：
+
+```yaml
+sources:
+  - name: "xxx 入门教程"
+    url: "https://youtube.com/watch?v=example"
+    author: "频道名"
+    type: "video"
+    note: "第 3-15 分钟与本教程相关"
+```
+
+### 3.5 团队内部知识
+
+当内容来自团队内部知识库时：
+
+> 这部分配置来自我们团队的内部 Wiki，经过实践验证。
+
+Frontmatter 记录：
+
+```yaml
+sources:
+  - name: "团队内部部署手册"
+    author: "Innate DevOps Team"
+    type: "doc"
+    note: "内部文档，不外传"
+```
+
+---
+
+## 4. 许可证说明
+
+### 4.1 常见开源许可证
+
+| 许可证 | 要求 | 说明 |
+|--------|------|------|
+| MIT | 保留版权声明 | 最宽松，只需保留原始版权声明 |
+| Apache-2.0 | 保留版权声明 + 专利授权 | 商业友好 |
+| CC-BY-4.0 | 署名 | 知识共享，需标注原作者 |
+| CC-BY-SA-4.0 | 署名 + 相同方式共享 | 衍生作品需使用相同许可证 |
+| CC0 | 无 | 公共领域，可自由使用 |
+
+### 4.2 引用时的注意事项
+
+1. **检查许可证** — 使用前确认原始资料的许可证允许改编
+2. **保留声明** — 在教程中保留原始作者和许可证信息
+3. **注明修改** — 如果做了改编，说明哪些地方有修改
+4. **提供链接** — 尽可能提供原始资料的链接
+
+---
+
+## 5. 完整的「参考来源」章节
+
+建议在每篇教程末尾添加「参考来源」章节，汇总所有引用：
+
+```mdx
+---
+
+## 参考来源
+
+1. [MDX 官方文档](https://mdxjs.com/docs/) — MDX Team，MIT 许可证
+2. [Markdown 指南](https://www.markdownguide.org/) — Matt Cone，CC-BY-SA-4.0
+3. [Shiki 语法高亮](https://shiki.style/) — Pine Wu & Anthony Fu，MIT 许可证
+4. *《设计模式》* — Erich Gamma 等，机械工业出版社
+
+*本教程基于上述资料整理编写，部分章节做了适应性修改以适配 Innate Desktop 的使用场景。*
+```
+
+---
+
+## 6. 本教程的实际来源
+
+下面是本教程真实使用的来源（演示 `sources` frontmatter 的实际效果）：
+
+### Frontmatter 中记录的来源
+
+本教程在 frontmatter 中声明了以下 4 个来源：
+
+1. **Markdown 官方教程** — Matt Cone 编写的 [Markdown Guide](https://www.markdownguide.org/)，CC-BY-SA-4.0 许可证
+2. **MDX 官方文档** — [MDX Team](https://mdxjs.com/docs/) 维护，MIT 许可证
+3. **Shiki 语法高亮文档** — [Pine Wu & Anthony Fu](https://shiki.style/) 开发，MIT 许可证
+4. **示例视频教程** — 一个假设的 YouTube 视频（从第 3-15 分钟相关）
+
+### 为什么这样组织
+
+- 结构化数据（frontmatter）便于程序化处理（如生成来源列表、检查许可证兼容性）
+- 正文中的链接便于读者在阅读时直接点击访问
+- 文末的「参考来源」章节提供了完整的汇总视图
+
+---
+
+## 你已经学会了什么
+
+1. **来源标注的重要性** — 尊重原创、可追溯、维护时效
+2. **Frontmatter `sources` 字段** — 结构化的来源记录方式
+3. **不同来源类型的处理** — 文档、博客、书籍、视频各有不同标注方式
+4. **许可证注意事项** — MIT、CC-BY、Apache 等常见许可证的要求
+
+## 下一步
+
+- 查看 `00-complete-example.mdx` 了解所有 MDX 组件的用法
+- 阅读 `../TUTORIAL_AUTHORING.md` 获取完整的教程编写文档
+- 开始编写你的第一篇教程！
+
+---
+
+## 参考来源
+
+1. [Markdown Guide](https://www.markdownguide.org/) — Matt Cone，CC-BY-SA-4.0
+2. [MDX Documentation](https://mdxjs.com/docs/) — MDX Team，MIT
+3. [Shiki](https://shiki.style/) — Pine Wu & Anthony Fu，MIT
+
+*本教程为 Innate Desktop 编写，旨在建立团队内部的内容来源标注规范。*

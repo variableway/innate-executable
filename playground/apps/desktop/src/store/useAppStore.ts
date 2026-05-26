@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Skill, Course, CourseSkill, Progress, TerminalPosition, TerminalEntry, Workspace, FileNode } from '../types';
+import { Tutorial, Series, SeriesTutorial, Progress, TerminalPosition, TerminalEntry, Workspace, FileNode } from '../types';
 import { tauriStorage } from '../lib/tauri-storage';
-import { SkillFile, CourseFile, scanBuiltin, scanWorkspace } from '../lib/tutorial-scanner';
+import { TutorialFile, SeriesFile, scanBuiltin, scanWorkspace } from '../lib/tutorial-scanner';
 
 interface AppState {
   // Data
-  skills: Skill[];
-  courses: Course[];
+  tutorials: Tutorial[];
+  series: Series[];
   progress: Record<string, Progress>;
 
   // UI State
@@ -24,8 +24,8 @@ interface AppState {
   pendingCommands: string[];
 
   // Actions
-  setSkills: (skills: Skill[]) => void;
-  setCourses: (courses: Course[]) => void;
+  setTutorials: (tutorials: Tutorial[]) => void;
+  setSeries: (series: Series[]) => void;
   setSearchQuery: (query: string) => void;
   setCategory: (category: string | null) => void;
   setDifficulty: (difficulty: string | null) => void;
@@ -66,17 +66,17 @@ interface AppState {
   setFileContent: (content: string) => void;
   setSelectedFolderPath: (path: string | null) => void;
 
-  // Discovered skills/courses (from MDX frontmatter scanning)
-  discoveredSkills: SkillFile[];
-  discoveredCourses: CourseFile[];
-  courseSkillOrder: Record<string, string[]>;
+  // Discovered tutorials/series (from MDX frontmatter scanning)
+  discoveredTutorials: TutorialFile[];
+  discoveredSeries: SeriesFile[];
+  seriesTutorialOrder: Record<string, string[]>;
   scanContent: () => Promise<void>;
-  saveCourseSkillOrder: (courseId: string, slugs: string[]) => void;
+  saveSeriesTutorialOrder: (seriesId: string, slugs: string[]) => void;
 
   // Getters
-  getFilteredSkills: () => Skill[];
-  getSkillsByCourse: (courseId: string) => SkillFile[];
-  getCoursesForSkill: (slug: string) => CourseFile[];
+  getFilteredTutorials: () => Tutorial[];
+  getTutorialsBySeries: (seriesId: string) => TutorialFile[];
+  getSeriesForTutorial: (slug: string) => SeriesFile[];
 }
 
 // Pre-cached Tauri invoke to avoid dynamic import on every call
@@ -114,8 +114,8 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
   // Initial state
-  skills: [],
-  courses: [],
+  tutorials: [],
+  series: [],
   progress: {},
 
   searchQuery: '',
@@ -130,8 +130,8 @@ export const useAppStore = create<AppState>()(
   pendingCommands: [],
 
   // Actions
-  setSkills: (skills) => set({ skills }),
-  setCourses: (courses) => set({ courses }),
+  setTutorials: (tutorials) => set({ tutorials }),
+  setSeries: (series) => set({ series }),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setCategory: (selectedCategory) => set({ selectedCategory }),
   setDifficulty: (selectedDifficulty) => set({ selectedDifficulty }),
@@ -236,7 +236,7 @@ export const useAppStore = create<AppState>()(
   updateProgress: (progress) => set((state) => ({
     progress: {
       ...state.progress,
-      [progress.skillId]: progress,
+      [progress.tutorialId]: progress,
     },
   })),
 
@@ -280,14 +280,14 @@ export const useAppStore = create<AppState>()(
   setFileContent: (fileContent) => set({ fileContent }),
   setSelectedFolderPath: (selectedFolderPath) => set({ selectedFolderPath }),
 
-  // Discovered skills/courses
-  discoveredSkills: [],
-  discoveredCourses: [],
-  courseSkillOrder: {},
+  // Discovered tutorials/series
+  discoveredTutorials: [],
+  discoveredSeries: [],
+  seriesTutorialOrder: {},
 
-  saveCourseSkillOrder: (courseId, slugs) =>
+  saveSeriesTutorialOrder: (seriesId, slugs) =>
     set((state) => ({
-      courseSkillOrder: { ...state.courseSkillOrder, [courseId]: slugs },
+      seriesTutorialOrder: { ...state.seriesTutorialOrder, [seriesId]: slugs },
     })),
   scanContent: async () => {
     try {
@@ -297,61 +297,52 @@ export const useAppStore = create<AppState>()(
         ? state.workspaces.find((w: Workspace) => w.id === state.defaultWorkspaceId)?.path
         : undefined;
 
-      let workspace = { courses: [] as CourseFile[], skills: [] as SkillFile[] };
+      let workspace = { series: [] as SeriesFile[], tutorials: [] as TutorialFile[] };
       if (workspacePath) {
         workspace = await scanWorkspace(workspacePath);
       }
 
-      // Merge: workspace skills override builtin with same slug
-      // Also deduplicate within builtin (same slug can appear in multiple courses)
-      const seenSlugs = new Set<string>();
-      const dedupedBuiltinSkills = builtin.skills.filter((s) => {
-        const key = `${s.slug}::${s.courseId || '__none__'}`;
-        if (seenSlugs.has(key)) return false;
-        seenSlugs.add(key);
-        return true;
-      });
+      // Merge: workspace tutorials override builtin with same slug
+      const slugSet = new Set(workspace.tutorials.map((s) => s.slug));
+      const mergedTutorials = [...workspace.tutorials, ...builtin.tutorials.filter((s) => !slugSet.has(s.slug))];
 
-      const slugSet = new Set(workspace.skills.map((s) => s.slug));
-      const mergedSkills = [...workspace.skills, ...dedupedBuiltinSkills.filter((s) => !slugSet.has(s.slug))];
+      // Merge series: workspace overrides builtin by id
+      const seriesIdSet = new Set(workspace.series.map((c) => c.id));
+      const mergedSeries = [...workspace.series, ...builtin.series.filter((c) => !seriesIdSet.has(c.id))];
 
-      // Merge courses: workspace overrides builtin by id
-      const courseIdSet = new Set(workspace.courses.map((c) => c.id));
-      const mergedCourses = [...workspace.courses, ...builtin.courses.filter((c) => !courseIdSet.has(c.id))];
-
-      set({ discoveredSkills: mergedSkills, discoveredCourses: mergedCourses });
+      set({ discoveredTutorials: mergedTutorials, discoveredSeries: mergedSeries });
     } catch (e) {
       console.error('[scanContent] failed:', e);
     }
   },
 
   // Getters
-  getFilteredSkills: () => {
-    const { skills, searchQuery, selectedCategory, selectedDifficulty } = get();
-    return skills.filter((skill) => {
+  getFilteredTutorials: () => {
+    const { tutorials, searchQuery, selectedCategory, selectedDifficulty } = get();
+    return tutorials.filter((tutorial) => {
       const matchesSearch = !searchQuery ||
-        skill.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        skill.description.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = !selectedCategory || skill.category === selectedCategory;
-      const matchesDifficulty = !selectedDifficulty || skill.difficulty === selectedDifficulty;
+        tutorial.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tutorial.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = !selectedCategory || tutorial.category === selectedCategory;
+      const matchesDifficulty = !selectedDifficulty || tutorial.difficulty === selectedDifficulty;
       return matchesSearch && matchesCategory && matchesDifficulty;
     });
   },
 
-  getSkillsByCourse: (courseId: string) => {
-    const { discoveredSkills, discoveredCourses } = get();
-    const course = discoveredCourses.find((c) => c.id === courseId);
-    if (!course?.skills) return [];
-    return course.skills
+  getTutorialsBySeries: (seriesId: string) => {
+    const { discoveredTutorials, discoveredSeries } = get();
+    const seriesItem = discoveredSeries.find((c) => c.id === seriesId);
+    if (!seriesItem?.tutorials) return [];
+    return seriesItem.tutorials
       .sort((a, b) => a.order - b.order)
-      .map((cs) => discoveredSkills.find((s) => s.slug === cs.slug))
-      .filter((s): s is SkillFile => !!s);
+      .map((cs) => discoveredTutorials.find((s) => s.slug === cs.slug))
+      .filter((s): s is TutorialFile => !!s);
   },
 
-  getCoursesForSkill: (slug: string) => {
-    const { discoveredCourses } = get();
-    return discoveredCourses.filter(
-      (c) => c.skills?.some((cs) => cs.slug === slug)
+  getSeriesForTutorial: (slug: string) => {
+    const { discoveredSeries } = get();
+    return discoveredSeries.filter(
+      (c) => c.tutorials?.some((cs) => cs.slug === slug)
     );
   },
 }),
@@ -361,7 +352,7 @@ export const useAppStore = create<AppState>()(
   partialize: (state) => ({
     workspaces: state.workspaces,
     defaultWorkspaceId: state.defaultWorkspaceId,
-    courseSkillOrder: state.courseSkillOrder,
+    seriesTutorialOrder: state.seriesTutorialOrder,
   }),
 }
   )

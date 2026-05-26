@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   },
   transpilePackages: ["@innate/ui", "@innate/utils"],
   trailingSlash: true,
+  staticPageGenerationTimeout: 300,
   ...(basePath
     ? { basePath, assetPrefix: basePath }
     : {}),

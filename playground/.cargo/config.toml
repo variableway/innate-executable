@@ -1,0 +1,4 @@
+[build]
+# 使用相对路径共享根 workspace 的 target 目录
+# 从 playground/.cargo/ 往上 4 层到 innate-desktop-mono/
+target-dir = "../../../../target"

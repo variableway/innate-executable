@@ -30,7 +30,7 @@ import {
 export default function Home() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const { discoveredCourses, discoveredSkills, progress } = useAppStore();
+  const { discoveredSeries, discoveredTutorials, progress } = useAppStore();
 
   useEffect(() => {
     setMounted(true);
@@ -47,11 +47,11 @@ export default function Home() {
     );
   }
 
-  const recentSkills = discoveredSkills.slice(0, 6);
+  const recentSkills = discoveredTutorials.slice(0, 6);
 
   const stats = [
-    { label: "技能总数", value: discoveredSkills.length, icon: FileText },
-    { label: "课程", value: discoveredCourses.length, icon: FolderOpen },
+    { label: "教程总数", value: discoveredTutorials.length, icon: FileText },
+    { label: "系列", value: discoveredSeries.length, icon: FolderOpen },
     { label: "学习时长", value: "120+", icon: Clock },
   ];
 
@@ -82,7 +82,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-auto">
+    <div className="flex flex-col h-full">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10" />
@@ -97,11 +97,11 @@ export default function Home() {
               可执行
               <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 {" "}
-                技能
+                教程
               </span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
-              边学边做，让技术学习变得简单有趣。每个技能都包含可执行的命令，
+              边学边做，让技术学习变得简单有趣。每个教程都包含可执行的命令，
               点击运行即可在终端中看到实时结果。
             </p>
 
@@ -135,31 +135,32 @@ export default function Home() {
                 <TrendingUp className="text-primary-foreground" size={20} />
               </div>
               <div>
-                <h2 className="text-xl font-bold">推荐课程</h2>
+                <h2 className="text-xl font-bold">推荐系列</h2>
                 <p className="text-sm text-muted-foreground">精选学习路径</p>
               </div>
             </div>
-            <Button variant="ghost" className="group" onClick={() => router.push("/courses")}>
+            <Button variant="ghost" className="group" onClick={() => router.push("/series")}>
               查看全部
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={16} />
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {discoveredCourses.map((c) => {
-              const courseSkillSlugs = (c.skills ?? []).map((cs) => cs.slug);
-              const courseSkills = courseSkillSlugs
-                .map((slug) => discoveredSkills.find((t) => t.slug === slug))
+          {discoveredSeries.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {discoveredSeries.map((c) => {
+              const seriesTutorialSlugs = (c.tutorials ?? []).map((st) => st.slug);
+              const seriesTutorials = seriesTutorialSlugs
+                .map((slug) => discoveredTutorials.find((t) => t.slug === slug))
                 .filter((t): t is NonNullable<typeof t> => !!t);
-              const totalDuration = courseSkills.reduce((sum, t) => sum + t.duration, 0);
-              const completedCount = courseSkills.filter((t) => progress[t.slug]?.completed).length;
-              const progressPercent = courseSkills.length > 0 ? (completedCount / courseSkills.length) * 100 : 0;
+              const totalDuration = seriesTutorials.reduce((sum, t) => sum + t.duration, 0);
+              const completedCount = seriesTutorials.filter((t) => progress[t.slug]?.completed).length;
+              const progressPercent = seriesTutorials.length > 0 ? (completedCount / seriesTutorials.length) * 100 : 0;
 
               return (
                 <Card
                   key={c.id}
                   className="group cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
-                  onClick={() => router.push(`/courses/detail?id=${c.id}`)}
+                  onClick={() => router.push(`/series/detail?id=${c.id}`)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start gap-4">
@@ -173,7 +174,7 @@ export default function Home() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge variant="secondary" className="text-xs">
-                          {courseSkills.length} 技能
+                          {seriesTutorials.length} 教程
                         </Badge>
                         <CardTitle className="text-base mt-1 truncate">{c.title}</CardTitle>
                       </div>
@@ -184,7 +185,7 @@ export default function Home() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <BookOpen size={14} />
-                        <span>{courseSkills.length} 个技能</span>
+                        <span>{seriesTutorials.length} 个教程</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock size={14} />
@@ -205,7 +206,16 @@ export default function Home() {
                 </Card>
               );
             })}
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-card rounded-2xl border border-dashed">
+              <FolderOpen size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
+              <p className="text-muted-foreground">暂无系列</p>
+              <Button variant="link" onClick={() => router.push("/admin/series")}>
+                创建系列
+              </Button>
+            </div>
+          )}
         </section>
 
         {/* Recent Tutorials */}
@@ -217,7 +227,7 @@ export default function Home() {
               </div>
               <div>
                 <h2 className="text-xl font-bold">
-                  最近技能
+                  最近教程
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   最新发布的内容
@@ -300,9 +310,9 @@ export default function Home() {
           ) : (
             <div className="text-center py-16 bg-card rounded-2xl border border-dashed">
               <FileText size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground">暂无技能</p>
+              <p className="text-muted-foreground">暂无教程</p>
               <Button variant="link" onClick={() => router.push("/tutorials")}>
-                浏览技能中心
+                浏览教程中心
               </Button>
             </div>
           )}
@@ -329,17 +339,17 @@ export default function Home() {
                 </div>
                 <div className="text-left">
                   <span className="font-semibold block">添加本地目录</span>
-                  <span className="text-sm text-muted-foreground">导入本地技能文件夹</span>
+                  <span className="text-sm text-muted-foreground">导入本地教程文件夹</span>
                 </div>
               </Button>
 
-              <Button variant="outline" className="h-auto py-4 px-6 justify-start" onClick={() => router.push("/admin/courses")}>
+              <Button variant="outline" className="h-auto py-4 px-6 justify-start" onClick={() => router.push("/admin/series")}>
                 <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mr-3">
                   <Plus className="text-secondary" size={24} />
                 </div>
                 <div className="text-left">
-                  <span className="font-semibold block">管理课程</span>
-                  <span className="text-sm text-muted-foreground">创建和管理课程与技能</span>
+                  <span className="font-semibold block">管理系列</span>
+                  <span className="text-sm text-muted-foreground">创建和管理系列与教程</span>
                 </div>
               </Button>
             </div>

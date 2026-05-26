@@ -22,14 +22,13 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
-import "highlight.js/styles/github-dark.css";
+import { ShikiCodeBlock } from "@/components/tutorial/shiki-code-block";
 
 const DEFAULT_FOLDERS = [
-  { name: "skills", description: "技能相关文件" },
+  { name: "skills", description: "教程相关文件" },
   { name: "Apps", description: "应用程序相关文件" },
   { name: "KM", description: "知识库相关文件" },
-  { name: "lessons", description: "课程相关文件" },
+  { name: "lessons", description: "系列相关文件" }
 ];
 
 // File tree item with expand/collapse
@@ -225,7 +224,7 @@ function FileViewer({ node, content }: { node: FileNode; content: string }) {
               prose-ul:list-disc prose-ol:list-decimal">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight]}
+                components={{ pre: ShikiCodeBlock as any }}
               >
                 {content}
               </ReactMarkdown>

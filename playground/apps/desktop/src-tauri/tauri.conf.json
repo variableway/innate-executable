@@ -5,8 +5,8 @@
   "identifier": "com.innate.playground",
   "build": {
     "frontendDist": "../out",
-    "devUrl": "http://localhost:3001",
-    "beforeDevCommand": "node ./node_modules/next/dist/bin/next dev --port 3001",
+    "devUrl": "http://localhost:5001",
+    "beforeDevCommand": "node ./node_modules/next/dist/bin/next dev --port 5001",
     "beforeBuildCommand": "node ./node_modules/next/dist/bin/next build"
   },
   "app": {

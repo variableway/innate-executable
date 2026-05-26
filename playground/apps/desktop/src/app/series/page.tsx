@@ -23,7 +23,7 @@ import {
 export default function CoursesPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const { discoveredCourses, discoveredSkills, progress, scanContent } = useAppStore();
+  const { discoveredSeries, discoveredTutorials, progress, scanContent } = useAppStore();
 
   useEffect(() => {
     setMounted(true);
@@ -48,27 +48,27 @@ export default function CoursesPage() {
               <GraduationCap className="text-primary-foreground" size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">课程中心</h1>
+              <h1 className="text-2xl font-bold">系列中心</h1>
               <p className="text-sm text-muted-foreground">
-                {discoveredCourses.length} 个课程，{discoveredSkills.length} 个技能
+                {discoveredSeries.length} 个系列，{discoveredTutorials.length} 个教程
               </p>
             </div>
           </div>
-          <Button variant="outline" onClick={() => router.push("/admin/courses")} className="gap-2">
+          <Button variant="outline" onClick={() => router.push("/admin/series")} className="gap-2">
             <Sparkles size={16} />
-            管理课程
+            管理系列
           </Button>
         </div>
       </div>
 
       {/* Courses Grid */}
       <div className="px-8 pb-8">
-        {discoveredCourses.length > 0 ? (
+        {discoveredSeries.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {discoveredCourses.map((c) => {
+            {discoveredSeries.map((c) => {
               const courseSkillSlugs = (c.skills ?? []).map((cs) => cs.slug);
               const courseSkills = courseSkillSlugs
-                .map((slug) => discoveredSkills.find((s) => s.slug === slug))
+                .map((slug) => discoveredTutorials.find((s) => s.slug === slug))
                 .filter((s): s is NonNullable<typeof s> => !!s);
               const totalDuration = courseSkills.reduce((sum, s) => sum + s.duration, 0);
               const completedCount = courseSkills.filter((s) => progress[s.slug]?.completed).length;
@@ -78,7 +78,7 @@ export default function CoursesPage() {
                 <Card
                   key={c.id}
                   className="group cursor-pointer transition-all hover:shadow-lg hover:border-primary/50"
-                  onClick={() => router.push(`/courses/detail?id=${c.id}`)}
+                  onClick={() => router.push(`/series/detail?id=${c.id}`)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start gap-4">
@@ -92,7 +92,7 @@ export default function CoursesPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <Badge variant="secondary" className="text-xs">
-                          {courseSkills.length} 技能
+                          {courseSkills.length} 教程
                         </Badge>
                         <CardTitle className="text-base mt-1 truncate">{c.title}</CardTitle>
                       </div>
@@ -103,7 +103,7 @@ export default function CoursesPage() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <BookOpen size={14} />
-                        <span>{courseSkills.length} 个技能</span>
+                        <span>{courseSkills.length} 个教程</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock size={14} />
@@ -142,9 +142,9 @@ export default function CoursesPage() {
         ) : (
           <div className="text-center py-24 bg-card rounded-2xl border border-dashed">
             <GraduationCap size={64} className="mx-auto mb-4 text-muted-foreground opacity-30" />
-            <p className="text-muted-foreground text-lg mb-2">暂无课程</p>
-            <p className="text-sm text-muted-foreground mb-4">在管理页面创建或导入课程</p>
-            <Button onClick={() => router.push("/admin/courses")}>
+            <p className="text-muted-foreground text-lg mb-2">暂无系列</p>
+            <p className="text-sm text-muted-foreground mb-4">在管理页面创建或导入系列</p>
+            <Button onClick={() => router.push("/admin/series")}>
               前往管理
             </Button>
           </div>

@@ -1,2 +1,28 @@
 @import "@innate/ui/globals.css";
 @source "../../../../packages/ui/src";
+
+/* ── Shiki code block styles ── */
+
+.shiki-code-block pre {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  background: transparent !important;
+}
+
+.shiki-code-block code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  display: grid;
+}
+
+/* Line styling */
+.shiki-code-block .line {
+  padding: 0 0.25rem;
+}
+
+/* Inline code (not in pre) */
+:not(pre) > code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}

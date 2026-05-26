@@ -97,7 +97,7 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              <p>Innate Playground — 边做边学的可执行技能练习平台，每一步都可运行、有产出。</p>
+              <p>Innate Playground — 边做边学的可执行教程练习平台，每一步都可运行、有产出。</p>
               <p className="mt-2">Built with Tauri v2 + Next.js + shadcn/ui</p>
             </CardContent>
           </Card>

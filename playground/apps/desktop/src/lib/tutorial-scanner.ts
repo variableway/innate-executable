@@ -6,11 +6,11 @@
  * after adding new .mdx/.md files to public/skills/.
  */
 
-import { CourseSkill } from "@/types";
+import { SeriesTutorial } from "@/types";
 
 // ─── Types ───────────────────────────────────────────────
 
-export interface SkillFile {
+export interface TutorialFile {
   slug: string;
   title: string;
   description: string;
@@ -18,31 +18,31 @@ export interface SkillFile {
   duration: number;
   category: string;
   tags?: string[];
-  course?: string;
-  courseOrder?: number;
+  series?: string;
+  seriesOrder?: number;
   source?: string;
   localPath?: string;
 }
 
-export interface CourseFile {
+export interface SeriesFile {
   id: string;
   title: string;
   description: string;
   icon?: string;
   color?: string;
-  skills?: CourseSkill[];
+  tutorials?: SeriesTutorial[];
 }
 
 interface ScanResult {
-  courses: CourseFile[];
-  skills: SkillFile[];
+  series: SeriesFile[];
+  tutorials: TutorialFile[];
 }
 
-interface SkillsManifest {
+interface TutorialsManifest {
   generatedAt: string;
   count: number;
-  skills: SkillFile[];
-  courses: CourseFile[];
+  tutorials: TutorialFile[];
+  series: SeriesFile[];
 }
 
 // ─── Base Path Helper ────────────────────────────────────
@@ -57,15 +57,15 @@ function getBasePath(): string {
 
 // ─── Manifest Loader ─────────────────────────────────────
 
-let _cachedManifest: SkillsManifest | null = null;
+let _cachedManifest: TutorialsManifest | null = null;
 
-async function loadManifest(): Promise<SkillsManifest> {
+async function loadManifest(): Promise<TutorialsManifest> {
   if (_cachedManifest) return _cachedManifest;
 
   try {
     const response = await fetch(`${getBasePath()}/skills-manifest.json`);
     if (response.ok) {
-      const manifest: SkillsManifest = await response.json();
+      const manifest: TutorialsManifest = await response.json();
       _cachedManifest = manifest;
       return manifest;
     }
@@ -74,7 +74,7 @@ async function loadManifest(): Promise<SkillsManifest> {
   }
 
   // Fallback: empty manifest
-  return { generatedAt: "", count: 0, skills: [], courses: [] };
+  return { generatedAt: "", count: 0, tutorials: [], series: [] };
 }
 
 /** Clear the cached manifest (use after adding/removing tutorials). */
@@ -128,7 +128,7 @@ export function parseFrontmatter(content: string): {
 
 // ─── Content Loader ──────────────────────────────────────
 
-export async function loadSkillContent(
+export async function loadTutorialContent(
   slug: string,
   workspacePath?: string
 ): Promise<{ content: string; path: string } | null> {
@@ -160,13 +160,13 @@ export async function loadSkillContent(
 
   // Try built-in tutorials from manifest
   const manifest = await loadManifest();
-  const skill = manifest.skills.find((s) => s.slug === slug);
-  if (skill?.localPath) {
+  const tutorial = manifest.tutorials.find((s) => s.slug === slug);
+  if (tutorial?.localPath) {
     try {
       const response = await fetch(`${getBasePath()}${skill.localPath}`);
       if (response.ok) {
         const content = await response.text();
-        return { content, path: skill.localPath };
+        return { content, path: tutorial.localPath };
       }
     } catch {
       // fallback
@@ -193,18 +193,18 @@ export async function loadSkillContent(
 
 export async function scanBuiltin(): Promise<ScanResult> {
   const manifest = await loadManifest();
-  return { courses: manifest.courses || [], skills: manifest.skills };
+  return { series: manifest.series || [], tutorials: manifest.tutorials };
 }
 
 // ─── Synchronous Access for generateStaticParams ─────────
 // generateStaticParams runs at build time and needs sync access.
 // We import the manifest JSON directly via a build-time require.
 
-let _syncSkills: SkillFile[] | null = null;
+let _syncTutorials: TutorialFile[] | null = null;
 
-/** Get built-in skills synchronously (for generateStaticParams at build time). */
-export function getBuiltinSkillsSync(): SkillFile[] {
-  if (_syncSkills) return _syncSkills;
+/** Get built-in tutorials synchronously (for generateStaticParams at build time). */
+export function getBuiltinTutorialsSync(): TutorialFile[] {
+  if (_syncTutorials) return _syncTutorials;
 
   // At build time (Node.js), try to read the manifest file directly
   if (typeof window === "undefined") {
@@ -213,9 +213,9 @@ export function getBuiltinSkillsSync(): SkillFile[] {
       const path = require("path");
       const manifestPath = path.join(process.cwd(), "public", "skills-manifest.json");
       const raw = fs.readFileSync(manifestPath, "utf-8");
-      const manifest: SkillsManifest = JSON.parse(raw);
-      _syncSkills = manifest.skills;
-      return _syncSkills;
+      const manifest: TutorialsManifest = JSON.parse(raw);
+      _syncTutorials = manifest.tutorials;
+      return _syncTutorials;
     } catch {
       // manifest not found or not in Node.js
     }
@@ -228,13 +228,13 @@ export function getBuiltinSkillsSync(): SkillFile[] {
 
 export async function scanWorkspace(workspacePath: string): Promise<ScanResult> {
   if (!("__TAURI_INTERNALS__" in window)) {
-    return { courses: [], skills: [] };
+    return { series: [], tutorials: [] };
   }
 
   try {
     const { readDir, exists } = await import("@tauri-apps/plugin-fs");
-    const skills: SkillFile[] = [];
-    const courses: CourseFile[] = [];
+    const tutorials: TutorialFile[] = [];
+    const series: SeriesFile[] = [];
 
     const scanDir = async (dir: string, depth = 0) => {
       if (depth > 3) return;
@@ -257,12 +257,12 @@ export async function scanWorkspace(workspacePath: string): Promise<ScanResult> 
               const { frontmatter } = parseFrontmatter(text);
 
               const slug = name.replace(/\.(md|mdx)$/, "");
-              skills.push({
+              tutorials.push({
                 slug,
                 title: (frontmatter.title as string) || slug,
                 description: (frontmatter.description as string) || "",
                 difficulty:
-                  (frontmatter.difficulty as SkillFile["difficulty"]) || "beginner",
+                  (frontmatter.difficulty as TutorialFile["difficulty"]) || "beginner",
                 duration: (frontmatter.duration as number) || 5,
                 category: (frontmatter.category as string) || "general",
                 tags: Array.isArray(frontmatter.tags)
@@ -295,15 +295,15 @@ export async function scanWorkspace(workspacePath: string): Promise<ScanResult> 
 
     await scanDir(workspacePath, 0);
 
-    return { courses, skills };
+    return { series, tutorials };
   } catch {
-    return { courses: [], skills: [] };
+    return { series: [], tutorials: [] };
   }
 }
 
 // ─── Workspace File Helpers ──────────────────────────────
 
-export function generateSkillMDX({
+export function generateTutorialMDX({
   title,
   description,
   difficulty,
@@ -334,25 +334,25 @@ ${content}
 `;
 }
 
-export async function saveSkillToWorkspace(
+export async function saveTutorialToWorkspace(
   workspacePath: string,
   slug: string,
   content: string
 ): Promise<void> {
   if (!("__TAURI_INTERNALS__" in window)) return;
   const { writeFile, mkdir } = await import("@tauri-apps/plugin-fs");
-  const skillsDir = `${workspacePath}/skills`;
+  const tutorialsDir = `${workspacePath}/skills`;
   try {
-    await mkdir(skillsDir, { recursive: true });
+    await mkdir(tutorialsDir, { recursive: true });
   } catch {
     // dir may already exist
   }
-  const path = `${skillsDir}/${slug}.md`;
+  const path = `${tutorialsDir}/${slug}.md`;
   const encoder = new TextEncoder();
   await writeFile(path, encoder.encode(content));
 }
 
-export async function deleteSkillFromWorkspace(
+export async function deleteTutorialFromWorkspace(
   workspacePath: string,
   slug: string
 ): Promise<void> {
@@ -375,42 +375,42 @@ export async function deleteSkillFromWorkspace(
   }
 }
 
-export async function saveCourseToWorkspace(
+export async function saveSeriesToWorkspace(
   workspacePath: string,
-  course: CourseFile
+  seriesItem: SeriesFile
 ): Promise<void> {
   if (!("__TAURI_INTERNALS__" in window)) return;
   const { writeFile, readFile, mkdir } = await import("@tauri-apps/plugin-fs");
-  const coursesDir = `${workspacePath}/courses`;
+  const seriesDir = `${workspacePath}/courses`;
   try {
-    await mkdir(coursesDir, { recursive: true });
+    await mkdir(seriesDir, { recursive: true });
   } catch {
     // dir may already exist
   }
 
-  const path = `${coursesDir}/${course.id}.json`;
-  let courses: CourseFile[] = [];
+  const path = `${seriesDir}/${seriesItem.id}.json`;
+  let seriesList: SeriesFile[] = [];
   try {
     const bytes = await readFile(`${workspacePath}/_courses.json`);
     const text = new TextDecoder().decode(bytes);
-    courses = JSON.parse(text);
+    seriesList = JSON.parse(text);
   } catch {
     // file may not exist
   }
 
-  const idx = courses.findIndex((c) => c.id === course.id);
+  const idx = seriesList.findIndex((c) => c.id === seriesItem.id);
   if (idx >= 0) {
-    courses[idx] = course;
+    seriesList[idx] = seriesItem;
   } else {
-    courses.push(course);
+    seriesList.push(seriesItem);
   }
 
   const encoder = new TextEncoder();
-  await writeFile(`${workspacePath}/_courses.json`, encoder.encode(JSON.stringify(courses, null, 2)));
-  await writeFile(path, encoder.encode(JSON.stringify(course, null, 2)));
+  await writeFile(`${workspacePath}/_courses.json`, encoder.encode(JSON.stringify(seriesList, null, 2)));
+  await writeFile(path, encoder.encode(JSON.stringify(seriesItem, null, 2)));
 }
 
-export async function deleteCourseFromWorkspace(
+export async function deleteSeriesFromWorkspace(
   workspacePath: string,
   id: string
 ): Promise<void> {
@@ -426,8 +426,8 @@ export async function deleteCourseFromWorkspace(
   try {
     const bytes = await readFile(`${workspacePath}/_courses.json`);
     const text = new TextDecoder().decode(bytes);
-    const courses: CourseFile[] = JSON.parse(text);
-    const filtered = courses.filter((c) => c.id !== id);
+    const seriesList: SeriesFile[] = JSON.parse(text);
+    const filtered = seriesList.filter((c) => c.id !== id);
     const encoder = new TextEncoder();
     await writeFile(`${workspacePath}/_courses.json`, encoder.encode(JSON.stringify(filtered, null, 2)));
   } catch {
@@ -435,77 +435,77 @@ export async function deleteCourseFromWorkspace(
   }
 }
 
-export async function addSkillToCourse(
+export async function addTutorialToSeries(
   workspacePath: string,
-  courseId: string,
+  seriesId: string,
   slug: string,
   _content: string,
   order: number
 ): Promise<void> {
   if (!("__TAURI_INTERNALS__" in window)) return;
   const { readFile, writeFile } = await import("@tauri-apps/plugin-fs");
-  const path = `${workspacePath}/courses/${courseId}.json`;
+  const path = `${workspacePath}/courses/${seriesId}.json`;
 
   try {
     const bytes = await readFile(path);
     const text = new TextDecoder().decode(bytes);
-    const course: CourseFile & { skills?: CourseSkill[] } = JSON.parse(text);
-    if (!course.skills) course.skills = [];
-    if (!course.skills.find((s) => s.slug === slug)) {
-      course.skills.push({ slug, order });
+    const seriesItem: SeriesFile & { tutorials?: SeriesTutorial[] } = JSON.parse(text);
+    if (!seriesItem.tutorials) seriesItem.tutorials = [];
+    if (!seriesItem.tutorials.find((s) => s.slug === slug)) {
+      seriesItem.tutorials.push({ slug, order });
     }
     const encoder = new TextEncoder();
-    await writeFile(path, encoder.encode(JSON.stringify(course, null, 2)));
+    await writeFile(path, encoder.encode(JSON.stringify(seriesItem, null, 2)));
   } catch {
-    // course may not exist
+    // series may not exist
   }
 }
 
-export async function removeSkillFromCourse(
+export async function removeTutorialFromSeries(
   workspacePath: string,
-  courseId: string,
+  seriesId: string,
   slug: string
 ): Promise<void> {
   if (!("__TAURI_INTERNALS__" in window)) return;
   const { readFile, writeFile } = await import("@tauri-apps/plugin-fs");
-  const path = `${workspacePath}/courses/${courseId}.json`;
+  const path = `${workspacePath}/courses/${seriesId}.json`;
 
   try {
     const bytes = await readFile(path);
     const text = new TextDecoder().decode(bytes);
-    const course: CourseFile & { skills?: CourseSkill[] } = JSON.parse(text);
-    if (course.skills) {
-      course.skills = course.skills.filter((s) => s.slug !== slug);
+    const seriesItem: SeriesFile & { tutorials?: SeriesTutorial[] } = JSON.parse(text);
+    if (seriesItem.tutorials) {
+      seriesItem.tutorials = seriesItem.tutorials.filter((s) => s.slug !== slug);
     }
     const encoder = new TextEncoder();
-    await writeFile(path, encoder.encode(JSON.stringify(course, null, 2)));
+    await writeFile(path, encoder.encode(JSON.stringify(seriesItem, null, 2)));
   } catch {
-    // course may not exist
+    // series may not exist
   }
 }
 
-export async function reorderCourseSkills(
+export async function reorderSeriesTutorials(
   workspacePath: string,
-  courseId: string,
+  seriesId: string,
   slugs: string[]
 ): Promise<void> {
   if (!("__TAURI_INTERNALS__" in window)) return;
   const { readFile, writeFile } = await import("@tauri-apps/plugin-fs");
-  const path = `${workspacePath}/courses/${courseId}.json`;
+  const path = `${workspacePath}/courses/${seriesId}.json`;
 
   try {
     const bytes = await readFile(path);
     const text = new TextDecoder().decode(bytes);
-    const course: CourseFile & { skills?: CourseSkill[] } = JSON.parse(text);
-    if (course.skills) {
-      course.skills = slugs.map((slug, idx) => ({
+    const seriesItem: SeriesFile & { tutorials?: SeriesTutorial[] } = JSON.parse(text);
+    if (seriesItem.tutorials) {
+      seriesItem.tutorials = slugs.map((slug, idx) => ({
         slug,
         order: idx + 1,
       }));
     }
     const encoder = new TextEncoder();
-    await writeFile(path, encoder.encode(JSON.stringify(course, null, 2)));
+    await writeFile(path, encoder.encode(JSON.stringify(seriesItem, null, 2)));
   } catch {
-    // course may not exist
+    // series may not exist
   }
 }

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Skills & Courses Manifest Generator
+ * Tutorials & Series Manifest Generator
  *
  * Scans public/skills/ for .mdx/.md files, parses frontmatter,
- * auto-generates course definitions from skill categories,
+ * auto-generates series definitions from tutorial categories,
  * and writes public/skills-manifest.json for client-side consumption.
  */
 
@@ -17,9 +17,9 @@ const PROJECT_ROOT = join(__dirname, "..");
 const SKILLS_DIR = join(PROJECT_ROOT, "public", "skills");
 const MANIFEST_PATH = join(PROJECT_ROOT, "public", "skills-manifest.json");
 
-// ─── Course templates by category ──────────────────────────
+// ─── Series templates by category ──────────────────────────
 
-const COURSE_TEMPLATES = {
+const SERIES_TEMPLATES = {
   "ai-assistant": {
     id: "ai-assistant-basics",
     title: "AI 助手入门系列",
@@ -81,26 +81,26 @@ function parseFrontmatter(content) {
   return { frontmatter, body: match[2] };
 }
 
-function scanSkillsDir() {
+function scanTutorialsDir() {
   if (!existsSync(SKILLS_DIR)) {
     console.log("⚠️  public/skills/ directory not found, creating empty manifest");
     return [];
   }
 
   const files = readdirSync(SKILLS_DIR);
-  const skillFiles = files.filter(
+  const tutorialFiles = files.filter(
     (f) => (f.endsWith(".mdx") || f.endsWith(".md")) && !f.startsWith("_")
   );
 
-  const skills = [];
+  const tutorials = [];
 
-  for (const filename of skillFiles) {
+  for (const filename of tutorialFiles) {
     const slug = filename.replace(/\.(md|mdx)$/, "");
     const filePath = join(SKILLS_DIR, filename);
     const content = readFileSync(filePath, "utf-8");
     const { frontmatter } = parseFrontmatter(content);
 
-    skills.push({
+    tutorials.push({
       slug,
       title: frontmatter.title || slug,
       description: frontmatter.description || "",
@@ -110,67 +110,68 @@ function scanSkillsDir() {
       tags: Array.isArray(frontmatter.tags) ? frontmatter.tags : [],
       source: "builtin",
       localPath: `/skills/${filename}`,
+      sources: Array.isArray(frontmatter.sources) ? frontmatter.sources : undefined,
     });
   }
 
   // Sort by category then title for consistent ordering
-  skills.sort((a, b) => {
+  tutorials.sort((a, b) => {
     if (a.category !== b.category) return a.category.localeCompare(b.category);
     return a.title.localeCompare(b.title);
   });
 
-  return skills;
+  return tutorials;
 }
 
-function generateCourses(skills) {
-  // Group skills by category
+function generateSeries(tutorials) {
+  // Group tutorials by category
   const byCategory = {};
-  for (const skill of skills) {
-    const cat = skill.category || "general";
+  for (const tutorial of tutorials) {
+    const cat = tutorial.category || "general";
     if (!byCategory[cat]) byCategory[cat] = [];
-    byCategory[cat].push(skill);
+    byCategory[cat].push(tutorial);
   }
 
-  const courses = [];
+  const series = [];
 
-  for (const [category, catSkills] of Object.entries(byCategory)) {
-    const template = COURSE_TEMPLATES[category];
+  for (const [category, catTutorials] of Object.entries(byCategory)) {
+    const template = SERIES_TEMPLATES[category];
     if (!template) continue; // skip categories without a template
 
-    courses.push({
+    series.push({
       id: template.id,
       title: template.title,
       description: template.description,
       icon: template.icon,
       color: template.color,
-      skills: catSkills.map((s, i) => ({ slug: s.slug, order: i + 1 })),
+      tutorials: catTutorials.map((s, i) => ({ slug: s.slug, order: i + 1 })),
     });
   }
 
-  return courses;
+  return series;
 }
 
 // ─── Main ──────────────────────────────────────────────────
 
 console.log("🔍 Scanning public/skills/ for tutorial files...");
 
-const skills = scanSkillsDir();
-const courses = generateCourses(skills);
+const tutorials = scanTutorialsDir();
+const series = generateSeries(tutorials);
 
 const manifest = {
   generatedAt: new Date().toISOString(),
-  count: skills.length,
-  skills,
-  courses,
+  count: tutorials.length,
+  tutorials,
+  series,
 };
 
 writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2), "utf-8");
 
-console.log(`✅ Generated manifest with ${skills.length} tutorials in ${courses.length} courses:`);
-for (const course of courses) {
-  console.log(`   ${course.icon} ${course.title} (${course.skills.length} skills)`);
+console.log(`✅ Generated manifest with ${tutorials.length} tutorials in ${series.length} series:`);
+for (const s of series) {
+  console.log(`   ${s.icon} ${s.title} (${s.tutorials.length} tutorials)`);
 }
-for (const s of skills) {
-  console.log(`   ${s.slug} (${s.difficulty}, ${s.category})`);
+for (const t of tutorials) {
+  console.log(`   ${t.slug} (${t.difficulty}, ${t.category})`);
 }
 console.log(`📝 Manifest written to: public/skills-manifest.json`);

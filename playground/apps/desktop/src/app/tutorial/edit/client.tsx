@@ -10,10 +10,10 @@ import {
   Upload,
 } from "lucide-react";
 import {
-  loadSkillContent,
-  saveSkillToWorkspace,
+  loadTutorialContent,
+  saveTutorialToWorkspace,
   parseFrontmatter,
-  generateSkillMDX,
+  generateTutorialMDX,
 } from "@/lib/tutorial-scanner";
 
 interface TutorialEditClientProps {
@@ -22,7 +22,7 @@ interface TutorialEditClientProps {
 
 export default function TutorialEditClient({ slug }: TutorialEditClientProps) {
   const router = useRouter();
-  const { discoveredSkills, currentWorkspace, workspaces, defaultWorkspaceId } = useAppStore();
+  const { discoveredTutorials, currentWorkspace, workspaces, defaultWorkspaceId } = useAppStore();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -36,12 +36,12 @@ export default function TutorialEditClient({ slug }: TutorialEditClientProps) {
   const workspacePath = currentWorkspace?.path ||
     (defaultWorkspaceId ? workspaces.find((w) => w.id === defaultWorkspaceId)?.path : undefined);
 
-  const skill = discoveredSkills.find((s) => s.slug === slug);
+  const skill = discoveredTutorials.find((s) => s.slug === slug);
 
   useEffect(() => {
     async function loadContent() {
       try {
-        const result = await loadSkillContent(slug, workspacePath);
+        const result = await loadTutorialContent(slug, workspacePath);
         if (result) {
           const { frontmatter, body: contentBody } = parseFrontmatter(result.content);
           setTitle(frontmatter.title || "");
@@ -71,7 +71,7 @@ export default function TutorialEditClient({ slug }: TutorialEditClientProps) {
     if (!workspacePath) return;
     setSaving(true);
     try {
-      const mdx = generateSkillMDX({
+      const mdx = generateTutorialMDX({
         title,
         description,
         difficulty,
@@ -80,7 +80,7 @@ export default function TutorialEditClient({ slug }: TutorialEditClientProps) {
         tags: skill?.tags || [],
         content: body,
       });
-      await saveSkillToWorkspace(workspacePath, slug, mdx);
+      await saveTutorialToWorkspace(workspacePath, slug, mdx);
       router.back();
     } catch (err) {
       console.error("Failed to save tutorial:", err);
@@ -132,7 +132,7 @@ export default function TutorialEditClient({ slug }: TutorialEditClientProps) {
           <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <ArrowLeft size={16} />
           </Button>
-          <h1 className="text-lg font-bold">编辑技能: {title || slug}</h1>
+          <h1 className="text-lg font-bold">编辑教程: {title || slug}</h1>
         </div>
         <div className="flex items-center gap-2">
           {workspacePath && (

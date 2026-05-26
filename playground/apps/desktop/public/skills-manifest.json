@@ -1,324 +1,38 @@
 {
-  "generatedAt": "2026-05-04T04:23:43.810Z",
-  "count": 14,
-  "skills": [
+  "generatedAt": "2026-05-26T10:42:29.540Z",
+  "count": 2,
+  "tutorials": [
     {
-      "slug": "openclaw-search-summarize",
-      "title": "AI 助手基本使用 — 搜索和总结",
-      "description": "学会使用 OpenClaw 的搜索和总结功能，让 AI 帮你高效获取和处理信息",
-      "difficulty": "beginner",
-      "duration": 15,
-      "category": "ai-assistant",
-      "tags": [
-        "openclaw",
-        "search",
-        "summarize",
-        "效率",
-        "基础"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/openclaw-search-summarize.mdx"
-    },
-    {
-      "slug": "openclaw-email-calendar",
-      "title": "AI 助手管理日常 — 邮件和日程",
-      "description": "配置 AI 助手管理你的邮箱和日历，实现邮件自动分类、回复和日程提醒",
-      "difficulty": "beginner",
-      "duration": 20,
-      "category": "ai-assistant",
-      "tags": [
-        "openclaw",
-        "email",
-        "calendar",
-        "效率",
-        "自动化"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/openclaw-email-calendar.mdx"
-    },
-    {
-      "slug": "openclaw-custom-skills",
-      "title": "AI 助手进阶 — 自定义技能",
-      "description": "学习开发和使用自定义 OpenClaw 技能，从技能市场安装到自定义配置",
-      "difficulty": "intermediate",
-      "duration": 25,
-      "category": "ai-assistant",
-      "tags": [
-        "openclaw",
-        "skills",
-        "开发",
-        "进阶"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/openclaw-custom-skills.mdx"
-    },
-    {
-      "slug": "openclaw-5min-experience",
-      "title": "认识 AI 助手 — OpenClaw 5分钟体验",
-      "description": "零基础了解 AI 助手是什么，用 AutoClaw 一键安装并完成第一次对话",
-      "difficulty": "beginner",
-      "duration": 10,
-      "category": "ai-assistant",
-      "tags": [
-        "openclaw",
-        "ai-assistant",
-        "入门",
-        "体验"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/openclaw-5min-experience.mdx"
-    },
-    {
-      "slug": "ai-cognitive-science",
-      "title": "AI 和大脑 — 认知科学入门",
-      "description": "从人类大脑的工作方式理解 AI 的设计灵感：注意力、记忆、推理，以及 AI 与大脑的关键区别",
-      "difficulty": "beginner",
-      "duration": 15,
-      "category": "ai-fundamentals",
-      "tags": [
-        "path2agi",
-        "认知科学",
-        "神经科学",
-        "入门"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/ai-cognitive-science.mdx"
-    },
-    {
-      "slug": "ai-math-basics-part1",
-      "title": "AI 必备数学（上）— 概率和线性代数",
-      "description": "用最通俗的方式理解 AI 背后最常用的两个数学工具：概率论和线性代数",
-      "difficulty": "beginner",
-      "duration": 20,
-      "category": "ai-fundamentals",
-      "tags": [
-        "path2agi",
-        "数学",
-        "概率",
-        "线性代数",
-        "入门"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/ai-math-basics-part1.mdx"
-    },
-    {
-      "slug": "ai-math-basics-part2",
-      "title": "AI 必备数学（下）— 微积分和信息论",
-      "description": "理解梯度下降和信息熵，掌握 AI 学习过程和信息处理的数学本质",
-      "difficulty": "beginner",
-      "duration": 20,
-      "category": "ai-fundamentals",
-      "tags": [
-        "path2agi",
-        "数学",
-        "微积分",
-        "信息论",
-        "入门"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/ai-math-basics-part2.mdx"
-    },
-    {
-      "slug": "ai-interdisciplinary-journey",
-      "title": "AI 的跨学科之旅",
-      "description": "用通俗语言理解 AI 为什么需要数学、心理学、语言学等多学科知识，找到你的学习路线",
-      "difficulty": "beginner",
-      "duration": 10,
-      "category": "ai-fundamentals",
-      "tags": [
-        "path2agi",
-        "入门",
-        "跨学科",
-        "学习路线"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/ai-interdisciplinary-journey.mdx"
-    },
-    {
-      "slug": "ai-cybernetics-complexity",
-      "title": "AI 系统工程 — 控制论与复杂系统",
-      "description": "从控制论和复杂系统科学的角度理解 AI：反馈机制、涌现行为、规模法则",
-      "difficulty": "intermediate",
-      "duration": 25,
-      "category": "ai-fundamentals",
-      "tags": [
-        "path2agi",
-        "控制论",
-        "复杂系统",
-        "进阶"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/ai-cybernetics-complexity.mdx"
-    },
-    {
-      "slug": "ai-causal-inference",
-      "title": "深入 AI 数学 — 因果推断与优化",
-      "description": "超越相关关系，理解因果关系和高级优化方法，掌握 AI 深层推理的数学基础",
-      "difficulty": "intermediate",
-      "duration": 25,
-      "category": "ai-fundamentals",
-      "tags": [
-        "path2agi",
-        "因果推断",
-        "优化",
-        "数学",
-        "进阶"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/ai-causal-inference.mdx"
-    },
-    {
-      "slug": "install-claude-code-glm5-deepseek-v4",
-      "title": "Claude Code + GLM 5.1 + DeepSeek V4 安装指南",
-      "description": "一次性安装 Claude Code，配置 GLM 5.1 和 DeepSeek V4 模型，使用 Coding Tool Helper 自动化管理",
-      "difficulty": "beginner",
-      "duration": 15,
-      "category": "dev-tools",
-      "tags": [
-        "claude-code",
-        "glm",
-        "deepseek",
-        "ai",
-        "setup",
-        "coding-helper"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/install-claude-code-glm5-deepseek-v4.mdx"
-    },
-    {
-      "slug": "install-git",
-      "title": "Git 安装指南",
-      "description": "安装 Git 版本控制工具并完成基础配置，支持一键安装脚本，Mac/Windows 双平台",
+      "slug": "01-source-attribution-example",
+      "title": "如何编写例子",
+      "description": "演示如何在教程中标注内容来源，包括外部文章、官方文档、书籍和视频",
       "difficulty": "beginner",
       "duration": 8,
-      "category": "dev-tools",
+      "category": "general",
       "tags": [
-        "git",
-        "版本控制",
-        "安装",
-        "命令行"
+        "来源",
+        "引用",
+        "规范",
+        "示例"
       ],
       "source": "builtin",
-      "localPath": "/skills/install-git.mdx"
+      "localPath": "/skills/01-source-attribution-example.mdx"
     },
     {
-      "slug": "install-kimi-cli",
-      "title": "Kimi Code CLI 安装指南",
-      "description": "安装 Kimi Code CLI，Moonshot AI 出品的终端 AI 编程助手，支持代码编辑、命令执行和网页搜索",
+      "slug": "00-complete-example",
+      "title": "如何编写教程",
+      "description": "展示 Innate Desktop 教程系统中所有可用的 Markdown 语法和 MDX 组件",
       "difficulty": "beginner",
       "duration": 10,
-      "category": "dev-tools",
+      "category": "general",
       "tags": [
-        "kimi-cli",
-        "moonshot-ai",
-        "ai",
-        "cli",
-        "coding-agent"
+        "示例",
+        "教程",
+        "参考"
       ],
       "source": "builtin",
-      "localPath": "/skills/install-kimi-cli.mdx"
-    },
-    {
-      "slug": "install-nodejs",
-      "title": "Node.js 安装指南",
-      "description": "使用 fnm 版本管理器安装 Node.js，支持多版本切换和一键安装脚本",
-      "difficulty": "beginner",
-      "duration": 10,
-      "category": "dev-tools",
-      "tags": [
-        "nodejs",
-        "fnm",
-        "javascript",
-        "版本管理",
-        "安装"
-      ],
-      "source": "builtin",
-      "localPath": "/skills/install-nodejs.mdx"
+      "localPath": "/skills/00-complete-example.mdx"
     }
   ],
-  "courses": [
-    {
-      "id": "ai-assistant-basics",
-      "title": "AI 助手入门系列",
-      "description": "从零开始学习使用 AI 助手，掌握搜索总结、邮件管理、日程安排和自定义技能",
-      "icon": "🤖",
-      "color": "#6366f1",
-      "skills": [
-        {
-          "slug": "openclaw-search-summarize",
-          "order": 1
-        },
-        {
-          "slug": "openclaw-email-calendar",
-          "order": 2
-        },
-        {
-          "slug": "openclaw-custom-skills",
-          "order": 3
-        },
-        {
-          "slug": "openclaw-5min-experience",
-          "order": 4
-        }
-      ]
-    },
-    {
-      "id": "ai-fundamentals",
-      "title": "AI 基础知识系列",
-      "description": "系统学习 AI 的跨学科基础：数学、认知科学、控制论和因果推断",
-      "icon": "🧠",
-      "color": "#8b5cf6",
-      "skills": [
-        {
-          "slug": "ai-cognitive-science",
-          "order": 1
-        },
-        {
-          "slug": "ai-math-basics-part1",
-          "order": 2
-        },
-        {
-          "slug": "ai-math-basics-part2",
-          "order": 3
-        },
-        {
-          "slug": "ai-interdisciplinary-journey",
-          "order": 4
-        },
-        {
-          "slug": "ai-cybernetics-complexity",
-          "order": 5
-        },
-        {
-          "slug": "ai-causal-inference",
-          "order": 6
-        }
-      ]
-    },
-    {
-      "id": "dev-tools-setup",
-      "title": "开发环境搭建系列",
-      "description": "一站式安装和配置 AI 编程工具：Claude Code、Node.js、Git、Kimi CLI",
-      "icon": "🛠️",
-      "color": "#f59e0b",
-      "skills": [
-        {
-          "slug": "install-claude-code-glm5-deepseek-v4",
-          "order": 1
-        },
-        {
-          "slug": "install-git",
-          "order": 2
-        },
-        {
-          "slug": "install-kimi-cli",
-          "order": 3
-        },
-        {
-          "slug": "install-nodejs",
-          "order": 4
-        }
-      ]
-    }
-  ]
+  "series": []
 }

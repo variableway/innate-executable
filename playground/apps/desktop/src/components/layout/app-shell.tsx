@@ -40,14 +40,13 @@ function AppShellContent({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider>
       <Suspense><AppSidebar /></Suspense>
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <SidebarInset className="overflow-hidden">
         {/* Menu Bar */}
         <MenuBar />
 
-        <div className="flex flex-1 overflow-hidden">
-          <SidebarInset className="flex-1 overflow-hidden">
-            <div className="flex-1 overflow-auto">{children}</div>
-          </SidebarInset>
+        {/* Main Content Area */}
+        <div className="flex flex-1 overflow-hidden min-h-0">
+          <div className="flex-1 overflow-auto min-h-0">{children}</div>
 
           {/* Terminal - Right Side */}
           {terminalVisible && terminalPosition === "right" && (
@@ -61,7 +60,7 @@ function AppShellContent({ children }: { children: ReactNode }) {
         )}
 
         <StatusBar />
-      </div>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
