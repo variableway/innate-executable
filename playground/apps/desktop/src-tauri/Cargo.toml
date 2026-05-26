@@ -3,7 +3,6 @@ name = "innate-playground"
 version = "0.1.0"
 description = "Innate Playground - AI Agent Learning Desktop App"
 authors = ["Innate"]
-license = "MIT"
 repository = ""
 edition = "2021"
 rust-version = "1.77.2"

@@ -8,18 +8,50 @@ This directory integrates the `innate-executable/playground` project into the `i
 apps/innate-executable/
 ├── README.md                          # This file
 ├── package.json                       # Integration entry scripts
+├── Taskfile.yml                       # Task runner (playground/desktop)
 ├── INTEGRATION.md                     # Integration strategy & target sharing
 ├── APPSHELL_COMPARISON.md             # AppShell comparison with current workbench
+├── docs/
+│   └── cargo-target-sharing.md        # Shared Cargo Target guide
 └── playground/                        # Original innate-executable project (unchanged)
     ├── package.json
     ├── pnpm-workspace.yaml
     ├── apps/desktop/                  # Next.js + Tauri desktop app
+    │   ├── Taskfile.yml               # Task commands for build/dev/start-client
+    │   ├── build.sh                   # Legacy bash build script
     │   ├── src-tauri/                 # Rust backend (shared target)
     │   └── src/                       # Next.js frontend
     └── packages/                      # ui, utils, tsconfig
 ```
 
 ## Quick Start
+
+### Using Task (recommended)
+
+```bash
+cd apps/innate-executable/playground/apps/desktop
+
+# List all tasks
+task --list-all
+
+# Start client (dev mode with hot reload)
+task start-client
+
+# Or equivalently
+task dev
+
+# Full build (frontend + Tauri + DMG)
+task default
+
+# Only frontend
+task build-frontend
+
+# Only Tauri (uses shared workspace target/)
+task build-tauri
+
+# Clean build artifacts
+task clean
+```
 
 ### Run within this monorepo (shared target)
 
@@ -64,6 +96,8 @@ target-dir = "target"
 ```
 
 Both Tauri projects share the same `target/` directory at the repository root, significantly reducing disk usage.
+
+See [docs/cargo-target-sharing.md](docs/cargo-target-sharing.md) for detailed architecture and FAQ.
 
 ## Important Notes
 

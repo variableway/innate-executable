@@ -1,0 +1,110 @@
+# https://taskfile.dev
+version: "3"
+
+vars:
+  APP_NAME: "Innate Playground"
+  APP_VERSION: "0.1.0"
+  DESKTOP_DIR: "{{.TASKFILE_DIR}}"
+  PROJECT_ROOT: "{{.TASKFILE_DIR}}/../.."
+  TAURI_DIR: "{{.DESKTOP_DIR}}/src-tauri"
+  DIST_DIR: "{{.TAURI_DIR}}/target/release"
+  BUNDLE_DIR: "{{.DIST_DIR}}/bundle"
+
+tasks:
+  default:
+    desc: Build everything (deps + frontend + Tauri + DMG)
+    cmds:
+      - task: check
+      - task: install
+      - task: build-frontend
+      - task: build-tauri
+      - task: dmg
+      - task: summary
+
+  check:
+    desc: Check prerequisites (Node, pnpm, Rust)
+    silent: true
+    cmds:
+      - |
+        command -v node >/dev/null 2>&1 || { echo "[ERROR] Node.js not found"; exit 1; }
+        command -v pnpm >/dev/null 2>&1 || { echo "[ERROR] pnpm not found"; exit 1; }
+        command -v rustc >/dev/null 2>&1 || { echo "[ERROR] Rust not found"; exit 1; }
+        command -v cargo >/dev/null 2>&1 || { echo "[ERROR] Cargo not found"; exit 1; }
+        echo "[OK] Node $(node -v), pnpm $(pnpm -v), rustc $(rustc --version)"
+
+  install:
+    desc: Install dependencies
+    dir: "{{.PROJECT_ROOT}}"
+    cmds:
+      - pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+
+  build-frontend:
+    desc: Build Next.js static export
+    dir: "{{.DESKTOP_DIR}}"
+    cmds:
+      - pnpm build
+
+  build-tauri:
+    desc: Build Tauri desktop app (uses shared workspace target/)
+    dir: "{{.DESKTOP_DIR}}"
+    cmds:
+      - pnpm tauri build
+
+  dev:
+    desc: Start Tauri dev server with hot reload
+    dir: "{{.DESKTOP_DIR}}"
+    cmds:
+      - pnpm tauri dev
+
+  start-client:
+    desc: Start the client app (dev mode, frontend + Tauri)
+    dir: "{{.DESKTOP_DIR}}"
+    cmds:
+      - pnpm tauri dev
+
+  dmg:
+    desc: Create DMG from existing .app bundle
+    dir: "{{.DESKTOP_DIR}}"
+    preconditions:
+      - test -d "{{.BUNDLE_DIR}}/macos/{{.APP_NAME}}.app"
+    cmds:
+      - |
+        mkdir -p "{{.BUNDLE_DIR}}/dmg"
+        hdiutil create \
+          -volname "{{.APP_NAME}}" \
+          -srcfolder "{{.BUNDLE_DIR}}/macos/{{.APP_NAME}}.app" \
+          -ov \
+          -format UDZO \
+          "{{.BUNDLE_DIR}}/dmg/{{.APP_NAME}}_{{.APP_VERSION}}_$(uname -m).dmg"
+
+  clean:
+    desc: Remove all build artifacts
+    cmds:
+      - rm -rf "{{.DESKTOP_DIR}}/out" "{{.DESKTOP_DIR}}/.next"
+
+  summary:
+    desc: Print build summary
+    silent: true
+    cmds:
+      - |
+        echo ""
+        echo "========================================="
+        echo "  Build Summary"
+        echo "========================================="
+        echo ""
+        APP_PATH="{{.BUNDLE_DIR}}/macos/{{.APP_NAME}}.app"
+        BINARY_PATH="{{.DIST_DIR}}/innate-playground"
+        DMG_PATH="{{.BUNDLE_DIR}}/dmg/{{.APP_NAME}}_{{.APP_VERSION}}_$(uname -m).dmg"
+        if [ -d "$APP_PATH" ]; then
+          echo "[OK] .app bundle: $APP_PATH ($(du -sh "$APP_PATH" | cut -f1))"
+        fi
+        if [ -f "$BINARY_PATH" ]; then
+          echo "[OK] Binary:      $BINARY_PATH ($(du -sh "$BINARY_PATH" | cut -f1))"
+        fi
+        if [ -f "$DMG_PATH" ]; then
+          echo "[OK] DMG:         $DMG_PATH ($(du -sh "$DMG_PATH" | cut -f1))"
+        fi
+        echo ""
+        echo "Open the app:"
+        echo "  open \"$APP_PATH\""
+        echo ""
