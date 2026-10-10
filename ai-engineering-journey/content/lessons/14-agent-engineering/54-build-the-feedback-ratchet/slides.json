@@ -1,0 +1,110 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Build a Feedback Ratchet with Ownership and Retirement\n\n> Shipping closes one build loop and opens the learning loop. Evidence must change the system or it becomes telemetry nobody owns.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lessons 46 and 53\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Turn incidents, evaluations, user behavior, and corrections into owned actions.\n- Route each signal to context, evaluation, policy, runtime, or backlog.\n- Prioritize recurrence by severity and frequency.\n- Give every control a retirement condition.",
+    "keyPoints": [
+      "Turn incidents, evaluations, user behavior, and corrections into owned actions.",
+      "Route each signal to context, evaluation, policy, runtime, or backlog.",
+      "Prioritize recurrence by severity and frequency.",
+      "Give every control a retirement condition."
+    ],
+    "commands": []
+  },
+  {
+    "id": "feedback-is-infrastructure",
+    "title": "Feedback Is Infrastructure",
+    "bodyMarkdown": "A team can collect traces, evaluations, support tickets, and incident logs without learning from any of them. The missing mechanism is promotion: a defined path from observation to a durable change with an owner and proof.\n\nThe loop is:\n\n1. observe a concrete signal;\n2. connect it to an outcome, constraint, or assumption;\n3. identify the earliest system layer that owns the cause;\n4. create a bounded change;\n5. verify that recurrence becomes less likely;\n6. review whether the control should remain.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "route-to-the-owning-layer",
+    "title": "Route to the Owning Layer",
+    "bodyMarkdown": "| Signal | Destination |\n|---|---|\n| False positive, regression, wrong result | Evaluation or test |\n| Missing context, duplicate work, stale fact | Context source or retrieval route |\n| Unsafe action or authority gap | Policy or permission boundary |\n| Timeout, retry storm, unavailable dependency | Runtime control |\n| New product need or unresolved tradeoff | Shaped backlog item |\n\nFix the cause at the earliest effective layer. Do not add another prompt paragraph when a test or permission can make the failure impossible.\n\n```mermaid\nflowchart LR\n  S[Signal] --> O[Outcome or constraint]\n  O --> R[Root cause]\n  R --> D[Owning layer]\n  D --> C[Durable control]\n  C --> V[Verification]\n  V --> N[Next run]\n  N --> S\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ownership-is-part-of-the-control",
+    "title": "Ownership Is Part of the Control",
+    "bodyMarkdown": "Every ratchet action needs:\n\n- one owner;\n- a priority based on consequence and recurrence;\n- the artifact to change;\n- the verification that proves the change;\n- a review or expiry window;\n- a retirement condition.\n\nAn unowned improvement is an observation with better formatting.",
+    "keyPoints": [
+      "one owner;",
+      "a priority based on consequence and recurrence;",
+      "the artifact to change;",
+      "the verification that proves the change;",
+      "a review or expiry window;",
+      "a retirement condition."
+    ],
+    "commands": []
+  },
+  {
+    "id": "retire-stale-controls",
+    "title": "Retire Stale Controls",
+    "bodyMarkdown": "Feedback systems accumulate policy. That policy can become contradictory and expensive. Review controls when:\n\n- architecture or workflow changes;\n- a lower-level invariant replaces a higher-level instruction;\n- the protected failure has not appeared across the chosen window;\n- the control blocks legitimate work more often than it prevents harm.\n\nRetirement also needs evidence. Do not delete a control because it feels old.",
+    "keyPoints": [
+      "architecture or workflow changes;",
+      "a lower-level invariant replaces a higher-level instruction;",
+      "the protected failure has not appeared across the chosen window;",
+      "the control blocks legitimate work more often than it prevents harm."
+    ],
+    "commands": []
+  },
+  {
+    "id": "connect-build-and-coding-agent-feedback",
+    "title": "Connect Build and Coding-Agent Feedback",
+    "bodyMarkdown": "The same ratchet serves both tracks:\n\n- Product evidence changes the outcome frame, assumptions, slice, or measurement plan.\n- Coding-agent corrections change tests, context, scope, automation, or handoff.\n- Incidents can change both the product boundary and the agent workbench.\n\nThis is why shaping the build is not a phase that ends before coding. It continues through every accepted change.",
+    "keyPoints": [
+      "Product evidence changes the outcome frame, assumptions, slice, or measurement plan.",
+      "Coding-agent corrections change tests, context, scope, automation, or handoff.",
+      "Incidents can change both the product boundary and the agent workbench."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab classifies signals, creates owned ratchet actions, prioritizes them, and writes `outputs/feedback-backlog.json`.\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nAdd a runtime timeout signal and confirm that it routes to the runtime rather than the general backlog.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Turn one incident and one user complaint into ratchet actions.\n2. Name the earliest layer that can prevent each recurrence.\n3. Add verification commands or observations to the lab output.\n4. Define a retirement condition for a policy rule.\n5. Trace one accepted correction back into the next task frame.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Basili, Caldiera, and Rombach, The Goal Question Metric Approach](https://www.cs.toronto.edu/~sme/CSC444F/handouts/GQM-paper.pdf), for organizational learning through goal-oriented measurement.\n- [Fagerholm et al., Building Blocks for Continuous Experimentation](https://doi.org/10.1145/2601248.2601276), for the technical and organizational loop that connects evidence to continued product development.\n- [Nuseibeh and Easterbrook, Requirements Engineering: A Roadmap](https://www.cs.toronto.edu/~sme/papers/2000/ICSE2000.pdf), for treating requirements as evolving through the system lifecycle.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/feedback-backlog.json`. It is the closing artifact of the Product Judgment and Delivery path and the input to the next outcome frame.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

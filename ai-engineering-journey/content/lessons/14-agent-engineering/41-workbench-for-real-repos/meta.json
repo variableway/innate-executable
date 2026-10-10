@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/41-workbench-for-real-repos",
+  "slug": "41-workbench-for-real-repos",
+  "phase": "14-agent-engineering",
+  "order": 41,
+  "phaseOrder": 14,
+  "title": {
+    "en": "The Workbench on a Real Repo",
+    "zh": ""
+  },
+  "hook": "Eleven lessons of surfaces are worth nothing if they do not survive contact with a real codebase. This lesson runs the same task twice on a small sample app: prompt-only versus workbench-guided. The numbers do the arguing.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phases 14 · 32 to 14 · 40"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

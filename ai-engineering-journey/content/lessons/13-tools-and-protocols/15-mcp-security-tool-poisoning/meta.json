@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/15-mcp-security-tool-poisoning",
+  "slug": "15-mcp-security-tool-poisoning",
+  "phase": "13-tools-and-protocols",
+  "order": 15,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Security: Poisoned Metadata, Routing, and MRTR State",
+    "zh": ""
+  },
+  "hook": "Stateless does not mean trustless. It means every request exposes the evidence a server and gateway need to validate the call independently.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 · 07 (MCP server)",
+    "Phase 13 · 08 (MCP client)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

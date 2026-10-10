@@ -1,0 +1,25 @@
+{
+  "id": "19-capstone-projects/13-mcp-server-with-registry",
+  "slug": "13-mcp-server-with-registry",
+  "phase": "19-capstone-projects",
+  "order": 13,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 13: Stateless MCP Server with Registry and Governance",
+    "zh": ""
+  },
+  "hook": "Production MCP is not one server process. It is a chain of contracts: publishable metadata, live discovery, a stateless request envelope, authorization, policy, audit, and deployment evidence.",
+  "type": "Capstone",
+  "languages": [
+    "Python and TypeScript reference models; any production language"
+  ],
+  "prerequisites": [
+    "Phase 11",
+    "Phase 13",
+    "Phase 14",
+    "Phase 17",
+    "and Phase 18"
+  ],
+  "timeMinutes": 25,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/24-coreference-resolution",
+  "slug": "24-coreference-resolution",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 24,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Coreference Resolution",
+    "zh": ""
+  },
+  "hook": "\"She called him. He did not answer. The doctor was at lunch.\" Three references to two people and nobody is named. Coreference resolution figures out who is who.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 06 (NER)",
+    "Phase 5 · 07 (POS & Parsing)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

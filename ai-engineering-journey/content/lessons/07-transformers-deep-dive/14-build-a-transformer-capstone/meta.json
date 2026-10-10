@@ -1,0 +1,21 @@
+{
+  "id": "07-transformers-deep-dive/14-build-a-transformer-capstone",
+  "slug": "14-build-a-transformer-capstone",
+  "phase": "07-transformers-deep-dive",
+  "order": 14,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Build a Transformer from Scratch — The Capstone",
+    "zh": ""
+  },
+  "hook": "Thirteen lessons. One model. No shortcuts.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 01 through 13. Don't skip."
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

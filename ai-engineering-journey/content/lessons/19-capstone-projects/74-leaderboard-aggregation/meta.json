@@ -1,0 +1,24 @@
+{
+  "id": "19-capstone-projects/74-leaderboard-aggregation",
+  "slug": "74-leaderboard-aggregation",
+  "phase": "19-capstone-projects",
+  "order": 74,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Leaderboard Aggregation",
+    "zh": ""
+  },
+  "hook": "Per-task scores are easy. Per-model rankings across heterogeneous tasks are harder. Statistical significance on a thousand-prediction leaderboard is the part everyone skips. This lesson does not skip it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track B foundations",
+    "lessons 70",
+    "71",
+    "73"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

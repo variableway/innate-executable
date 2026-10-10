@@ -1,0 +1,23 @@
+{
+  "id": "10-llms-from-scratch/34-gradient-checkpointing",
+  "slug": "34-gradient-checkpointing",
+  "phase": "10-llms-from-scratch",
+  "order": 34,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Gradient Checkpointing and Activation Recomputation",
+    "zh": ""
+  },
+  "hook": "Backprop keeps every intermediate activation. At 70B parameters and 128K context that is 3 TB of activations per rank. Checkpointing trades FLOPs for memory: recompute instead of save. The question is which segments to drop, and the answer is not \"all of them.\"",
+  "type": "Build",
+  "languages": [
+    "Python (with numpy",
+    "optional torch)"
+  ],
+  "prerequisites": [
+    "Phase 10 Lesson 04 (Pre-Training Mini-GPT)",
+    "Phase 10 Lesson 05 (Scaling & Distributed)"
+  ],
+  "timeMinutes": 70,
+  "needsTranslation": true
+}

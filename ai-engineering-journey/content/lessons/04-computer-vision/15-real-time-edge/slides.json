@@ -1,0 +1,101 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Real-Time Vision — Edge Deployment\n\n> Edge inference is the discipline of getting a 90-accuracy model to run at 30 fps on a device with 2 GB of RAM. Every percentage point of accuracy is traded against milliseconds of latency.\n\n**Type:** Learn + Build\n**Languages:** Python\n**Prerequisites:** Phase 4 Lesson 04 (Image Classification), Phase 10 Lesson 11 (Quantization)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Measure inference latency, peak memory, and throughput for any PyTorch model, and read the FLOPs / params / latency trade-off\n- Quantise a vision model to INT8 using PyTorch's post-training quantisation and verify accuracy loss < 1%\n- Export to ONNX and compile with ONNX Runtime or TensorRT; name the three most common export failures and their fixes\n- Explain when to pick MobileNetV3, EfficientNet-Lite, ConvNeXt-Tiny, or MobileViT for an edge constraint",
+    "keyPoints": [
+      "Measure inference latency, peak memory, and throughput for any PyTorch model, and read the FLOPs / params / latency trade-off",
+      "Quantise a vision model to INT8 using PyTorch's post-training quantisation and verify accuracy loss < 1%",
+      "Export to ONNX and compile with ONNX Runtime or TensorRT; name the three most common export failures and their fixes",
+      "Explain when to pick MobileNetV3, EfficientNet-Lite, ConvNeXt-Tiny, or MobileViT for an edge constraint"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "A training-time vision model is a floating-point monster. 100M parameters, 10 GFLOPs per forward pass, 2 GB of VRAM. None of that fits on a phone, a car's infotainment unit, an industrial camera, or a drone. Shipping a vision system means fitting the same predictions into a budget that is 100x smaller.\n\nThree knobs do most of the work: model choice (a smaller architecture with the same recipe), quantisation (INT8 instead of FP32), and the inference runtime (ONNX Runtime, TensorRT, Core ML, TFLite). Getting them right is the difference between a demo that runs on a workstation and a product that ships on a $30 camera module.\n\nThis lesson sets up the measurement discipline first (you cannot optimise what you cannot measure), then walks the three knobs. The goal is not to learn every edge runtime but to know what levers exist and how to verify each one does what you think.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### The three budgets\n\n```mermaid\nflowchart LR\n    M[\"Model\"] --> LAT[\"Latency<br/>ms per image\"]\n    M --> MEM[\"Memory<br/>peak MB\"]\n    M --> PWR[\"Power<br/>mJ per inference\"]\n\n    LAT --> SHIP[\"Ship / no-ship<br/>decision\"]\n    MEM --> SHIP\n    PWR --> SHIP\n\n    style LAT fill:#fecaca,stroke:#dc2626\n    style MEM fill:#fef3c7,stroke:#d97706\n    style PWR fill:#dbeafe,stroke:#2563eb\n```\n\n- **Latency**: p50, p95, p99. Averaging only p50 hides tail behaviour that matters for real-time systems.\n- **Peak memory**: the maximum the device ever sees, not the steady-state average. Matters because OOMs are fatal on embedded targets.\n- **Power / energy**: millijoules per inference on a battery-powered device. Often proxied by CPU/GPU utilisation * time.\n\nA table of (model, latency, memory, accuracy) is what an edge decision is made from. Every cell is measured on the target device, not the workstation.\n\n### Measurement discipline\n\nThree rules that every edge profile should follow:\n\n1. **Warm up** the model with 5-10 dummy forward passes before measuring. Cold caches and JIT compilation produce unrepresentative first numbers.\n2. **Synchronise** GPU workloads with `torch.cuda.synchronize()` before and after the timed block. Without this you measure kernel dispatch, not kernel execution.\n3. **Fix input sizes** to the production resolution. Latency on 224x224 is not latency on 512x512.\n\n### FLOPs as a proxy\n\nFLOPs (floating-point operations per inference) is a cheap, device-independent proxy for latency. Useful for architecture comparison, misleading as absolute wall-clock. A model with 10% more FLOPs can be 2x faster in practice because it uses hardware-friendly ops (depthwise convs compile well, large 7x7 convs do not).\n\nRule: use FLOPs for architecture search, use on-device latency for deployment decisions.\n\n### Quantisation in one paragraph\n\nReplace FP32 weights and activations with INT8. Model size drops 4x, memory bandwidth drops 4x, compute drops 2-4x on hardware that has INT8 kernels (every modern mobile SoC, every NVIDIA GPU with Tensor Cores). Accuracy loss on vision tasks is typically 0.1-1 percentage points with post-training static quantisation.\n\nTypes:\n\n- **Dynamic** — quantise weights to INT8, activations computed in FP. Easy, small speedup.\n- **Static (post-training)** — quantise weights + calibrate activation ranges on a small calibration set. Much faster than dynamic.\n- **Quantisation-aware training (QAT)** — simulate quantisation during training so the model learns around it. Best accuracy, needs labelled data.\n\nFor vision, post-training static quantisation gives 95% of the benefit with 5% of the effort. Use QAT only when accuracy loss from PTQ is unacceptable.\n\n### Pruning and distillation\n\n- **Pruning** — remove unimportant weights (magnitude-based) or channels (structured). Works well on overparameterised models; less useful on already-compact architectures.\n- **Distillation** — train a small student to mimic a large teacher's logits. Often recovers most of the accuracy lost by shrinking the model. Standard for production edge models.\n\n### The inference runtimes\n\n- **PyTorch eager** — slow, not for deployment. Use for development only.\n- **TorchScript** — legacy. Superseded by `torch.compile` and ONNX export.\n- **ONNX Runtime** — the neutral runtime. CPU, CUDA, CoreML, TensorRT, OpenVINO all have ONNX providers. Start here.\n- **TensorRT** — NVIDIA's compiler. Best latency on NVIDIA GPUs (workstation and Jetson). Integrates with ONNX Runtime or standalone.\n- **Core ML** — Apple's runtime for iOS/macOS. Needs `.mlmodel` or `.mlpackage`.\n- **TFLite** — Google's runtime for Android/ARM. Needs `.tflite`.\n- **OpenVINO** — Intel's runtime for CPU/VPU. Needs `.xml` + `.bin`.\n\nIn practice: export PyTorch -> ONNX -> pick the runtime for the target. ONNX is the lingua franca.\n\n### Edge architecture picker\n\n| Budget | Model | Why |\n|--------|-------|-----|\n| < 3M params | MobileNetV3-Small | Compiles everywhere, good baseline |\n| 3-10M | EfficientNet-Lite-B0 | Best accuracy per param on TFLite |\n| 10-20M | ConvNeXt-Tiny | Best accuracy-per-param, CPU-friendly |\n| 20-30M | MobileViT-S or EfficientViT | Transformer with ImageNet accuracy |\n| 30-80M | Swin-V2-Tiny | If stack supports window attention |\n\nQuantise all of these to INT8 unless you have a specific reason not to.\n\n```figure\ncnn-param-count\n```",
+    "keyPoints": [
+      "Latency: p50, p95, p99. Averaging only p50 hides tail behaviour that matters for real-time systems.",
+      "Peak memory: the maximum the device ever sees, not the steady-state average. Matters because OOMs are fatal on embedded targets.",
+      "Power / energy: millijoules per inference on a battery-powered device. Often proxied by CPU/GPU utilisation * time.",
+      "Warm up",
+      "Synchronise",
+      "Fix input sizes"
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: Measure latency correctly\n\n```python\nimport time\nimport torch\n\ndef measure_latency(model, input_shape, device=\"cpu\", warmup=10, iters=50):\n    model = model.to(device).eval()\n    x = torch.randn(input_shape, device=device)\n    with torch.no_grad():\n        for _ in range(warmup):\n            model(x)\n        if device == \"cuda\":\n            torch.cuda.synchronize()\n        times = []\n        for _ in range(iters):\n            if device == \"cuda\":\n                torch.cuda.synchronize()\n            t0 = time.perf_counter()\n            model(x)\n            if device == \"cuda\":\n                torch.cuda.synchronize()\n            times.append((time.perf_counter() - t0) * 1000)\n    times.sort()\n    return {\n        \"p50_ms\": times[len(times) // 2],\n        \"p95_ms\": times[int(len(times) * 0.95)],\n        \"p99_ms\": times[int(len(times) * 0.99)],\n        \"mean_ms\": sum(times) / len(times),\n    }\n```\n\nWarm up, synchronise, use `time.perf_counter()`. Report percentiles, not just mean.\n\n### Step 2: Parameter and FLOP counts\n\n```python\ndef parameter_count(model):\n    return sum(p.numel() for p in model.parameters())\n\ndef flops_estimate(model, input_shape):\n    \"\"\"\n    Rough FLOP count for a conv/linear-only model. For production use `fvcore` or `ptflops`.\n    \"\"\"\n    total = 0\n    def conv_hook(m, inp, out):\n        nonlocal total\n        c_out, c_in, kh, kw = m.weight.shape\n        h, w = out.shape[-2:]\n        total += 2 * c_in * c_out * kh * kw * h * w\n    def linear_hook(m, inp, out):\n        nonlocal total\n        total += 2 * m.in_features * m.out_features\n    hooks = []\n    for m in model.modules():\n        if isinstance(m, torch.nn.Conv2d):\n            hooks.append(m.register_forward_hook(conv_hook))\n        elif isinstance(m, torch.nn.Linear):\n            hooks.append(m.register_forward_hook(linear_hook))\n    model.eval()\n    with torch.no_grad():\n        model(torch.randn(input_shape))\n    for h in hooks:\n        h.remove()\n    return total\n```\n\nFor real projects use `fvcore.nn.FlopCountAnalysis` or `ptflops`; they handle every module type correctly.\n\n### Step 3: Post-training static quantisation\n\n```python\ndef quantise_ptq(model, calibration_loader, backend=\"x86\"):\n    import torch.ao.quantization as tq\n    model = model.eval().cpu()\n    model.qconfig = tq.get_default_qconfig(backend)\n    tq.prepare(model, inplace=True)\n    with torch.no_grad():\n        for x, _ in calibration_loader:\n            model(x)\n    tq.convert(model, inplace=True)\n    return model\n```\n\nThree steps: configure, prepare (insert observers), calibrate with real data, convert (fuse + quantise). Requires the model to be fused (`Conv -> BN -> ReLU` -> `ConvBnReLU`), which `torch.ao.quantization.fuse_modules` handles.\n\n### Step 4: Export to ONNX\n\n```python\ndef export_onnx(model, sample_input, path=\"model.onnx\"):\n    model = model.eval()\n    torch.onnx.export(\n        model,\n        sample_input,\n        path,\n        input_names=[\"input\"],\n        output_names=[\"output\"],\n        dynamic_axes={\"input\": {0: \"batch\"}, \"output\": {0: \"batch\"}},\n        opset_version=17,\n    )\n    return path\n```\n\n`opset_version=17` is the safe default in 2026. `dynamic_axes` lets you run the ONNX model with arbitrary batch size.\n\n### Step 5: Benchmark and compare regimes\n\n```python\nimport torch.nn as nn\nfrom torchvision.models import mobilenet_v3_small\n\ndef compare_regimes():\n    model = mobilenet_v3_small(weights=None, num_classes=10)\n    params = parameter_count(model)\n    flops = flops_estimate(model, (1, 3, 224, 224))\n    lat_fp32 = measure_latency(model, (1, 3, 224, 224), device=\"cpu\")\n    print(f\"FP32 MobileNetV3-Small: {params:,} params  {flops/1e9:.2f} GFLOPs  \"\n          f\"p50={lat_fp32['p50_ms']:.2f}ms  p95={lat_fp32['p95_ms']:.2f}ms\")\n```\n\nRun the same function for `resnet50`, `efficientnet_v2_s`, and `convnext_tiny` and you have the comparison table you need for a deployment decision.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Production stacks converge on one of three paths:\n\n- **Web / serverless**: PyTorch -> ONNX -> ONNX Runtime (CPU or CUDA provider). Easiest, good enough for most.\n- **NVIDIA edge (Jetson, GPU server)**: PyTorch -> ONNX -> TensorRT. Best latency, biggest engineering effort.\n- **Mobile**: PyTorch -> ONNX -> Core ML (iOS) or TFLite (Android). Quantise before export.\n\nFor measurement, `torch-tb-profiler`, `nvprof` / `nsys`, and Instruments on macOS give layer-by-layer breakdowns. `benchmark_app` (OpenVINO) and `trtexec` (TensorRT) give standalone CLI numbers.",
+    "keyPoints": [
+      "Web / serverless: PyTorch -> ONNX -> ONNX Runtime (CPU or CUDA provider). Easiest, good enough for most.",
+      "NVIDIA edge (Jetson, GPU server): PyTorch -> ONNX -> TensorRT. Best latency, biggest engineering effort.",
+      "Mobile: PyTorch -> ONNX -> Core ML (iOS) or TFLite (Android). Quantise before export."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces:\n\n- `outputs/prompt-edge-deployment-planner.md` — a prompt that picks backbone, quantisation strategy, and runtime given target device and latency SLA.\n- `outputs/skill-latency-profiler.md` — a skill that writes a complete latency-benchmarking script with warmup, synchronisation, percentiles, and memory tracking.",
+    "keyPoints": [
+      "`outputs/prompt-edge-deployment-planner.md` — a prompt that picks backbone, quantisation strategy, and runtime given target device and latency SLA."
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **(Easy)** Measure p50 latency for `resnet18`, `mobilenet_v3_small`, `efficientnet_v2_s`, and `convnext_tiny` at 224x224 on CPU. Report the table and identify which architecture has the best accuracy-per-ms.\n2. **(Medium)** Apply post-training static quantisation to `mobilenet_v3_small`. Report FP32 vs INT8 latency and accuracy loss on a held-out subset of CIFAR-10 or similar.\n3. **(Hard)** Export `convnext_tiny` to ONNX, run it through `onnxruntime` with the `CPUExecutionProvider`, and compare latency to the PyTorch eager baseline. Identify the first layer where ONNX Runtime is faster and explain why.",
+    "keyPoints": [
+      "(Medium)"
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|----------------------|\n| Latency | \"How fast\" | Time from input to output; p50/p95/p99 percentiles, not mean |\n| FLOPs | \"Model size\" | Floating-point ops per forward pass; rough proxy for compute cost |\n| INT8 quantisation | \"8-bit\" | Replace FP32 weights/activations with 8-bit integers; ~4x smaller, 2-4x faster |\n| PTQ | \"Post-training quantisation\" | Quantise a trained model without retraining; easy, usually enough |\n| QAT | \"Quantisation-aware training\" | Simulate quantisation during training; best accuracy, requires labelled data |\n| ONNX | \"The neutral format\" | Model exchange format supported by every mainstream inference runtime |\n| TensorRT | \"NVIDIA compiler\" | Compiles ONNX into an optimised engine for NVIDIA GPUs |\n| Distillation | \"Teacher -> student\" | Train a small model to mimic a big model's logits; recovers most lost accuracy |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [EfficientNet (Tan & Le, 2019)](https://arxiv.org/abs/1905.11946) — compound scaling for efficient architectures\n- [MobileNetV3 (Howard et al., 2019)](https://arxiv.org/abs/1905.02244) — mobile-first architecture with h-swish and squeeze-excite\n- [A Practical Guide to TensorRT Optimization (NVIDIA)](https://developer.nvidia.com/blog/accelerating-model-inference-with-tensorrt-tips-and-best-practices-for-pytorch-users/) — how to actually get the throughput numbers in the paper\n- [ONNX Runtime docs](https://onnxruntime.ai/docs/) — quantisation, graph optimisation, provider selection",
+    "keyPoints": [
+      "[EfficientNet (Tan & Le, 2019)](https://arxiv.org/abs/1905.11946) — compound scaling for efficient architectures",
+      "[MobileNetV3 (Howard et al., 2019)](https://arxiv.org/abs/1905.02244) — mobile-first architecture with h-swish and squeeze-excite",
+      "[ONNX Runtime docs](https://onnxruntime.ai/docs/) — quantisation, graph optimisation, provider selection"
+    ],
+    "commands": []
+  }
+]

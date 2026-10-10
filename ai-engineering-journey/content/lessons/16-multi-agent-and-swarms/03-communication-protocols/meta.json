@@ -1,0 +1,22 @@
+{
+  "id": "16-multi-agent-and-swarms/03-communication-protocols",
+  "slug": "03-communication-protocols",
+  "phase": "16-multi-agent-and-swarms",
+  "order": 3,
+  "phaseOrder": 16,
+  "title": {
+    "en": "Communication Protocols",
+    "zh": ""
+  },
+  "hook": "Agents that can't speak the same language aren't a team. They're strangers shouting into the void.",
+  "type": "Build",
+  "languages": [
+    "TypeScript"
+  ],
+  "prerequisites": [
+    "Phase 14 (Agent Engineering)",
+    "Lesson 16.01 (Why Multi-Agent)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

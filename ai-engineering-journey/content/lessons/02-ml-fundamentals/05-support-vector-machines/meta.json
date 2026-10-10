@@ -1,0 +1,21 @@
+{
+  "id": "02-ml-fundamentals/05-support-vector-machines",
+  "slug": "05-support-vector-machines",
+  "phase": "02-ml-fundamentals",
+  "order": 5,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Support Vector Machines",
+    "zh": ""
+  },
+  "hook": "Find the widest street between two classes. That is the entire idea.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1 (Lessons 08 Optimization",
+    "14 Norms and Distances",
+    "18 Convex Optimization)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

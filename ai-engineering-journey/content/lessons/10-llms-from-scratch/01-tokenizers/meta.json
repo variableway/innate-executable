@@ -1,0 +1,21 @@
+{
+  "id": "10-llms-from-scratch/01-tokenizers",
+  "slug": "01-tokenizers",
+  "phase": "10-llms-from-scratch",
+  "order": 1,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Tokenizers: BPE, WordPiece, SentencePiece",
+    "zh": ""
+  },
+  "hook": "Your LLM does not read English. It reads integers. The tokenizer decides whether those integers carry meaning or waste it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 05 (NLP Foundations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

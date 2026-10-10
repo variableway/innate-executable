@@ -1,0 +1,25 @@
+{
+  "id": "06-speech-and-audio/12-voice-assistant-pipeline",
+  "slug": "12-voice-assistant-pipeline",
+  "phase": "06-speech-and-audio",
+  "order": 12,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Build a Voice Assistant Pipeline — The Phase 6 Capstone",
+    "zh": ""
+  },
+  "hook": "Everything from lessons 01-11, stitched together. Build a voice assistant that listens, reasons, and talks back. In 2026 that is a solved engineering problem, not a research problem — but the integration details decide whether it ships.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 04",
+    "05",
+    "06",
+    "07",
+    "11; Phase 11 · 09 (Function Calling); Phase 14 · 01 (Agent Loop)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

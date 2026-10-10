@@ -1,0 +1,27 @@
+{
+  "id": "19-capstone-projects/06-devops-troubleshooting-agent",
+  "slug": "06-devops-troubleshooting-agent",
+  "phase": "19-capstone-projects",
+  "order": 6,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 06 — DevOps Troubleshooting Agent for Kubernetes",
+    "zh": ""
+  },
+  "hook": "AWS's DevOps Agent went GA, Resolve AI published its K8s playbooks, NeuBird demoed semantic monitoring, and Metoro tied AI SRE to per-service SLOs. The production shape is settled: an alert webhook fires, an agent reads telemetry, walks a graph of K8s objects, ranks root-cause hypotheses, and posts a Slack brief with approval buttons. Read-only by default. Every remediation gated by a human. This capstone is that agent, evaluated on 20 synthetic incidents and compared against AWS's Agent on three shared cases.",
+  "type": "Capstone",
+  "languages": [
+    "Python (agent)",
+    "TypeScript (Slack integration)"
+  ],
+  "prerequisites": [
+    "Phase 11 (LLM engineering)",
+    "Phase 13 (tools and MCP)",
+    "Phase 14 (agents)",
+    "Phase 15 (autonomous)",
+    "Phase 17 (infrastructure)",
+    "Phase 18 (safety)"
+  ],
+  "timeMinutes": 30,
+  "needsTranslation": true
+}

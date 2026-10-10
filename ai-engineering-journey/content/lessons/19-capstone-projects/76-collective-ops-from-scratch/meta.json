@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/76-collective-ops-from-scratch",
+  "slug": "76-collective-ops-from-scratch",
+  "phase": "19-capstone-projects",
+  "order": 76,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Collective Ops From Scratch",
+    "zh": ""
+  },
+  "hook": "The four collective operations that hold distributed training together are allreduce, broadcast, allgather, and reduce_scatter. Every other primitive a training framework offers is a wrapper around these. Build them once over a `multiprocessing.Queue` mesh, verify them against a reference implementation, and the rest of the track becomes plumbing.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track C lessons 42-49"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

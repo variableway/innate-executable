@@ -1,0 +1,22 @@
+{
+  "id": "08-generative-ai/09-inpainting-outpainting-editing",
+  "slug": "09-inpainting-outpainting-editing",
+  "phase": "08-generative-ai",
+  "order": 9,
+  "phaseOrder": 8,
+  "title": {
+    "en": "Inpainting, Outpainting & Image Editing",
+    "zh": ""
+  },
+  "hook": "Text-to-image makes new things. Inpainting fixes old ones. In production, 70% of billable image work is editing — swap a background, remove a logo, extend the canvas, regenerate a hand. Inpainting is where diffusion earns its keep.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 8 · 07 (Latent Diffusion)",
+    "Phase 8 · 08 (ControlNet & LoRA)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

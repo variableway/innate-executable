@@ -1,0 +1,15 @@
+{
+  "name": "ai-agents-atlas",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:atlas": "pnpm --filter @atlas/web dev",
+    "dev:academy": "pnpm --filter @atlas/academy dev",
+    "build": "pnpm -r build",
+    "build:web": "pnpm --filter @atlas/web build",
+    "build:academy": "pnpm --filter @atlas/academy build",
+    "check": "pnpm -r check"
+  }
+}

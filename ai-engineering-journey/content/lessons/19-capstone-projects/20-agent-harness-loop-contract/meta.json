@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/20-agent-harness-loop-contract",
+  "slug": "20-agent-harness-loop-contract",
+  "phase": "19-capstone-projects",
+  "order": 20,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Agent Harness Loop Contract",
+    "zh": ""
+  },
+  "hook": "The harness is the agent. The model is a coprocessor. This lesson freezes the loop contract you can wire any model into.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 lessons 01-07",
+    "Phase 14 lesson 01"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

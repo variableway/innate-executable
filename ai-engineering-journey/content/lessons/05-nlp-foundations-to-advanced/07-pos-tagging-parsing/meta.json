@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/07-pos-tagging-parsing",
+  "slug": "07-pos-tagging-parsing",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 7,
+  "phaseOrder": 5,
+  "title": {
+    "en": "POS Tagging and Syntactic Parsing",
+    "zh": ""
+  },
+  "hook": "Grammar was unfashionable for a while. Then every LLM pipeline needed to validate structured extraction, and it came back.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 01 (Text Processing)",
+    "Phase 2 · 14 (Naive Bayes)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

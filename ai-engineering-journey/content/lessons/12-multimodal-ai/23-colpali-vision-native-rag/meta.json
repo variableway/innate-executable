@@ -1,0 +1,23 @@
+{
+  "id": "12-multimodal-ai/23-colpali-vision-native-rag",
+  "slug": "23-colpali-vision-native-rag",
+  "phase": "12-multimodal-ai",
+  "order": 23,
+  "phaseOrder": 12,
+  "title": {
+    "en": "ColPali and Vision-Native Document RAG",
+    "zh": ""
+  },
+  "hook": "Traditional RAG parses PDFs into text, splits into chunks, embeds chunks, stores vectors. Every step loses signal: OCR drops chart data, chunking breaks table rows, text embeddings ignore figures. ColPali (Faysse et al., July 2024) asked the simpler question: why extract text at all? Embed the page image directly via PaliGemma, use ColBERT-style late interaction for retrieval, and keep all the layout, figures, fonts, and formatting signal the document carries. Published benchmarks: 20-40% better end-to-end accuracy than text-RAG on visually-rich documents. ColQwen2, ColSmol, and VisRAG extended the pattern. This lesson reads the vision-native RAG thesis and builds a tiny ColPali-like indexer.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib",
+    "multi-vector indexer + MaxSim scorer)"
+  ],
+  "prerequisites": [
+    "Phase 11 (LLM Engineering — RAG basics)",
+    "Phase 12 · 05 (LLaVA)"
+  ],
+  "timeMinutes": 180,
+  "needsTranslation": true
+}

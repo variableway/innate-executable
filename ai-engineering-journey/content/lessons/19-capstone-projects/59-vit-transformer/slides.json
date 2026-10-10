@@ -1,0 +1,112 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Vision Transformer Encoder\n\n> Patches alone do not see. A 12-layer pre-LN transformer with 12 attention heads turns the sequence of patch tokens into a sequence of contextual tokens, with the CLS token pooling whole-image features in its final hidden state. This lesson is the engine room of every modern vision-language model.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 19 lessons 30-37 (Track B foundations)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement a pre-LN transformer block with multi-head self-attention and a feed-forward sub-layer.\n- Stack 12 blocks with 12 heads to form a ViT-Base encoder.\n- Wire the patch front end from lesson 58 into the encoder and run a forward pass.\n- Verify that the CLS token aggregates information from every patch.",
+    "keyPoints": [
+      "Implement a pre-LN transformer block with multi-head self-attention and a feed-forward sub-layer.",
+      "Stack 12 blocks with 12 heads to form a ViT-Base encoder.",
+      "Wire the patch front end from lesson 58 into the encoder and run a forward pass.",
+      "Verify that the CLS token aggregates information from every patch."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "The patch embedding produces a sequence of 197 tokens, each one a vector with no awareness of any other patch. A picture of a cat needs every patch to know which patches contain whiskers, which contain background, and which contain the eye. The transformer is the mechanism that builds that awareness, one attention layer at a time. Without it, the patch front end is a clever tokenizer with no understanding.\n\nThe standard recipe is twelve blocks deep, twelve heads wide, with pre-LayerNorm placement, GELU activation, and a feed-forward expansion of 4x. That recipe is the spine of CLIP ViT-L, SigLIP, DINOv2, the Qwen-VL family, InternVL, and every other open-weight vision encoder of 2025-2026. The recipe is stable enough that you can read any of those papers and assume this block shape unless they explicitly say otherwise.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "```mermaid\nflowchart TB\n  Input[token sequence B x 197 x 768] --> B1[Block 1]\n  B1 --> B2[Block 2]\n  B2 --> Dots[...]\n  Dots --> B12[Block 12]\n  B12 --> LN[Final LayerNorm]\n  LN --> Out[contextual tokens B x 197 x 768]\n```\n\n```mermaid\nflowchart LR\n  Token[token x] --> N1[LayerNorm]\n  N1 --> Attn[multi-head self-attention]\n  Attn --> R1[+ residual]\n  R1 --> N2[LayerNorm]\n  N2 --> MLP[FFN: linear -> GELU -> linear]\n  MLP --> R2[+ residual]\n  R2 --> Out[token x']\n```\n\n### Pre-LN vs post-LN\n\nOriginal Transformer placed LayerNorm after the residual. Pre-LN (LayerNorm before each sub-layer) is the version every modern vision-language model uses, because it trains stably without learning-rate warm-up tricks. The difference is one line in the forward pass, and the gradient flow at depth 12+ is night and day.\n\n### Multi-head self-attention\n\nEach head projects the token vector to its own `(query, key, value)` triple with dimension `head_dim = hidden / num_heads`. With `hidden = 768` and `heads = 12`, each head has `dim = 64`. The 12 heads attend in parallel, then their outputs concat back to dimension 768 and pass through an output projection. The point of multi-head is that one head can learn \"attend to the cat eye\" while another learns \"attend to the background gradient\" without interference.\n\n### Why the 4x feed-forward expansion\n\nThe FFN goes `hidden -> 4 * hidden -> hidden` with GELU in the middle. The factor 4 is empirical and has held across language and vision transformers since 2017. Smaller (2x) underfits; larger (8x) overfits at fixed data budget. The MLP is where the model stores most of its learned facts, and the wider middle is where they sit.\n\n| Component | Parameters at ViT-Base scale |\n|-----------|------------------------------|\n| qkv projection per block | `3 * 768 * 768 = 1.77M` |\n| output projection per block | `768 * 768 = 590K` |\n| FFN per block (4x expansion) | `2 * 768 * 4 * 768 = 4.72M` |\n| LayerNorm per block | `4 * 768 = 3K` |\n| Total per block | about 7.1M |\n| 12 blocks | about 85M |\n| Plus front end | about 86M total |\n\nViT-Base is a 86M-parameter encoder. That is small by 2026 standards (SigLIP-So400M is 400M, the Qwen-VL ViT is 675M), but the architecture is identical up to width and depth.\n\n### Causal mask or not?\n\nVision Transformers are encoder-only and bidirectional: token `i` may attend to token `j` for any pair. No mask. The decoder-side cross-attention in lesson 61 will use a causal mask, but inside the vision encoder, attention is fully connected.\n\n### What the CLS token learns\n\nThe CLS token starts as a learned parameter, has no patch content of its own, and accumulates information through attention across every block. By the final layer, the CLS row is a vector summary of the whole image; downstream heads project this single vector into class logits, contrastive embeddings, or cross-attention keys for a text decoder.\n\n```figure\nch-cls-funnel\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements:\n\n- `MultiHeadSelfAttention`, with `qkv` and output projections, the scaled-dot-product attention math, and shape assertions.\n- `FeedForward`, the 4x-expansion GELU MLP.\n- `Block`, a pre-LN block composing attention and feed-forward sub-layers with residuals.\n- `ViT`, a stack of 12 blocks with a final LayerNorm.\n- `VisionEncoder`, which wires `VisionFrontEnd` from lesson 58 to the `ViT` stack and exposes a `forward()` returning the contextual sequence and the pooled CLS vector.\n- A demo that runs a synthesized 224x224 fixture image through the full encoder and prints input shape, output shape, parameter count, and the CLS norm at every other layer.\n\nRun it:\n\n```bash\npython3 code/main.py\n```\n\nOutput: the fixture is encoded to a `(1, 197, 768)` tensor. The CLS norm drifts upward as the layers compose, then stabilizes at the final LayerNorm. Total parameters report at about 86M.",
+    "keyPoints": [
+      "`MultiHeadSelfAttention`, with `qkv` and output projections, the scaled-dot-product attention math, and shape assertions.",
+      "`FeedForward`, the 4x-expansion GELU MLP.",
+      "`Block`, a pre-LN block composing attention and feed-forward sub-layers with residuals.",
+      "`ViT`, a stack of 12 blocks with a final LayerNorm."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "The encoder defined here is, up to width and depth, the same block stack that ships inside every open-weight VLM in 2025-2026. Differences live in:\n\n- **Width and depth.** ViT-Large is `hidden=1024, depth=24, heads=16`; SigLIP So400M is `hidden=1152, depth=27, heads=16`. Same block.\n- **Pooling head.** CLS pooling (this lesson) vs average pooling (SigLIP) vs attention pooling (later VLMs).\n- **Position handling.** Fixed sinusoidal (lesson 58) vs learned 1D vs ALiBi vs 2D RoPE. The block math is unchanged.\n- **Register tokens.** DINOv2 prepends 4 extra learned tokens. One line of code.\n\nThis block stack is the substrate. The next lessons (60-63) stand on top of it.",
+    "keyPoints": [
+      "Width and depth.: ViT-Large is `hidden=1024, depth=24, heads=16`; SigLIP So400M is `hidden=1152, depth=27, heads=16`. Same block.",
+      "Pooling head.: CLS pooling (this lesson) vs average pooling (SigLIP) vs attention pooling (later VLMs).",
+      "Position handling.: Fixed sinusoidal (lesson 58) vs learned 1D vs ALiBi vs 2D RoPE. The block math is unchanged.",
+      "Register tokens.: DINOv2 prepends 4 extra learned tokens. One line of code."
+    ],
+    "commands": []
+  },
+  {
+    "id": "tests",
+    "title": "Tests",
+    "bodyMarkdown": "`code/test_main.py` covers:\n\n- a single block preserves shape and is invariant to input batch size\n- attention scores sum to one along the key axis (softmax sanity)\n- residual paths are wired (zero input still produces non-zero output via the CLS token)\n- a 4-layer stacked forward pass produces the right shape\n- gradients flow to the patch projection from the CLS output\n\nRun them:\n\n```bash\npython3 -m unittest code/test_main.py\n```",
+    "keyPoints": [
+      "a single block preserves shape and is invariant to input batch size",
+      "attention scores sum to one along the key axis (softmax sanity)",
+      "residual paths are wired (zero input still produces non-zero output via the CLS token)",
+      "a 4-layer stacked forward pass produces the right shape",
+      "gradients flow to the patch projection from the CLS output"
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 -m unittest code/test_main.py"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add register tokens (4 learned vectors prepended after CLS) and rerun. Compare attention map smoothness via the entropy of the softmax distribution on the last layer.\n\n2. Swap pre-LN for post-LN and train for one epoch on a synthetic shape classifier. Observe which one trains stably without LR warm-up.\n\n3. Implement causal masking as an `attn_mask` argument so the same block can be reused as a decoder block. The mask shape is `(seq, seq)`, lower-triangular.\n\n4. Profile a forward pass at batch sizes 1, 8, 64 with `torch.profiler`. The MLP layer dominates wall time, not attention.\n\n5. Replace one attention head's q-k-v projections with a low-rank LoRA adapter, freeze the rest, and verify the gradient only flows where you expect.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What it means |\n|------|---------------|\n| Pre-LN | LayerNorm applied before each sub-layer instead of after |\n| Self-attention | Each token attends to every other token in the same sequence |\n| Multi-head | The hidden dim is split across `H` independent attention heads |\n| FFN expansion | The feed-forward layer widens to `4 * hidden` before contracting |\n| CLS pooling | Use the first token's final hidden state as the image summary |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- An Image is Worth 16x16 Words (ViT, 2021) for the encoder recipe.\n- DINOv2 (2023) for register tokens and the self-supervised pretraining objective.\n- SigLIP (2023) for the average-pooling variant and the sigmoid contrastive loss used in lesson 62.",
+    "keyPoints": [
+      "An Image is Worth 16x16 Words (ViT, 2021) for the encoder recipe.",
+      "DINOv2 (2023) for register tokens and the self-supervised pretraining objective.",
+      "SigLIP (2023) for the average-pooling variant and the sigmoid contrastive loss used in lesson 62."
+    ],
+    "commands": []
+  }
+]

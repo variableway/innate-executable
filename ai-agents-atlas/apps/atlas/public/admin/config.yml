@@ -1,0 +1,97 @@
+# Decap CMS configuration — optional authoring surface for the Atlas.
+# Auth runs through Cloudflare Pages Access (preferred) or a Decap-CMS
+# OAuth proxy deployed as a Pages Function. Set the proxy URL in the
+# `backend.name` field once you have it; until then this file is inert
+# and editing happens through git + PRs.
+
+backend:
+  name: proxy
+  proxy_url: https://atlas-cms-proxy.pages.dev/api/v1
+  branch: main
+
+media_folder: public/media
+public_folder: /media
+
+site_url: https://atlas.example.com
+display_url: https://atlas.example.com
+logo_url: /favicon.svg
+
+publish_mode: editorial_workflow
+
+collections:
+  - name: lessons
+    label: Lessons
+    label_singular: Lesson
+    folder: src/content/lessons
+    create: true
+    slug: "{{slug}}"
+    extension: mdx
+    format: frontmatter
+    summary: "{{title}} — {{framework}} / {{level}}"
+    sortable_fields: [publishedAt, framework, level]
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Description, name: description, widget: text }
+      - { label: Author, name: author, widget: string, default: Atlas Team }
+      - { label: Published at, name: publishedAt, widget: datetime }
+      - { label: Updated at, name: updatedAt, widget: datetime, required: false }
+      - label: Level
+        name: level
+        widget: select
+        options:
+          - { label: Beginner, value: beginner }
+          - { label: Intermediate, value: intermediate }
+          - { label: Advanced, value: advanced }
+      - label: Framework
+        name: framework
+        widget: select
+        options:
+          - { label: CrewAI, value: crewai }
+          - { label: LangGraph, value: langgraph }
+          - { label: AutoGen, value: autogen }
+          - { label: Agno, value: agno }
+          - { label: LlamaIndex, value: llamaindex }
+          - { label: Cross-framework, value: cross }
+      - { label: Industry, name: industry, widget: string, required: false }
+      - { label: Tags, name: tags, widget: list, default: [] }
+      - { label: Duration (min), name: duration, widget: number, required: false }
+      - { label: Prerequisites, name: prerequisites, widget: list, default: [] }
+      - { label: Related slugs, name: related, widget: list, default: [] }
+      - { label: Objectives, name: objectives, widget: list, default: [] }
+      - { label: Draft, name: draft, widget: boolean, default: false }
+      - { label: Body, name: body, widget: markdown }
+
+  - name: agents
+    label: Agents
+    label_singular: Agent
+    folder: src/content/agents
+    create: true
+    slug: "{{slug}}"
+    extension: mdx
+    format: frontmatter
+    fields:
+      - { label: Title, name: title, widget: string }
+      - { label: Description, name: description, widget: text }
+      - label: Framework
+        name: framework
+        widget: select
+        options: [crewai, langgraph, autogen, agno, llamaindex, cross]
+      - { label: LLM, name: llm, widget: string, default: Configurable }
+      - { label: Industry, name: industry, widget: string, default: General }
+      - label: Difficulty
+        name: difficulty
+        widget: select
+        default: intermediate
+        options:
+          - { label: Beginner, value: beginner }
+          - { label: Intermediate, value: intermediate }
+          - { label: Advanced, value: advanced }
+      - { label: Tags, name: tags, widget: list, default: [] }
+      - { label: Language, name: language, widget: string, default: Python }
+      - { label: Entrypoint, name: entrypoint, widget: string, default: agent.py }
+      - { label: Requirements, name: requirements, widget: string, default: requirements.txt }
+      - { label: GitHub path, name: githubPath, widget: string }
+      - { label: Published at, name: publishedAt, widget: datetime }
+      - { label: Order, name: order, widget: number, default: 0 }
+      - { label: Objectives, name: objectives, widget: list, default: [] }
+      - { label: Body, name: body, widget: markdown }

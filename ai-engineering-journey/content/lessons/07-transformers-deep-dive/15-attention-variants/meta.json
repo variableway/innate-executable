@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/15-attention-variants",
+  "slug": "15-attention-variants",
+  "phase": "07-transformers-deep-dive",
+  "order": 15,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Attention Variants — Sliding Window, Sparse, Differential",
+    "zh": ""
+  },
+  "hook": "Full attention is a circle. Every token sees every token, and memory pays the price. Four variants bend the shape of the circle and recover half the cost.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 02 (Self-Attention)",
+    "Phase 7 · 03 (Multi-Head)",
+    "Phase 7 · 12 (KV Cache / Flash Attention)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

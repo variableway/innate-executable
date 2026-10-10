@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/78-zero-parameter-sharding",
+  "slug": "78-zero-parameter-sharding",
+  "phase": "19-capstone-projects",
+  "order": 78,
+  "phaseOrder": 19,
+  "title": {
+    "en": "ZeRO Optimizer State Sharding",
+    "zh": ""
+  },
+  "hook": "Adam stores two moment estimates per parameter, both in float32. A 7B-parameter model carries 56 GB of optimiser state. ZeRO stage 1 shards that across N ranks; each rank owns 1/N of the optimiser. After the local step the updated parameter shards broadcast back, every rank reconstructs the full model, and the next step begins. The win is a linear memory drop on the largest single allocation in the training stack.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track C lessons 42-49"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

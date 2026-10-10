@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/43-hdf5-tokenized-corpus",
+  "slug": "43-hdf5-tokenized-corpus",
+  "phase": "19-capstone-projects",
+  "order": 43,
+  "phaseOrder": 19,
+  "title": {
+    "en": "HDF5 Tokenized Corpus",
+    "zh": ""
+  },
+  "hook": "The downloaded corpus has to land in a layout the trainer can stream from at line speed. JSONL on disk does not survive 16 dataloader workers. HDF5 with a resizable, chunked integer dataset does. This lesson builds streaming tokenization into a resizable HDF5 dataset, sharded write across multiple files, memory-mapped read at training time, and a sliding-window dataloader that produces fixed-length sequences with the right packing.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

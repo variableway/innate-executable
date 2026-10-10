@@ -1,0 +1,10 @@
+---
+import { localizedStaticPaths } from '@/i18n/content';
+import DocDetail from '@/components/pages/DocDetail.astro';
+
+export const getStaticPaths = () => localizedStaticPaths('docs', 'en');
+
+const { entry } = Astro.props;
+---
+
+<DocDetail locale="en" entry={entry} slug={Astro.params.slug} />

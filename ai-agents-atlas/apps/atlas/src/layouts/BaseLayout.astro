@@ -1,0 +1,442 @@
+---
+import '@/styles/globals.css';
+import { Toaster } from '@atlas/ui/components/ui/sonner';
+import { AtlasShell, HeaderThemeToggle } from '@/components/atlas/shell';
+import { HeaderPaletteToggle } from '@/components/atlas/palette-toggle';
+import { ThemeProvider } from '@/components/providers/theme-provider';
+import { CommandPalette } from '@/components/atlas/command-palette';
+import { CommandPaletteTrigger } from '@/components/atlas/command-palette-trigger';
+import { PagefindSearch } from '@/components/atlas/search-results';
+import { CopyCodeEnhancer } from '@/components/atlas/copy-code-button';
+import { FeedbackWidget } from '@/components/atlas/feedback-widget';
+import { MobileNav } from '@/components/atlas/mobile-nav';
+import { cn } from '@/lib/utils';
+import { frameworkMeta } from '@/lib/frameworks';
+import { useTranslations, type Locale } from '@/i18n/ui';
+import { localePath, otherLocalePath } from '@/i18n/utils';
+import { getLocalizedEntries } from '@/i18n/content';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  class?: string;
+}
+
+const {
+  title = 'AI Agents Atlas',
+  description = 'A continuously published learning platform for AI agent projects.',
+  image = '/og-default.png',
+  noindex = false,
+  class: className,
+} = Astro.props;
+
+const locale = (Astro.currentLocale ?? 'zh') as Locale;
+const t = useTranslations(locale);
+
+const siteTitle = title === 'AI Agents Atlas' ? title : `${title} · AI Agents Atlas`;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString();
+const path = Astro.url.pathname;
+
+const nav = [
+  { href: '/', label: t('nav.atlas') },
+  { href: '/lessons', label: t('nav.lessons') },
+  { href: '/agents', label: t('nav.agents') },
+  { href: '/use-cases', label: t('nav.useCases') },
+  { href: '/frameworks', label: t('nav.frameworks') },
+  { href: '/docs', label: t('nav.docs') },
+];
+
+// Localized content (falls back to English while zh is being written).
+const [lessons, agents, useCases] = await Promise.all([
+  getLocalizedEntries('lessons', locale, ({ data }) => !data.draft),
+  getLocalizedEntries('agents', locale),
+  getLocalizedEntries('useCases', locale),
+]);
+
+lessons.sort(
+  (a, b) => b.entry.data.publishedAt.getTime() - a.entry.data.publishedAt.getTime(),
+);
+agents.sort((a, b) => a.entry.data.order - b.entry.data.order);
+
+// Build search index for the ⌘K palette at build time.
+const searchItems = [
+  ...lessons.map((l) => ({
+    kind: 'lesson' as const,
+    slug: l.slug,
+    title: l.entry.data.title,
+    subtitle: `${l.entry.data.framework} · ${l.entry.data.level}`,
+    href: localePath(locale, `/lessons/${l.slug}`),
+  })),
+  ...agents.map((a) => ({
+    kind: 'agent' as const,
+    slug: a.slug,
+    title: a.entry.data.title,
+    subtitle: `${a.entry.data.framework} · ${a.entry.data.industry}`,
+    href: localePath(locale, `/agents/${a.slug}`),
+  })),
+  ...useCases.map((u) => ({
+    kind: 'useCase' as const,
+    slug: u.slug,
+    title: u.entry.data.title,
+    subtitle: `${u.entry.data.framework} · ${u.entry.data.industry}`,
+    href: localePath(locale, `/use-cases/${u.slug}`),
+  })),
+];
+
+const plausibleDomain = import.meta.env.PUBLIC_PLAUSIBLE_DOMAIN;
+
+// Three-column layout data, modeled on superlinear-academy:
+// a left icon rail (one icon per section) → a middle panel listing the
+// active section's entries → the main content on the right.
+const sidebarIcons: Record<string, string> = {
+  home: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  book: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>',
+  bot: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><rect width="18" height="10" x="3" y="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" x2="8" y1="16" y2="16"/><line x1="16" x2="16" y1="16" y2="16"/></svg>',
+  briefcase: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg>',
+  blocks: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><rect width="7" height="7" x="14" y="3" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3"/></svg>',
+};
+
+const sectionLink = (href: string) => localePath(locale, href);
+
+const sections = [
+  {
+    label: t('section.lessons'),
+    icon: 'book',
+    href: sectionLink('/lessons'),
+    items: [
+      { href: sectionLink('/roadmap'), label: t('section.roadmap') },
+      ...lessons.map((l) => ({
+        href: sectionLink(`/lessons/${l.slug}`),
+        label: l.entry.data.title,
+      })),
+    ],
+  },
+  {
+    label: t('section.agents'),
+    icon: 'bot',
+    href: sectionLink('/agents'),
+    items: agents.map((a) => ({
+      href: sectionLink(`/agents/${a.slug}`),
+      label: a.entry.data.title,
+    })),
+  },
+  {
+    label: t('section.useCases'),
+    icon: 'briefcase',
+    href: sectionLink('/use-cases'),
+    items: useCases.map((u) => ({
+      href: sectionLink(`/use-cases/${u.slug}`),
+      label: u.entry.data.title,
+    })),
+  },
+  {
+    label: t('section.frameworks'),
+    icon: 'blocks',
+    href: sectionLink('/frameworks'),
+    items: Object.entries(frameworkMeta).map(([slug, f]) => ({
+      href: sectionLink(`/frameworks#${slug}`),
+      label: f.name,
+    })),
+  },
+];
+
+const railItems = [
+  { href: localePath(locale, '/'), label: t('section.home'), icon: 'home' },
+  ...sections.map(({ href, label, icon }) => ({ href, label, icon })),
+];
+
+// Section matching must run against the unprefixed path so both
+// /lessons and /en/lessons light up the same section.
+const unprefixedPath = locale === 'zh' ? path : path.replace(/^\/en/, '') || '/';
+
+// The section whose entries fill the middle panel, if any. /roadmap
+// belongs to the lessons section even though it lives outside /lessons.
+const activeSection = sections.find((s) => {
+  const bare = s.href.replace(/^\/en/, '');
+  return (
+    unprefixedPath === bare ||
+    unprefixedPath.startsWith(`${bare}/`) ||
+    (bare === '/lessons' && unprefixedPath === '/roadmap')
+  );
+});
+
+// The mobile drawer still shows every section's entries at once.
+const mobileGroups = sections.map((s, i) => ({
+  label: s.label,
+  icon: s.icon,
+  items: [
+    {
+      href: s.href,
+      label: t(
+        (['section.all.lessons', 'section.all.agents', 'section.all.useCases', 'section.all.frameworks'] as const)[i],
+      ),
+    },
+    ...s.items,
+  ],
+}));
+
+// hreflang targets for this page.
+const zhPath = locale === 'zh' ? path : path.replace(/^\/en/, '') || '/';
+const enPath = locale === 'en' ? path : `/en${path === '/' ? '' : path}`;
+---
+
+<!doctype html>
+<html lang={locale === 'zh' ? 'zh-CN' : 'en'} class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {/* Blueprint palette fonts — the browser only downloads a family when
+        the active palette's font stack actually references it. */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=VT323&display=swap"
+    />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="zh-CN" href={new URL(zhPath, Astro.site).toString()} />
+    <link rel="alternate" hreflang="en" href={new URL(enPath, Astro.site).toString()} />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={siteTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(image, Astro.site).toString()} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={siteTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(image, Astro.site).toString()} />
+
+    {plausibleDomain && (
+      <script
+        defer
+        data-domain={plausibleDomain}
+        src="https://plausible.io/js/script.js"
+      />
+    )}
+
+    <script is:inline>
+      (function () {
+        try {
+          const stored = localStorage.getItem('ai-agents-atlas-theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const dark = stored ? stored === 'dark' : prefersDark;
+          document.documentElement.classList.toggle('dark', dark);
+          const palette = localStorage.getItem('ai-agents-atlas-palette');
+          if (palette === 'blueprint') {
+            document.documentElement.dataset.palette = palette;
+          }
+        } catch (_) {}
+      })();
+    </script>
+
+    <title>{siteTitle}</title>
+  </head>
+  <body>
+    <ThemeProvider
+      client:load
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      storageKey="ai-agents-atlas-theme"
+    >
+      <AtlasShell client:load className={className}>
+        <a
+          href="#main-content"
+          class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:ring-2 focus:ring-ring"
+        >
+          {t('a11y.skipToContent')}
+        </a>
+        <header class="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
+          <div class="container flex h-14 items-center justify-between gap-4">
+            <a href={localePath(locale, '/')} class="flex items-center gap-2 font-semibold tracking-tight">
+              <span aria-hidden="true" class="grid h-7 w-7 place-items-center rounded-md border border-border bg-muted text-foreground">
+                ◍
+              </span>
+              <span class="hidden sm:inline">AI Agents Atlas</span>
+            </a>
+
+            <nav aria-label={t('a11y.mainNav')} class="hidden items-center gap-1 md:flex">
+              {nav.map((item) => {
+                const href = localePath(locale, item.href);
+                const active =
+                  item.href === '/'
+                    ? unprefixedPath === '/'
+                    : unprefixedPath === item.href || unprefixedPath.startsWith(`${item.href}/`);
+                return (
+                  <a
+                    href={href}
+                    aria-current={active ? 'page' : undefined}
+                    class={cn(
+                      'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                      active
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                    )}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+            </nav>
+
+            <div class="flex items-center gap-2">
+              <CommandPaletteTrigger client:idle iconOnly label={t('action.search')} />
+              <CommandPaletteTrigger client:idle label={t('action.search')} />
+              <HeaderThemeToggle client:load />
+              <HeaderPaletteToggle client:load label={t('action.palette')} />
+              <a
+                href={otherLocalePath(path)}
+                aria-label={t('a11y.switchLanguage')}
+                hreflang={locale === 'zh' ? 'en' : 'zh-CN'}
+                class="rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                {locale === 'zh' ? 'EN' : '中文'}
+              </a>
+              <a
+                href="https://github.com/ashishpatel26/500-AI-Agents-Projects"
+                target="_blank"
+                rel="noreferrer"
+                class="hidden text-sm text-muted-foreground hover:text-foreground md:inline"
+              >
+                GitHub ↗
+              </a>
+              <MobileNav
+                client:load
+                groups={mobileGroups}
+                currentPath={unprefixedPath}
+                searchLabel={t('action.search')}
+                menuLabel={t('a11y.openMenu')}
+              />
+            </div>
+          </div>
+        </header>
+
+        <div class="flex flex-1 items-start">
+          {/* Left icon rail — one entry per section, like superlinear-academy's LeftBar. */}
+          <nav
+            aria-label={t('a11y.sections')}
+            class="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-16 shrink-0 flex-col items-center gap-2 border-r border-border py-4 md:flex"
+          >
+            {railItems.map((item) => {
+              const bare = item.href.replace(/^\/en/, '') || '/';
+              const active =
+                bare === '/'
+                  ? unprefixedPath === '/'
+                  : unprefixedPath === bare ||
+                    unprefixedPath.startsWith(`${bare}/`) ||
+                    (bare === '/lessons' && unprefixedPath === '/roadmap');
+              return (
+                <a
+                  href={item.href}
+                  title={item.label}
+                  aria-label={item.label}
+                  aria-current={active ? 'page' : undefined}
+                  class={cn(
+                    'grid h-10 w-10 place-items-center rounded-lg transition-colors',
+                    active
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                  )}
+                >
+                  <span set:html={sidebarIcons[item.icon]} />
+                </a>
+              );
+            })}
+          </nav>
+
+          {/* Middle panel — the active section's entries. */}
+          {activeSection && (
+            <aside class="scrollbar-thin sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-64 shrink-0 overflow-y-auto border-r border-border lg:block">
+              <div class="px-4 py-4">
+                <div class="mb-2 flex items-center justify-between px-2">
+                  <a
+                    href={activeSection.href}
+                    class="flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <span set:html={sidebarIcons[activeSection.icon]} />
+                    {activeSection.label}
+                  </a>
+                  <span class="rounded bg-secondary px-1.5 py-0.5 text-xs text-muted-foreground">
+                    {activeSection.items.length}
+                  </span>
+                </div>
+                <ul class="space-y-0.5">
+                  {activeSection.items.map((item) => {
+                    const active = path === item.href;
+                    return (
+                      <li>
+                        <a
+                          href={item.href}
+                          aria-current={active ? 'page' : undefined}
+                          class={cn(
+                            'block truncate rounded-lg px-3 py-2 text-sm transition-colors',
+                            active
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+                          )}
+                        >
+                          {item.label}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </aside>
+          )}
+
+          <main id="main-content" tabindex="-1" class="min-w-0 flex-1 py-6">
+            <div class="container py-4">
+              <slot />
+            </div>
+          </main>
+        </div>
+
+        <footer class="border-t border-border py-8 text-sm text-muted-foreground">
+          <div class="container flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <FeedbackWidget
+              client:idle
+              endpoint={import.meta.env.PUBLIC_FEEDBACK_ENDPOINT}
+              labels={{
+                question: t('feedback.question'),
+                yes: t('feedback.yes'),
+                no: t('feedback.no'),
+                toastUp: t('feedback.toastUp'),
+                toastDown: t('feedback.toastDown'),
+              }}
+            />
+            <p>
+              {t('footer.built')}{' '}
+              <a
+                href="https://github.com/ashishpatel26/500-AI-Agents-Projects"
+                class="underline-offset-4 hover:underline"
+              >
+                GitHub
+              </a>
+              . {t('footer.license')}
+            </p>
+          </div>
+        </footer>
+      </AtlasShell>
+      <CommandPalette
+        client:idle
+        items={searchItems}
+        placeholder={t('palette.placeholder')}
+        emptyLabel={t('palette.empty')}
+      />
+      <PagefindSearch client:idle />
+      <CopyCodeEnhancer
+        client:idle
+        labels={{ aria: t('copy.aria'), success: t('copy.success'), error: t('copy.error') }}
+      />
+      <Toaster client:load />
+    </ThemeProvider>
+  </body>
+</html>

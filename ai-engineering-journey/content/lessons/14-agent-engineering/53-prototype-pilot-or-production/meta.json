@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/53-prototype-pilot-or-production",
+  "slug": "53-prototype-pilot-or-production",
+  "phase": "14-agent-engineering",
+  "order": 53,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Choose Prototype, Pilot, or Production Deliberately",
+    "zh": ""
+  },
+  "hook": "These are different learning environments, not levels of polish. Choose the stage that answers the current unknown with the least unnecessary consequence.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lessons 50 to 52"
+  ],
+  "timeMinutes": 70,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/20-fourier-transform",
+  "slug": "20-fourier-transform",
+  "phase": "01-math-foundations",
+  "order": 20,
+  "phaseOrder": 1,
+  "title": {
+    "en": "The Fourier Transform",
+    "zh": "傅里叶变换"
+  },
+  "hook": "Every signal is a sum of sine waves. The Fourier transform tells you which ones.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01-04",
+    "19 (complex numbers)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": false
+}

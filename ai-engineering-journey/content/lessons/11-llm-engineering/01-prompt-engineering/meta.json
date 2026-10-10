@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/01-prompt-engineering",
+  "slug": "01-prompt-engineering",
+  "phase": "11-llm-engineering",
+  "order": 1,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Prompt Engineering: Techniques & Patterns",
+    "zh": ""
+  },
+  "hook": "Most people write prompts like they are texting a friend. Then they wonder why a 200-billion parameter model gives mediocre answers. Prompt engineering is not about tricks. It is about understanding that every token you send is an instruction, and the model follows instructions literally. Write better instructions, get better outputs. It is that simple and that hard.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lessons 01-05 (LLMs from Scratch)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

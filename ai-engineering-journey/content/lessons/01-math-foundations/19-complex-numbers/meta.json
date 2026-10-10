@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/19-complex-numbers",
+  "slug": "19-complex-numbers",
+  "phase": "01-math-foundations",
+  "order": 19,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Complex Numbers for AI",
+    "zh": "复数"
+  },
+  "hook": "The square root of -1 is not imaginary. It is the key to rotations, frequencies, and half of signal processing.",
+  "type": "Learn",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01-04 (linear algebra",
+    "calculus)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": false
+}

@@ -1,0 +1,71 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@atlas/ui/components/ui/card';
+import { Badge } from '@atlas/ui/components/ui/badge';
+import { frameworkMeta } from '@/lib/frameworks';
+import { useTranslations, type Locale } from '@/i18n/ui';
+import { getLocalizedEntries } from '@/i18n/content';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const [lessons, agents, useCases] = await Promise.all([
+  getLocalizedEntries('lessons', locale, ({ data }) => !data.draft),
+  getLocalizedEntries('agents', locale),
+  getLocalizedEntries('useCases', locale),
+]);
+
+const countByFramework = () => {
+  const map: Record<string, { lessons: number; agents: number; useCases: number }> = {};
+  for (const fw of Object.keys(frameworkMeta)) {
+    map[fw] = { lessons: 0, agents: 0, useCases: 0 };
+  }
+  for (const l of lessons) {
+    const k = l.entry.data.framework;
+    if (map[k]) map[k].lessons++;
+  }
+  for (const a of agents) {
+    const k = a.entry.data.framework;
+    if (map[k]) map[k].agents++;
+  }
+  for (const u of useCases) {
+    const k = u.entry.data.framework;
+    if (map[k]) map[k].useCases++;
+  }
+  return map;
+};
+
+const counts = countByFramework();
+---
+
+<BaseLayout title={t('frameworks.index.title')} description={t('frameworks.index.lede')}>
+  <header class="space-y-3 border-b border-border pb-8">
+    <p class="text-sm uppercase tracking-wider text-muted-foreground">{t('frameworks.kicker')}</p>
+    <h1 class="text-4xl font-bold tracking-tight">{t('frameworks.index.title')}</h1>
+    <p class="max-w-2xl text-lg text-muted-foreground">
+      {t('frameworks.index.lede')}
+    </p>
+  </header>
+
+  <section class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    {Object.entries(frameworkMeta).map(([slug, meta]) => (
+      <Card id={slug} className="h-full">
+        <CardHeader>
+          <CardTitle>{meta.name}</CardTitle>
+          <CardDescription>{meta.bestFor}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="flex flex-wrap gap-2">
+            <Badge variant="outline">{counts[slug]?.lessons ?? 0} {t('frameworks.count.lessons')}</Badge>
+            <Badge variant="outline">{counts[slug]?.agents ?? 0} {t('frameworks.count.agents')}</Badge>
+            <Badge variant="outline">{counts[slug]?.useCases ?? 0} {t('frameworks.count.useCases')}</Badge>
+          </div>
+        </CardContent>
+      </Card>
+    ))}
+  </section>
+</BaseLayout>

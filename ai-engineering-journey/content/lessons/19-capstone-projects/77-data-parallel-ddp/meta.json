@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/77-data-parallel-ddp",
+  "slug": "77-data-parallel-ddp",
+  "phase": "19-capstone-projects",
+  "order": 77,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Data Parallel DDP From Scratch",
+    "zh": ""
+  },
+  "hook": "DistributedDataParallel is a hook on top of allreduce. Wrap a model, broadcast the initial parameters from rank 0 so every rank starts identical, install a backward hook on every parameter that issues an allreduce of the gradient, and the rest is gradient descent. The whole pattern is 200 lines.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track C lessons 42-49"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

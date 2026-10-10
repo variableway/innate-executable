@@ -1,0 +1,22 @@
+{
+  "id": "00-setup-and-tooling/03-gpu-setup-and-cloud",
+  "slug": "03-gpu-setup-and-cloud",
+  "phase": "00-setup-and-tooling",
+  "order": 3,
+  "phaseOrder": 0,
+  "title": {
+    "en": "GPU Setup & Cloud",
+    "zh": "GPU 与云端"
+  },
+  "hook": "Training on CPU is fine for learning. Training for real needs a GPU.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": false
+}

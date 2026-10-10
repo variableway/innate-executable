@@ -1,0 +1,21 @@
+{
+  "id": "00-setup-and-tooling/01-dev-environment",
+  "slug": "01-dev-environment",
+  "phase": "00-setup-and-tooling",
+  "order": 1,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Dev Environment",
+    "zh": "开发环境"
+  },
+  "hook": "Your tools shape your thinking. Set them up once, set them up right.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "Node.js",
+    "Rust"
+  ],
+  "prerequisites": [],
+  "timeMinutes": 45,
+  "needsTranslation": false
+}

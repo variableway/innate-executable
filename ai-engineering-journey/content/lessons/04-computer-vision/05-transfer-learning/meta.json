@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/05-transfer-learning",
+  "slug": "05-transfer-learning",
+  "phase": "04-computer-vision",
+  "order": 5,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Transfer Learning & Fine-Tuning",
+    "zh": ""
+  },
+  "hook": "Somebody else spent a million GPU hours teaching a network what edges, textures, and object parts look like. You should borrow those features before training your own.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 03 (CNNs)",
+    "Phase 4 Lesson 04 (Image Classification)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

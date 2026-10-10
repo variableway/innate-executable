@@ -1,0 +1,22 @@
+{
+  "id": "01-math-foundations/17-linear-systems",
+  "slug": "17-linear-systems",
+  "phase": "01-math-foundations",
+  "order": 17,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Linear Systems",
+    "zh": "线性方程组"
+  },
+  "hook": "Solving Ax = b is the oldest problem in mathematics that still runs your neural network.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01 (Linear Algebra Intuition)",
+    "02 (Vectors & Matrices)",
+    "03 (Matrix Transformations)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": false
+}

@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/05-context-engineering",
+  "slug": "05-context-engineering",
+  "phase": "11-llm-engineering",
+  "order": 5,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Context Engineering: Windows, Budgets, Memory, and Retrieval",
+    "zh": ""
+  },
+  "hook": "Prompt engineering is a subset. Context engineering is the whole game. A prompt is a string you type. Context is everything that goes into the model's window: system instructions, retrieved documents, tool definitions, conversation history, few-shot examples, and the prompt itself. The best AI engineers in 2026 are context engineers. They decide what goes in, what stays out, and in what order.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 10 (LLMs from Scratch)",
+    "Phase 11 Lesson 01-02"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

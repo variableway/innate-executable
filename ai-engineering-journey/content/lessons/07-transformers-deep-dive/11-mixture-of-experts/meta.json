@@ -1,0 +1,22 @@
+{
+  "id": "07-transformers-deep-dive/11-mixture-of-experts",
+  "slug": "11-mixture-of-experts",
+  "phase": "07-transformers-deep-dive",
+  "order": 11,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Mixture of Experts (MoE)",
+    "zh": ""
+  },
+  "hook": "A dense 70B transformer activates every parameter for every token. A 671B MoE activates only 37B per token and beats it on every benchmark. Sparsity is the most important scaling idea of the decade.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 05 (Full Transformer)",
+    "Phase 7 · 07 (GPT)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

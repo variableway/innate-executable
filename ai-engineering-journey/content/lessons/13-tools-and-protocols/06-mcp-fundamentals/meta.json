@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/06-mcp-fundamentals",
+  "slug": "06-mcp-fundamentals",
+  "phase": "13-tools-and-protocols",
+  "order": 6,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Fundamentals: Stateless Requests and JSON-RPC",
+    "zh": ""
+  },
+  "hook": "Modern MCP has no handshake and no protocol session. Each request must carry enough metadata to be understood, authorized, routed, and retried on its own.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13",
+    "Lessons 01 through 05"
+  ],
+  "timeMinutes": 55,
+  "needsTranslation": true
+}

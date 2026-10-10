@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/60-projection-layer-modality-align",
+  "slug": "60-projection-layer-modality-align",
+  "phase": "19-capstone-projects",
+  "order": 60,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Projection Layer for Modality Alignment",
+    "zh": ""
+  },
+  "hook": "A vision encoder produces image tokens. A text decoder consumes text tokens. The two live in different vector spaces. A small two-layer MLP projects image tokens into the text embedding space, and a cosine alignment loss against a paired caption pulls the two spaces into agreement. That projection is the smallest piece of a vision-language model and the one that matters most for transfer.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37 (Track B foundations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

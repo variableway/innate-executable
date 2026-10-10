@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/02-bag-of-words-tfidf",
+  "slug": "02-bag-of-words-tfidf",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 2,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Bag of Words, TF-IDF, and Text Representation",
+    "zh": ""
+  },
+  "hook": "Count first, think later. TF-IDF still beats embeddings on well-defined tasks in 2026.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 01 (Text Processing)",
+    "Phase 2 · 02 (Linear Regression from Scratch)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/23-otel-genai-conventions",
+  "slug": "23-otel-genai-conventions",
+  "phase": "14-agent-engineering",
+  "order": 23,
+  "phaseOrder": 14,
+  "title": {
+    "en": "OpenTelemetry GenAI Semantic Conventions",
+    "zh": ""
+  },
+  "hook": "OpenTelemetry's GenAI SIG (launched April 2024) defines the standard schema for agent telemetry. Span names, attributes, and content-capture rules converge across vendors so agent traces mean the same thing in Datadog, Grafana, Jaeger, and Honeycomb.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 13 (LangGraph)",
+    "Phase 14 · 24 (Observability Platforms)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,127 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Stateless MCP Gateways and Registry Admission\n\n> A gateway should make every route explicit. The 2026-07-28 protocol gives it method, name, version, capability, identity, cache, and trace boundaries without a transport session.\n\n**Type:** Learn\n**Languages:** Python\n**Prerequisites:** Phase 13 · 15 (security), Phase 13 · 16 (authorization)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Aggregate several MCP servers behind one 2026-07-28 endpoint without session affinity.\n- Validate per-request metadata and routing headers before policy or forwarding.\n- Merge tools with stable namespaces, deterministic order, descriptor pins, RBAC, and private caching.\n- Treat registry records as discovery evidence that still requires admission policy.\n- Route request-scoped SSE, `subscriptions/listen`, MRTR retries, and Tasks extension calls correctly.\n- Isolate legacy handshake and session support from the modern path.",
+    "keyPoints": [
+      "Aggregate several MCP servers behind one 2026-07-28 endpoint without session affinity.",
+      "Validate per-request metadata and routing headers before policy or forwarding.",
+      "Merge tools with stable namespaces, deterministic order, descriptor pins, RBAC, and private caching.",
+      "Treat registry records as discovery evidence that still requires admission policy.",
+      "Route request-scoped SSE, `subscriptions/listen`, MRTR retries, and Tasks extension calls correctly.",
+      "Isolate legacy handshake and session support from the modern path."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Connecting one client directly to one server is simple. A larger deployment needs a consistent answer to harder questions:\n\n- Which servers are allowed?\n- Which principal can see and call each tool?\n- What happens when two backends expose the same name?\n- How are descriptor changes reviewed?\n- Where are rate limits and audit events applied?\n- Can any instance handle the next request?\n\nA gateway sits between clients and backend MCP servers. It presents one MCP endpoint, applies cross-cutting policy, and forwards approved requests.\n\nOlder gateway designs often multiplexed one client session into several backend sessions and rewrote `Mcp-Session-Id`. That is a legacy compatibility design. The 2026-07-28 core has no protocol sessions.",
+    "keyPoints": [
+      "Which servers are allowed?",
+      "Which principal can see and call each tool?",
+      "What happens when two backends expose the same name?",
+      "How are descriptor changes reviewed?",
+      "Where are rate limits and audit events applied?",
+      "Can any instance handle the next request?"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### The modern gateway path\n\nFor each request:\n\n1. Authenticate the principal from transport authorization.\n2. Validate `MCP-Protocol-Version`, `Mcp-Method`, `Mcp-Name`, and `params._meta`.\n3. Authorize the principal, resource, method, tool, and arguments.\n4. Apply descriptor, registry, rate, and data policy.\n5. Create a fresh self-contained request for the selected backend.\n6. Validate the backend result and return a gateway result.\n7. Record an audit event without logging secrets.\n\nNo step needs a hidden protocol session. Application state can still exist in databases, explicit handles, Tasks, or integrity-protected MRTR state.\n\n### Runtime policy is the primary gateway decision\n\nAdmission decides which backend version may enter the gateway. It does not authorize a live call. For every request, the gateway recomputes policy from the authenticated principal, issuer and resource, tenant, matched method and name, normalized arguments, admitted descriptor pin, current backend health, capability intersection, data classification, rate state, and any action-bound approval.\n\nThis ordering matters. A Registry record can remain active while a user's role is revoked. A descriptor can remain pinned while a destination argument crosses a tenant boundary. A backend can remain approved while incident policy quarantines state-changing calls. Runtime policy is therefore the primary allow or deny decision, with Registry and descriptor evidence as inputs.\n\nDo not cache an allow decision under a connection or removed session identifier. If policy is unavailable, follow a declared failure policy by operation class. A safe default is to fail closed for state changes and sensitive reads, while explicitly approved public read paths may use a short-lived last-known policy only when their risk model permits it. Record which policy version and failure path made the decision, then validate the backend result before returning it.\n\n### One POST endpoint\n\nModern Streamable HTTP sends each JSON-RPC message through POST:\n\n```text\nPOST /mcp\nAuthorization: Bearer <gateway-token>\nMCP-Protocol-Version: 2026-07-28\nMcp-Method: tools/call\nMcp-Name: notes.search\nAccept: application/json, text/event-stream\n```\n\nThe gateway can return JSON or request-scoped SSE for that POST. GET and DELETE return 405 for modern requests. `Mcp-Session-Id` and `Last-Event-ID` do not create authority, affinity, or replay behavior.\n\nHeader and body values must agree. Reject mismatch with `-32020` before looking up a backend. This lets load balancers, gateways, and rate limiters route without parsing the full body while preserving end-to-end integrity.\n\nValidate in one exact order: JSON-RPC and metadata types, header and body equality, then support for the matched version. A mismatch returns HTTP 400 with `-32020`. If header and body agree on an unsupported version, return HTTP 400 with `-32022` and `data` exactly `{\"supported\":[\"2026-07-28\"],\"requested\":\"<actual>\"}`. An unknown method returns HTTP 404 with `-32601`.\n\n`ProtocolError` carries optional `data`, and the gateway serializes it into the JSON-RPC error object. A notification has no `id`, so it never receives a JSON-RPC success or error. An accepted HTTP notification returns 202 with an empty body.\n\n### Implement discovery at every layer\n\nThe gateway implements `server/discover` for clients. It also discovers each backend so it knows protocol versions, capabilities, and extensions.\n\nExample gateway result:\n\n```json\n{\n  \"resultType\": \"complete\",\n  \"supportedVersions\": [\"2026-07-28\"],\n  \"capabilities\": {\n    \"tools\": {\"listChanged\": true}\n  },\n  \"ttlMs\": 30000,\n  \"cacheScope\": \"private\",\n  \"_meta\": {\n    \"io.modelcontextprotocol/serverInfo\": {\n      \"name\": \"enterprise-gateway\",\n      \"version\": \"2.0.0\"\n    }\n  }\n}\n```\n\nAdvertise only the capability intersection the gateway can honor end to end. A backend feature is not automatically safe to expose. A gateway feature with no backend path is not useful to advertise.\n\n`serverInfo` is self-reported display and diagnostic data. Do not use it as registry or publisher proof.\n\n### Per-request client capabilities\n\nEvery forwarded request needs a current `_meta` envelope:\n\n```json\n{\n  \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n  \"io.modelcontextprotocol/clientCapabilities\": {},\n  \"io.modelcontextprotocol/clientInfo\": {\n    \"name\": \"enterprise-gateway\",\n    \"version\": \"1.0.0\"\n  }\n}\n```\n\nDo not blindly copy the outer client capabilities to a backend. The gateway is the backend's client. Advertise only features the gateway will mediate correctly.\n\n### Deterministic namespacing\n\nMerge backend tools under stable public names:\n\n```text\nnotes.search\nnotes.create\nissues.list\nissues.open\n```\n\nKeep a mapping from public name to backend and original tool name. Never choose the first or last collision. A public name is part of the approval and audit contract, so changing it is a migration.\n\n`tools/list` must be deterministic. When visibility differs by principal, return `cacheScope: private`. A bounded `ttlMs` reduces backend discovery load without allowing a user-specific list to leak across authorization contexts.\n\nEvery exposed tool descriptor includes a stable name, description, and object-root `inputSchema`. Namespacing cannot remove required descriptor fields. The complete list result also includes `resultType`, server identity metadata, and cache hints.\n\n### Pin approved descriptors\n\nAt admission time, canonicalize the complete descriptor and store its digest under the qualified public name. At list and call time, compare the live descriptor with the approved digest.\n\nIf it changes:\n\n- Remove it from `tools/list`.\n- Reject direct calls.\n- Emit an audit event.\n- Require policy or human re-approval before updating the pin.\n\nA gateway is a useful central enforcement point, but it does not turn a first-seen descriptor into a safe one. Initial review remains necessary.\n\n### Registries help discover, not decide\n\nA Registry `server.json` provides publication metadata. A package-backed record can look like this:\n\n```json\n{\n  \"$schema\": \"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json\",\n  \"name\": \"com.example/notes\",\n  \"description\": \"Example notes MCP server.\",\n  \"version\": \"1.0.0\",\n  \"packages\": [\n    {\n      \"registryType\": \"npm\",\n      \"identifier\": \"@example/notes-mcp\",\n      \"version\": \"1.0.0\",\n      \"transport\": {\"type\": \"stdio\"}\n    }\n  ]\n}\n```\n\nPublication metadata does not carry the gateway's security decision. Keep verified publisher and provenance evidence in separate admission state:\n\n```json\n{\n  \"registryName\": \"com.example/notes\",\n  \"registryVersion\": \"1.0.0\",\n  \"publisher\": {\"namespace\": \"com.example\", \"status\": \"verified\"},\n  \"provenance\": {\n    \"source\": \"registry.modelcontextprotocol.io\",\n    \"recordId\": \"com.example/notes@1.0.0\"\n  },\n  \"admission\": {\"status\": \"approved\", \"reviewedBy\": \"gateway-policy\"}\n}\n```\n\nThe gateway checks the `server.json` shape and joins it to that external state. The gateway still needs an admission policy.\n\nFor each admitted backend, record:\n\n- Exact registry and record identifier.\n- Verified publisher namespace or domain evidence.\n- Allowed transport and endpoint.\n- Pinned version or approved upgrade policy.\n- Artifact or descriptor digest.\n- Authorization issuer and resource.\n- Reviewer, approval time, and expiry.\n\nDo not accept a server because its display name resembles a familiar product. Do not treat registry presence as an operational security review. Private servers can be admitted through the same evidence schema even when they never appear in a public registry.\n\nThis lesson implements the gateway seam: join publication evidence to local admission before a backend becomes routable. [Lesson 30: MCP Registry Supply Chain, Admission, Drift, and Rollback](../../30-mcp-registry-supply-chain-and-drift/docs/en.md) builds the full control plane for exact namespace proof, artifact provenance, immutable pins, live descriptor drift, Registry status reconciliation, a tamper-evident admission ledger, and evidence-backed rollback. Keep that supply-chain state separate from the per-request runtime decision above.\n\n### Credential mediation\n\nThe gateway authenticates its callers and separately authenticates to backends. Backend credentials never go to the client.\n\nKeep these bindings explicit:\n\n```text\nouter principal -> gateway role and policy\nbackend issuer + resource -> backend registration and token\n```\n\nNever pass the outer gateway token to a backend. Never reuse a backend token at a different issuer or resource. If a tool acts on behalf of an end user, preserve that delegation with a designed exchange or claims model rather than impersonating the user with a shared service credential.\n\n### Rate limits without sessions\n\nKey limits by authenticated principal, issuer, resource, public tool, cost class, and time window. A session id is absent and would be easy to rotate even if it existed.\n\nApply cheap validation before consuming expensive work. Decide whether rejected calls count against abuse limits, business quotas, or both.\n\n### Audit the decision chain\n\nRecord enough to reconstruct a call:\n\n- Request and trace identifiers.\n- Authenticated principal and issuer.\n- Public tool and backend route.\n- Descriptor pin version.\n- Policy decision and reason.\n- Latency and result class.\n- MRTR round or task identifier when applicable.\n\nRedact bearer tokens, authorization codes, refresh tokens, raw secrets, and unnecessary sensitive arguments.\n\n### Request-scoped SSE\n\nA normal POST may return request-scoped SSE when work streams during that one request. Closing the response stream cancels that in-flight modern HTTP request.\n\nDo not create a separate GET stream and do not promise Last-Event-ID replay. Those are older transport assumptions.\n\n### Long-lived change notifications\n\nFor list and resource change notifications, a current client sends `subscriptions/listen` through POST and receives an SSE response. Notification filters use the exact flat fields `toolsListChanged`, `promptsListChanged`, `resourcesListChanged`, and `resourceSubscriptions`:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": \"listen-tools\",\n  \"method\": \"subscriptions/listen\",\n  \"params\": {\n    \"notifications\": {\n      \"toolsListChanged\": true\n    },\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {}\n    }\n  }\n}\n```\n\nThe first event acknowledges the supported subset. Its subscription identifier is the JSON-RPC id of the request that opened the stream:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"notifications/subscriptions/acknowledged\",\n  \"params\": {\n    \"_meta\": {\n      \"io.modelcontextprotocol/subscriptionId\": \"listen-tools\"\n    },\n    \"notifications\": {\n      \"toolsListChanged\": true\n    }\n  }\n}\n```\n\nThe gateway then forwards only the acknowledged change types. Every notification on that stream carries the same `io.modelcontextprotocol/subscriptionId` in `params._meta`. There is no automatic replay or automatic re-listen. On reconnect, the client reopens the subscription and refreshes the lists it relies on. A server-initiated graceful close returns a final complete result tagged with the same subscription id.\n\nThe modern path replaces `resources/subscribe`, `resources/unsubscribe`, and unsolicited standalone GET streaming. Keep those only in a version-gated older path.\n\n### MRTR through a gateway\n\nWhen a backend returns `resultType: input_required`, the gateway can forward that result only if the outer client supports the needed input request. Preserve `requestState` byte for byte unless the gateway deliberately terminates and reissues the interaction.\n\nThe client retries the original public tool with a fresh JSON-RPC id and `inputResponses`. The gateway re-authorizes the retry, checks the same public route, then forwards a fresh backend request. It must not assume an earlier round granted unlimited approval.\n\n### Tasks extension routing\n\nTasks are an official extension identified by `io.modelcontextprotocol/tasks`. They are not a core session replacement.\n\nThe client declares the extension inside per-request client capabilities, and the gateway advertises it in discovery only when it can preserve the lifecycle end to end. For a supported `tools/call`, the backend alone decides whether to return the ordinary result or `resultType: task`. A task result carries `taskId`, `status`, timestamps, `ttlMs`, and an optional `pollIntervalMs` directly in the result. The task must already be durably readable before that result is sent.\n\nThe gateway records the authenticated principal and backend route for the opaque task identifier. Subsequent `tasks/get`, `tasks/update`, and `tasks/cancel` calls use `params.taskId` as `Mcp-Name`, which gives intermediaries a routing key. `tasks/get` returns `resultType: complete` with the current task state and inlines the final result or protocol error in a terminal state. `tasks/update` sends keyed `inputResponses` for outstanding task input and returns an empty complete acknowledgment. `tasks/cancel` is a cooperative intent with an empty complete acknowledgment, not a guarantee that work stops.\n\nDo not implement new `tasks/list` or `tasks/result` methods. They belong to the older experimental model. A task that needs input exposes complete embedded requests through `tasks/get`; the client answers them through `tasks/update`, not by retrying the original tool call. The client still polls at the suggested interval; task creation remains server-directed.\n\nDurable task route state is application data keyed by the task handle, not a protocol session.\n\n### Compatibility boundary\n\nIf the gateway must serve an older client or backend:\n\n- Detect the era explicitly.\n- Keep initialization, transport sessions, GET streams, resource subscriptions, and old task vocabulary inside a legacy adapter.\n- Never leak a legacy session id into modern routing or authorization.\n- Prefer a bounded discovery probe and explicit fallback policy over silent downgrade.\n\n```figure\nt3-gateway-funnel\n```",
+    "keyPoints": [
+      "Remove it from `tools/list`.",
+      "Reject direct calls.",
+      "Emit an audit event.",
+      "Require policy or human re-approval before updating the pin.",
+      "Exact registry and record identifier.",
+      "Verified publisher namespace or domain evidence."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "POST /mcp\nAuthorization: Bearer <gateway-token>\nMCP-Protocol-Version: 2026-07-28\nMcp-Method: tools/call\nMcp-Name: notes.search\nAccept: application/json, text/event-stream"
+      },
+      {
+        "lang": "text",
+        "code": "notes.search\nnotes.create\nissues.list\nissues.open"
+      },
+      {
+        "lang": "text",
+        "code": "outer principal -> gateway role and policy\nbackend issuer + resource -> backend registration and token"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements an in-process protocol gateway and two backend servers. Each backend receives a fresh current-protocol request. The gateway provides discovery, user-filtered deterministic `tools/list`, namespaced routing, Registry `server.json` plus external admission state, descriptor pins, RBAC, principal-keyed rate limits, audit decisions, and a modeled `subscriptions/listen` SSE acknowledgment.\n\nThe model receives parsed request bodies, routing headers, and an authenticated bearer identity. It is not a complete HTTP adapter and does not parse `Content-Type` or the full `Accept` contract. Connect it to Lesson 09's Streamable HTTP adapter, which requires `Content-Type: application/json` and an `Accept` value containing both `application/json` and `text/event-stream`.\n\nRun it:\n\n```bash\ncd phases/13-tools-and-protocols/17-mcp-gateways-and-registries\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nThe demo prints the outer request id and fresh backend request id so the stateless hop is visible.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/17-mcp-gateways-and-registries\npython3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Replace the in-process backend objects with real current-protocol clients. Keep the same seams:\n\n- Admission record before connection.\n- Backend discovery before capability exposure.\n- Qualified public name before authorization.\n- Descriptor pin before list or call.\n- Fresh per-request metadata before forwarding.\n- Result validation before returning.",
+    "keyPoints": [
+      "Admission record before connection.",
+      "Backend discovery before capability exposure.",
+      "Qualified public name before authorization.",
+      "Descriptor pin before list or call.",
+      "Fresh per-request metadata before forwarding.",
+      "Result validation before returning."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson ships `outputs/skill-gateway-bootstrap.md`. It produces a modern gateway design covering ingress, discovery, admission, namespaces, authorization, caching, streaming, subscriptions, MRTR, Tasks, observability, and legacy isolation.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add trace context to the outer and forwarded request metadata and record the correlation in the audit event.\n2. Add a Tasks-capable backend and route `tasks/get` by task id in `Mcp-Name`.\n3. Change one backend descriptor and prove both discovery and direct call are blocked.\n4. Add a principal-specific server capability and explain why discovery must remain privately cached.\n5. Write a legacy adapter interface without adding any legacy state to the modern `Gateway` class.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | Meaning |\n|------|---------|\n| MCP gateway | Policy and routing server between clients and backend MCP servers |\n| Admission record | Evidence and policy decision allowing one backend into the gateway |\n| Qualified tool name | Stable public route such as `notes.search` |\n| Descriptor pin | Approved digest checked during discovery and dispatch |\n| Private cache scope | Cached result restricted to one authorization context |\n| Request-scoped SSE | Streaming response attached to one POST request |\n| `subscriptions/listen` | Client-opened SSE stream for selected long-lived change notifications |\n| Task route | Application mapping from an opaque task id to its backend |\n| Legacy adapter | Explicit version-gated boundary for old handshake and session behavior |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Streamable HTTP transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)\n- [Server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)\n- [Official Registry server.json requirements](https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/official-registry-requirements.md)\n- [MCP Tasks extension](https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks)",
+    "keyPoints": [
+      "[Streamable HTTP transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)",
+      "[Server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)",
+      "[MCP Tasks extension](https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks)"
+    ],
+    "commands": []
+  }
+]

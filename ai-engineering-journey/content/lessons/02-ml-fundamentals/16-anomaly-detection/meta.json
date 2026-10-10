@@ -1,0 +1,20 @@
+{
+  "id": "02-ml-fundamentals/16-anomaly-detection",
+  "slug": "16-anomaly-detection",
+  "phase": "02-ml-fundamentals",
+  "order": 16,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Anomaly Detection",
+    "zh": ""
+  },
+  "hook": "Normal is easy to define. Abnormal is whatever doesn't fit.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lessons 01-09"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

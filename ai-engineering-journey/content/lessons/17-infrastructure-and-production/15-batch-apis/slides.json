@@ -1,0 +1,88 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Batch APIs — the 50% Discount as Industry Standard\n\n> Every major provider ships an async batch API with a 50% discount and ~24-hour turnaround. OpenAI, Anthropic, Google, and most of the inference platforms (Fireworks batch tier, Together batch) implement the same pattern. Stack batch with prompt caching and overnight pipelines drop to ~10% of synchronous-uncached cost. The rule is brutally simple: if it is not interactive, it belongs on batch. Content generation pipelines, document classification, data extraction, report generation, bulk labeling, catalog tagging — anything tolerant of 24-hour latency is money left on the table until it moves to batch. The 2026 production pattern is to triage every new LLM workload into three lanes: interactive (synchronous with caching), semi-interactive (async queue with fallback), batch (overnight, cached input stacked). Workloads that pretend to be interactive but tolerate minutes of latency waste most.\n\n**Type:** Learn\n**Languages:** Python (stdlib, toy batch-vs-sync cost simulator)\n**Prerequisites:** Phase 17 · 14 (Prompt & Semantic Caching)\n**Time:** ~45 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Name the three provider batch APIs (OpenAI, Anthropic, Google) and the common 50% discount + 24h turnaround guarantees.\n- Compute the cost for stacking batch + cached-input on an overnight classification workload and compare to synchronous-uncached baseline.\n- Triage a workload into interactive / semi-interactive / batch and justify the lane.\n- Name the two traps: partial interactivity (user expects faster than 24h) and output-schema drift (batch file format differs per provider).",
+    "keyPoints": [
+      "Name the three provider batch APIs (OpenAI, Anthropic, Google) and the common 50% discount + 24h turnaround guarantees.",
+      "Compute the cost for stacking batch + cached-input on an overnight classification workload and compare to synchronous-uncached baseline.",
+      "Triage a workload into interactive / semi-interactive / batch and justify the lane.",
+      "Name the two traps: partial interactivity (user expects faster than 24h) and output-schema drift (batch file format differs per provider)."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Your team ships a nightly report generation pipeline. 50,000 documents, summarize each, cluster the summaries, draft an executive brief. Running synchronously it takes 4 hours at $2,000/night. You hear about batch APIs.\n\nThe batch gets you 50% off. You also enable prompt caching on the system prompt (shared across all 50k calls). Stacked, the bill drops to $180/night — ~9% of baseline. Same pipeline, three config changes.\n\nBatch is the cheapest lever in the LLM cost toolkit that nobody pulls. The reason is mostly organizational: teams think \"real-time\" when the SLA actually is \"by morning.\" This lesson is about not leaving 90% of the bill on the table.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### The three batch APIs\n\n**OpenAI Batch API**: JSONL file upload with a list of requests. Promised 24-hour turnaround (usually ~2-8 hours in practice). 50% discount on input and output tokens. `/v1/batches` endpoint. Cache-eligible inputs also get cached-input pricing on top.\n\n**Anthropic Message Batches**: JSONL upload. 24-hour turnaround. 50% discount. Supports `cache_control` — cache writes are explicit, reads happen automatically within the batch.\n\n**Google Vertex AI Batch Prediction**: BigQuery or GCS input. Similar 50% discount for Gemini. Integrates with Vertex pipelines.\n\n### Semantic: asynchronous, not slow\n\nBatch is \"I promise to return within 24 hours\" — not \"this will take 24 hours.\" Typical P50 is 2-6 hours. Provider schedules your batch during off-peak windows when GPU inventory is underutilized.\n\n### Stack with caching\n\nA 50k-document summarization with the same 4K-token system prompt:\n\n- Synchronous uncached: 50000 × ($input × 4000 + $output × 200) at full rates.\n- Synchronous cached: system prompt cached after first write; remaining 49999 get 10x cheaper input.\n- Batch cached: all of the above plus 50% discount on both read and write.\n\nThe stack: batch + cache = ~10% of sync uncached bill. Any workload that runs overnight and has a shared system prompt should use this.\n\n### Workload triage\n\n**Interactive** — user waits for the response. TTFT matters. Synchronous call with prompt caching. Cannot batch.\n\n**Semi-interactive** — user submits a task, checks back in minutes. Async queue with fallback to sync if batch not available. Think moderate-volume RAG indexing.\n\n**Batch** — user expects results \"by morning\" or \"next hour.\" Content pipelines, classification at scale, offline analysis. Always batch, always stack caching.\n\nCommon mistake: classifying everything as interactive because the pipeline is production. Production is not a latency spec — SLA is.\n\n### The partial-interactivity trap\n\nSome features look interactive but tolerate 5-10 minutes. Example: a nightly customer health report with \"refresh\" button. User clicks refresh; wait 10 minutes is fine. Team ships it as synchronous. 50 concurrent refreshes cost 10x what batched-and-delivered-via-email would cost.\n\nThe question to ask: \"What does 24-hour mean for this user?\" If the answer is \"they wouldn't notice,\" batch it.\n\n### The output-schema trap\n\nBatch file formats differ per provider:\n\n- OpenAI: JSONL, one request per line.\n- Anthropic: JSONL, one message per line; response format embedded.\n- Vertex: BigQuery table or GCS prefix with TFRecord.\n\nWriting \"one batch client\" across providers means adapter code per provider. Gateways that advertise multi-provider batch (Portkey, LiteLLM some tiers) still thin-wrap the raw format.\n\n### Numbers you should remember\n\n- Batch discount across providers: 50% flat on input + output.\n- Turnaround SLA: 24 hours guaranteed, 2-6 hours typical P50.\n- Stacked batch + cached input: ~10% of sync uncached cost.\n- Workload triage rule: if 24h latency acceptable, always batch.\n\n```figure\nbatch-lane-triage\n```",
+    "keyPoints": [
+      "Anthropic Message Batches",
+      "Google Vertex AI Batch Prediction",
+      "Synchronous uncached: 50000 × ($input × 4000 + $output × 200) at full rates.",
+      "Synchronous cached: system prompt cached after first write; remaining 49999 get 10x cheaper input.",
+      "Batch cached: all of the above plus 50% discount on both read and write.",
+      "Interactive"
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`code/main.py` computes costs across sync, sync+cache, batch, and batch+cache for a 50k-document workload. Reports savings in $ and percent.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces `outputs/skill-batch-triager.md`. Given workload characteristics, triages into interactive/semi/batch and estimates savings.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Run `code/main.py`. For a 100k-doc pipeline with 3K-token system prompt and 500-token output, compute the savings of full stack (batch + cache) vs sync baseline.\n2. Pick three features in a real product you know. Triage each into interactive/semi/batch.\n3. A user complains their report took 3 hours. Was that a batch mis-triage or a legitimate interactive? Write the decision criterion.\n4. Your batch API return SLA is 24h but P99 is 20 hours. How do you communicate this to the user — what is the downstream system behavior on the edge case?\n5. Compute break-even: at what shared-prefix length does batch + cache become cheaper than running overnight on your own reserved GPU?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| Batch API | \"async discount\" | 50% off with 24h turnaround |\n| JSONL | \"batch format\" | One JSON request per line; OpenAI/Anthropic standard |\n| Message Batches | \"Anthropic batch\" | Anthropic's batch API product name |\n| Batch prediction | \"Vertex batch\" | Vertex AI's batch API product |\n| Turnaround SLA | \"24h promise\" | Guarantee, not typical; typical is 2-6h |\n| Workload triage | \"interactivity decision\" | Interactive / semi / batch routing decision |\n| Output schema | \"response format\" | Per-provider JSONL layout; not portable |\n| Stacked discount | \"batch + cache\" | ~10% of uncached sync bill when both apply |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [OpenAI Batch API](https://platform.openai.com/docs/guides/batch) — JSONL format and `/v1/batches` semantics.\n- [Anthropic Message Batches](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) — batch format and `cache_control` interaction.\n- [Vertex AI Batch Prediction](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/batch-prediction-gemini) — Gemini batch semantics.\n- [Finout — OpenAI vs Anthropic API Pricing 2026](https://www.finout.io/blog/openai-vs-anthropic-api-pricing-comparison)\n- [Zen Van Riel — LLM API Cost Comparison 2026](https://zenvanriel.com/ai-engineer-blog/llm-api-cost-comparison-2026/)",
+    "keyPoints": [
+      "[OpenAI Batch API](https://platform.openai.com/docs/guides/batch) — JSONL format and `/v1/batches` semantics.",
+      "[Anthropic Message Batches](https://docs.anthropic.com/en/docs/build-with-claude/batch-processing) — batch format and `cache_control` interaction.",
+      "[Vertex AI Batch Prediction](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/batch-prediction-gemini) — Gemini batch semantics.",
+      "[Finout — OpenAI vs Anthropic API Pricing 2026](https://www.finout.io/blog/openai-vs-anthropic-api-pricing-comparison)",
+      "[Zen Van Riel — LLM API Cost Comparison 2026](https://zenvanriel.com/ai-engineer-blog/llm-api-cost-comparison-2026/)"
+    ],
+    "commands": []
+  }
+]

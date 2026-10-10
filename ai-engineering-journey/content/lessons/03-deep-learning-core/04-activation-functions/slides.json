@@ -1,0 +1,150 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Activation Functions\n\n> Without nonlinearity, your 100-layer network is a fancy matrix multiply. Activations are the gates that let neural networks think in curves.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Lesson 03.03 (Backpropagation)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish, and softmax with their derivatives from scratch\n- Diagnose the vanishing gradient problem by measuring activation magnitudes through 10+ layers with different activations\n- Detect dead neurons in a ReLU network and explain why GELU avoids this failure mode\n- Select the correct activation function for a given architecture (transformer, CNN, RNN, output layer)",
+    "keyPoints": [
+      "Implement sigmoid, tanh, ReLU, Leaky ReLU, GELU, Swish, and softmax with their derivatives from scratch",
+      "Diagnose the vanishing gradient problem by measuring activation magnitudes through 10+ layers with different activations",
+      "Detect dead neurons in a ReLU network and explain why GELU avoids this failure mode",
+      "Select the correct activation function for a given architecture (transformer, CNN, RNN, output layer)"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Stack two linear transformations: y = W2(W1x + b1) + b2. Expand it: y = W2W1x + W2b1 + b2. That's just y = Ax + c -- a single linear transformation. No matter how many linear layers you stack, the result collapses to one matrix multiply. Your 100-layer network has the same representational power as a single layer.\n\nThis is not a theoretical curiosity. It means a deep linear network literally cannot learn XOR, cannot classify a spiral dataset, cannot recognize a face. Without activation functions, depth is an illusion.\n\nActivation functions break the linearity. They warp the output of each layer through a nonlinear function, giving the network the ability to bend decision boundaries, approximate arbitrary functions, and actually learn. But pick the wrong activation and your gradients vanish to zero (sigmoid in deep networks), explode to infinity (unbounded activations without careful initialization), or your neurons die permanently (ReLU with large negative biases). The choice of activation function directly determines whether your network learns at all.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Why Nonlinearity Is Necessary\n\nMatrix multiplication is composable. Multiplying a vector by matrix A then matrix B is identical to multiplying by AB. This means stacking ten linear layers is mathematically equivalent to one linear layer with one big matrix. All those parameters, all that depth -- wasted. You need something to break the chain. That's what activation functions do.\n\nHere is the proof. A linear layer computes f(x) = Wx + b. Stack two:\n\n```\nLayer 1: h = W1 * x + b1\nLayer 2: y = W2 * h + b2\n```\n\nSubstitute:\n\n```\ny = W2 * (W1 * x + b1) + b2\ny = (W2 * W1) * x + (W2 * b1 + b2)\ny = A * x + c\n```\n\nOne layer. Insert a nonlinear activation g() between layers:\n\n```\nh = g(W1 * x + b1)\ny = W2 * h + b2\n```\n\nNow the substitution breaks. W2 * g(W1 * x + b1) + b2 cannot be reduced to a single linear transformation. The network can represent nonlinear functions. Each additional layer with an activation adds representational capacity.\n\n### Sigmoid\n\nThe original activation function for neural networks.\n\n```\nsigmoid(x) = 1 / (1 + e^(-x))\n```\n\nOutput range: (0, 1). Smooth, differentiable, maps any real number to a probability-like value.\n\nThe derivative:\n\n```\nsigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))\n```\n\nThe maximum value of this derivative is 0.25, occurring at x = 0. In backpropagation, gradients multiply through layers. Ten layers of sigmoid means the gradient gets multiplied by at most 0.25 ten times:\n\n```\n0.25^10 = 0.000000953674\n```\n\nLess than one millionth of the original signal. This is the vanishing gradient problem. Gradients in early layers become so small that weights barely update. The network appears to learn -- loss decreases in later layers -- but the first layers are frozen. Deep sigmoid networks simply do not train.\n\nAdditional problem: sigmoid outputs are always positive (0 to 1), which means gradients on weights are always the same sign. This causes zig-zagging during gradient descent.\n\n### Tanh\n\nThe centered version of sigmoid.\n\n```\ntanh(x) = (e^x - e^(-x)) / (e^x + e^(-x))\n```\n\nOutput range: (-1, 1). Zero-centered, which eliminates the zig-zag problem.\n\nThe derivative:\n\n```\ntanh'(x) = 1 - tanh(x)^2\n```\n\nMaximum derivative is 1.0 at x = 0 -- four times better than sigmoid. But the vanishing gradient problem still exists. For large positive or negative inputs, the derivative approaches zero. Ten layers still crush the gradient, just less aggressively.\n\n### ReLU: The Breakthrough\n\nRectified Linear Unit. Popularized for deep learning by Nair and Hinton in 2010 (the function itself dates to Fukushima's 1969 work), it changed everything.\n\n```\nrelu(x) = max(0, x)\n```\n\nOutput range: [0, infinity). The derivative is trivially simple:\n\n```\nrelu'(x) = 1  if x > 0\n            0  if x <= 0\n```\n\nNo vanishing gradient for positive inputs. The gradient is exactly 1, passed straight through. This is why deep networks became trainable -- ReLU preserves gradient magnitude across layers.\n\nBut there is a failure mode: the dead neuron problem. If a neuron's weighted input is always negative (due to a large negative bias or unfortunate weight initialization), its output is always zero, its gradient is always zero, and it never updates. It is permanently dead. In practice, 10-40% of neurons in a ReLU network can die during training.\n\n### Leaky ReLU\n\nThe simplest fix for dead neurons.\n\n```\nleaky_relu(x) = x        if x > 0\n                alpha * x if x <= 0\n```\n\nWhere alpha is a small constant, typically 0.01. The negative side has a small slope instead of zero, so dead neurons still get a gradient signal and can recover.\n\n### GELU: The Modern Default\n\nGaussian Error Linear Unit. Introduced by Hendrycks and Gimpel in 2016. Default activation in BERT, GPT, and most modern transformers.\n\n```\ngelu(x) = x * Phi(x)\n```\n\nWhere Phi(x) is the cumulative distribution function of the standard normal distribution. The approximation used in practice:\n\n```\ngelu(x) ~= 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))\n```\n\nGELU is smooth everywhere, allows small negative values (unlike ReLU which hard-clips to zero), and has a probabilistic interpretation: it weights each input by how likely it is to be positive under a Gaussian distribution. This smooth gating outperforms ReLU in transformer architectures because it provides better gradient flow and avoids the dead neuron problem entirely.\n\n### Swish / SiLU\n\nSelf-gated activation discovered by Ramachandran et al. in 2017 through automated search.\n\n```\nswish(x) = x * sigmoid(x)\n```\n\nSwish is formally x * sigmoid(x). Google discovered it through automated search over activation function space -- a neural network designing parts of neural networks.\n\nLike GELU, it is smooth, non-monotonic, and allows small negative values. The difference is subtle: Swish uses sigmoid for gating while GELU uses the Gaussian CDF. In practice, performance is nearly identical. Swish is used in EfficientNet and some vision models. GELU dominates in language models.\n\n### Softmax: The Output Activation\n\nNot used in hidden layers. Softmax converts a vector of raw scores (logits) into a probability distribution.\n\n```\nsoftmax(x_i) = e^(x_i) / sum(e^(x_j) for all j)\n```\n\nEvery output is between 0 and 1. All outputs sum to 1. This makes it the standard final activation for multi-class classification. The largest logit gets the highest probability, but unlike argmax, softmax is differentiable and preserves information about relative confidence.\n\n### Comparison of Shapes\n\n```mermaid\ngraph LR\n    subgraph \"Activation Functions\"\n        S[\"Sigmoid<br/>Range: (0,1)<br/>Saturates both ends\"]\n        T[\"Tanh<br/>Range: (-1,1)<br/>Zero-centered\"]\n        R[\"ReLU<br/>Range: [0,inf)<br/>Dead neurons\"]\n        G[\"GELU<br/>Range: ~(-0.17,inf)<br/>Smooth gating\"]\n    end\n    S -->|\"Vanishing gradient\"| Problem[\"Deep networks<br/>don't train\"]\n    T -->|\"Less severe but<br/>still vanishes\"| Problem\n    R -->|\"Gradient = 1<br/>for x > 0\"| Solution[\"Deep networks<br/>train fast\"]\n    G -->|\"Smooth gradient<br/>everywhere\"| Solution\n```\n\n### Gradient Flow Comparison\n\n```mermaid\ngraph TD\n    Input[\"Input Signal\"] --> L1[\"Layer 1\"]\n    L1 --> L5[\"Layer 5\"]\n    L5 --> L10[\"Layer 10\"]\n    L10 --> Output[\"Output\"]\n\n    subgraph \"Gradient at Layer 1\"\n        SigGrad[\"Sigmoid: ~0.000001\"]\n        TanhGrad[\"Tanh: ~0.001\"]\n        ReluGrad[\"ReLU: ~1.0\"]\n        GeluGrad[\"GELU: ~0.8\"]\n    end\n```\n\n### Which Activation When\n\n```mermaid\nflowchart TD\n    Start[\"What are you building?\"] --> Hidden{\"Hidden layers<br/>or output?\"}\n\n    Hidden -->|\"Hidden layers\"| Arch{\"Architecture?\"}\n    Hidden -->|\"Output layer\"| Task{\"Task type?\"}\n\n    Arch -->|\"Transformer / NLP\"| GELU[\"Use GELU\"]\n    Arch -->|\"CNN / Vision\"| ReLU[\"Use ReLU or Swish\"]\n    Arch -->|\"RNN / LSTM\"| Tanh[\"Use Tanh\"]\n    Arch -->|\"Simple MLP\"| ReLU2[\"Use ReLU\"]\n\n    Task -->|\"Binary classification\"| Sigmoid[\"Use Sigmoid\"]\n    Task -->|\"Multi-class classification\"| Softmax[\"Use Softmax\"]\n    Task -->|\"Regression\"| Linear[\"Use Linear (no activation)\"]\n```\n\n```figure\nsoftmax-temperature\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Layer 1: h = W1 * x + b1\nLayer 2: y = W2 * h + b2"
+      },
+      {
+        "lang": "text",
+        "code": "y = W2 * (W1 * x + b1) + b2\ny = (W2 * W1) * x + (W2 * b1 + b2)\ny = A * x + c"
+      },
+      {
+        "lang": "text",
+        "code": "h = g(W1 * x + b1)\ny = W2 * h + b2"
+      },
+      {
+        "lang": "text",
+        "code": "sigmoid(x) = 1 / (1 + e^(-x))"
+      },
+      {
+        "lang": "text",
+        "code": "sigmoid'(x) = sigmoid(x) * (1 - sigmoid(x))"
+      },
+      {
+        "lang": "text",
+        "code": "0.25^10 = 0.000000953674"
+      },
+      {
+        "lang": "text",
+        "code": "tanh(x) = (e^x - e^(-x)) / (e^x + e^(-x))"
+      },
+      {
+        "lang": "text",
+        "code": "tanh'(x) = 1 - tanh(x)^2"
+      },
+      {
+        "lang": "text",
+        "code": "relu(x) = max(0, x)"
+      },
+      {
+        "lang": "text",
+        "code": "relu'(x) = 1  if x > 0\n            0  if x <= 0"
+      },
+      {
+        "lang": "text",
+        "code": "leaky_relu(x) = x        if x > 0\n                alpha * x if x <= 0"
+      },
+      {
+        "lang": "text",
+        "code": "gelu(x) = x * Phi(x)"
+      },
+      {
+        "lang": "text",
+        "code": "gelu(x) ~= 0.5 * x * (1 + tanh(sqrt(2/pi) * (x + 0.044715 * x^3)))"
+      },
+      {
+        "lang": "text",
+        "code": "swish(x) = x * sigmoid(x)"
+      },
+      {
+        "lang": "text",
+        "code": "softmax(x_i) = e^(x_i) / sum(e^(x_j) for all j)"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: Implement All Activation Functions with Derivatives\n\nEach function takes a single float and returns a float. Each derivative function takes the same input and returns the gradient.\n\n```python\nimport math\n\ndef sigmoid(x):\n    x = max(-500, min(500, x))\n    return 1.0 / (1.0 + math.exp(-x))\n\ndef sigmoid_derivative(x):\n    s = sigmoid(x)\n    return s * (1 - s)\n\ndef tanh_act(x):\n    return math.tanh(x)\n\ndef tanh_derivative(x):\n    t = math.tanh(x)\n    return 1 - t * t\n\ndef relu(x):\n    return max(0.0, x)\n\ndef relu_derivative(x):\n    return 1.0 if x > 0 else 0.0\n\ndef leaky_relu(x, alpha=0.01):\n    return x if x > 0 else alpha * x\n\ndef leaky_relu_derivative(x, alpha=0.01):\n    return 1.0 if x > 0 else alpha\n\ndef gelu(x):\n    return 0.5 * x * (1 + math.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * x ** 3)))\n\ndef gelu_derivative(x):\n    phi = 0.5 * (1 + math.erf(x / math.sqrt(2)))\n    pdf = math.exp(-0.5 * x * x) / math.sqrt(2 * math.pi)\n    return phi + x * pdf\n\ndef swish(x):\n    return x * sigmoid(x)\n\ndef swish_derivative(x):\n    s = sigmoid(x)\n    return s + x * s * (1 - s)\n\ndef softmax(xs):\n    max_x = max(xs)\n    exps = [math.exp(x - max_x) for x in xs]\n    total = sum(exps)\n    return [e / total for e in exps]\n```\n\n### Step 2: Visualize Where Gradients Die\n\nCompute the gradient at 100 evenly-spaced points from -5 to 5. Print a text histogram showing where each activation's gradient is near-zero.\n\n```python\ndef gradient_scan(name, derivative_fn, start=-5, end=5, n=100):\n    step = (end - start) / n\n    near_zero = 0\n    healthy = 0\n    for i in range(n):\n        x = start + i * step\n        g = derivative_fn(x)\n        if abs(g) < 0.01:\n            near_zero += 1\n        else:\n            healthy += 1\n    pct_dead = near_zero / n * 100\n    print(f\"{name:15s}: {healthy:3d} healthy, {near_zero:3d} near-zero ({pct_dead:.0f}% dead zone)\")\n\ngradient_scan(\"Sigmoid\", sigmoid_derivative)\ngradient_scan(\"Tanh\", tanh_derivative)\ngradient_scan(\"ReLU\", relu_derivative)\ngradient_scan(\"Leaky ReLU\", leaky_relu_derivative)\ngradient_scan(\"GELU\", gelu_derivative)\ngradient_scan(\"Swish\", swish_derivative)\n```\n\n### Step 3: Vanishing Gradient Experiment\n\nForward-pass a signal through N layers using sigmoid vs ReLU. Measure how the activation magnitude changes.\n\n```python\nimport random\n\ndef vanishing_gradient_experiment(activation_fn, name, n_layers=10, n_inputs=5):\n    random.seed(42)\n    values = [random.gauss(0, 1) for _ in range(n_inputs)]\n\n    print(f\"\\n{name} through {n_layers} layers:\")\n    for layer in range(n_layers):\n        weights = [random.gauss(0, 1) for _ in range(n_inputs)]\n        z = sum(w * v for w, v in zip(weights, values))\n        activated = activation_fn(z)\n        magnitude = abs(activated)\n        bar = \"#\" * int(magnitude * 20)\n        print(f\"  Layer {layer+1:2d}: magnitude = {magnitude:.6f} {bar}\")\n        values = [activated] * n_inputs\n\nvanishing_gradient_experiment(sigmoid, \"Sigmoid\")\nvanishing_gradient_experiment(relu, \"ReLU\")\nvanishing_gradient_experiment(gelu, \"GELU\")\n```\n\n### Step 4: Dead Neuron Detector\n\nCreate a ReLU network, pass random inputs through it, count how many neurons never fire.\n\n```python\ndef dead_neuron_detector(n_inputs=5, hidden_size=20, n_samples=1000):\n    random.seed(0)\n    weights = [[random.gauss(0, 1) for _ in range(n_inputs)] for _ in range(hidden_size)]\n    biases = [random.gauss(0, 1) for _ in range(hidden_size)]\n\n    fire_counts = [0] * hidden_size\n\n    for _ in range(n_samples):\n        inputs = [random.gauss(0, 1) for _ in range(n_inputs)]\n        for neuron_idx in range(hidden_size):\n            z = sum(w * x for w, x in zip(weights[neuron_idx], inputs)) + biases[neuron_idx]\n            if relu(z) > 0:\n                fire_counts[neuron_idx] += 1\n\n    dead = sum(1 for c in fire_counts if c == 0)\n    rarely_fire = sum(1 for c in fire_counts if 0 < c < n_samples * 0.05)\n    healthy = hidden_size - dead - rarely_fire\n\n    print(f\"\\nDead Neuron Report ({hidden_size} neurons, {n_samples} samples):\")\n    print(f\"  Dead (never fired):     {dead}\")\n    print(f\"  Barely alive (<5%):     {rarely_fire}\")\n    print(f\"  Healthy:                {healthy}\")\n    print(f\"  Dead neuron rate:       {dead/hidden_size*100:.1f}%\")\n\n    for i, c in enumerate(fire_counts):\n        status = \"DEAD\" if c == 0 else \"WEAK\" if c < n_samples * 0.05 else \"OK\"\n        bar = \"#\" * (c * 40 // n_samples)\n        print(f\"  Neuron {i:2d}: {c:4d}/{n_samples} fires [{status:4s}] {bar}\")\n\ndead_neuron_detector()\n```\n\n### Step 5: Training Comparison -- Sigmoid vs ReLU vs GELU\n\nTrain the same two-layer network on the circle dataset (points inside a circle = class 1, outside = class 0) with three different activations. Compare convergence speed.\n\n```python\ndef make_circle_data(n=200, seed=42):\n    random.seed(seed)\n    data = []\n    for _ in range(n):\n        x = random.uniform(-2, 2)\n        y = random.uniform(-2, 2)\n        label = 1.0 if x * x + y * y < 1.5 else 0.0\n        data.append(([x, y], label))\n    return data\n\n\nclass ActivationNetwork:\n    def __init__(self, activation_fn, activation_deriv, hidden_size=8, lr=0.1):\n        random.seed(0)\n        self.act = activation_fn\n        self.act_d = activation_deriv\n        self.lr = lr\n        self.hidden_size = hidden_size\n\n        self.w1 = [[random.gauss(0, 0.5) for _ in range(2)] for _ in range(hidden_size)]\n        self.b1 = [0.0] * hidden_size\n        self.w2 = [random.gauss(0, 0.5) for _ in range(hidden_size)]\n        self.b2 = 0.0\n\n    def forward(self, x):\n        self.x = x\n        self.z1 = []\n        self.h = []\n        for i in range(self.hidden_size):\n            z = self.w1[i][0] * x[0] + self.w1[i][1] * x[1] + self.b1[i]\n            self.z1.append(z)\n            self.h.append(self.act(z))\n\n        self.z2 = sum(self.w2[i] * self.h[i] for i in range(self.hidden_size)) + self.b2\n        self.out = sigmoid(self.z2)\n        return self.out\n\n    def backward(self, target):\n        error = self.out - target\n        d_out = error * self.out * (1 - self.out)\n\n        for i in range(self.hidden_size):\n            d_h = d_out * self.w2[i] * self.act_d(self.z1[i])\n            self.w2[i] -= self.lr * d_out * self.h[i]\n            for j in range(2):\n                self.w1[i][j] -= self.lr * d_h * self.x[j]\n            self.b1[i] -= self.lr * d_h\n        self.b2 -= self.lr * d_out\n\n    def train(self, data, epochs=200):\n        losses = []\n        for epoch in range(epochs):\n            total_loss = 0\n            correct = 0\n            for x, y in data:\n                pred = self.forward(x)\n                self.backward(y)\n                total_loss += (pred - y) ** 2\n                if (pred >= 0.5) == (y >= 0.5):\n                    correct += 1\n            avg_loss = total_loss / len(data)\n            accuracy = correct / len(data) * 100\n            losses.append(avg_loss)\n            if epoch % 50 == 0 or epoch == epochs - 1:\n                print(f\"    Epoch {epoch:3d}: loss={avg_loss:.4f}, accuracy={accuracy:.1f}%\")\n        return losses\n\n\ndata = make_circle_data()\n\nconfigs = [\n    (\"Sigmoid\", sigmoid, sigmoid_derivative),\n    (\"ReLU\", relu, relu_derivative),\n    (\"GELU\", gelu, gelu_derivative),\n]\n\nresults = {}\nfor name, act_fn, act_d_fn in configs:\n    print(f\"\\n=== Training with {name} ===\")\n    net = ActivationNetwork(act_fn, act_d_fn, hidden_size=8, lr=0.1)\n    losses = net.train(data, epochs=200)\n    results[name] = losses\n\nprint(\"\\n=== Final Loss Comparison ===\")\nfor name, losses in results.items():\n    print(f\"  {name:10s}: start={losses[0]:.4f} -> end={losses[-1]:.4f} (improvement: {(1 - losses[-1]/losses[0])*100:.1f}%)\")\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "PyTorch provides all of these as both functional and module forms:\n\n```python\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nx = torch.randn(4, 10)\n\nrelu_out = F.relu(x)\ngelu_out = F.gelu(x)\nsigmoid_out = torch.sigmoid(x)\nswish_out = F.silu(x)\n\nlogits = torch.randn(4, 5)\nprobs = F.softmax(logits, dim=1)\n\nmodel = nn.Sequential(\n    nn.Linear(10, 64),\n    nn.GELU(),\n    nn.Linear(64, 32),\n    nn.GELU(),\n    nn.Linear(32, 5),\n)\n```\n\nHidden layers in a transformer: GELU. Hidden layers in a CNN: ReLU. Output layer for classification: softmax. Output layer for regression: none (linear). Output layer for probabilities: sigmoid. That's it. Start with these defaults. Change them only when you have evidence.\n\nRNNs and LSTMs use tanh for hidden state and sigmoid for gates, but if you're building from scratch today, you're probably not using RNNs. If neurons are dying in your ReLU network, switch to GELU. Don't reach for Leaky ReLU unless you have a specific reason -- GELU solves the dead neuron problem and gives better gradient flow.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces:\n- `outputs/prompt-activation-selector.md` -- a reusable prompt that helps you pick the right activation function for any architecture",
+    "keyPoints": [
+      "`outputs/prompt-activation-selector.md` -- a reusable prompt that helps you pick the right activation function for any architecture"
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Implement Parametric ReLU (PReLU) where the negative slope alpha is a learnable parameter. Train it on the circle dataset and compare to fixed Leaky ReLU.\n\n2. Run the vanishing gradient experiment with 50 layers instead of 10. Plot the magnitude at each layer for sigmoid, tanh, ReLU, and GELU. At which layer does each activation's signal effectively reach zero?\n\n3. Implement the ELU (Exponential Linear Unit): elu(x) = x if x > 0, alpha * (e^x - 1) if x <= 0. Compare its dead neuron rate to ReLU on the same network.\n\n4. Build a \"gradient health monitor\" that runs during training: at each epoch, compute the average gradient magnitude at each layer. Print a warning when any layer's gradient drops below 0.001 or exceeds 100.\n\n5. Modify the training comparison to use the XOR dataset from Lesson 01 instead of circles. Which activation converges fastest on XOR? Why does this differ from the circle results?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|----------------------|\n| Activation function | \"The nonlinear part\" | A function applied to each neuron's output that breaks linearity, enabling the network to learn nonlinear mappings |\n| Vanishing gradient | \"Gradients disappear in deep networks\" | Gradients shrink exponentially through layers when the activation's derivative is less than 1, making early layers untrainable |\n| Exploding gradient | \"Gradients blow up\" | Gradients grow exponentially through layers when the effective multiplier exceeds 1, causing unstable training |\n| Dead neuron | \"A neuron that stopped learning\" | A ReLU neuron whose input is permanently negative, producing zero output and zero gradient |\n| Sigmoid | \"Squishes values to 0-1\" | The logistic function 1/(1+e^-x), historically important but causes vanishing gradients in deep networks |\n| ReLU | \"Clips negatives to zero\" | max(0, x) -- the activation that made deep learning practical by preserving gradient magnitude |\n| GELU | \"The transformer activation\" | Gaussian Error Linear Unit, a smooth activation that weights inputs by their probability of being positive |\n| Swish/SiLU | \"Self-gated ReLU\" | x * sigmoid(x), discovered through automated search, used in EfficientNet |\n| Softmax | \"Turns scores into probabilities\" | Normalizes a vector of logits into a probability distribution where all values are in (0,1) and sum to 1 |\n| Leaky ReLU | \"ReLU that doesn't die\" | max(alpha*x, x) where alpha is small (0.01), preventing dead neurons by allowing small negative gradients |\n| Saturation | \"The flat part of sigmoid\" | Regions where an activation's derivative approaches zero, blocking gradient flow |\n| Logit | \"The raw score before softmax\" | The unnormalized output of the final layer before applying softmax or sigmoid |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- Nair & Hinton, \"Rectified Linear Units Improve Restricted Boltzmann Machines\" (2010) -- the paper that introduced ReLU and enabled training of deep networks\n- Hendrycks & Gimpel, \"Gaussian Error Linear Units (GELUs)\" (2016) -- introduced the activation function that became the default for transformers\n- Ramachandran et al., \"Searching for Activation Functions\" (2017) -- used automated search to discover Swish, showing that activation design can be automated\n- Glorot & Bengio, \"Understanding the difficulty of training deep feedforward neural networks\" (2010) -- the paper that diagnosed vanishing/exploding gradients and proposed Xavier initialization\n- Goodfellow, Bengio, Courville, \"Deep Learning\" Chapter 6.3 (https://www.deeplearningbook.org/) -- rigorous treatment of hidden units and activation functions",
+    "keyPoints": [
+      "Nair & Hinton, \"Rectified Linear Units Improve Restricted Boltzmann Machines\" (2010) -- the paper that introduced ReLU and enabled training of deep networks",
+      "Hendrycks & Gimpel, \"Gaussian Error Linear Units (GELUs)\" (2016) -- introduced the activation function that became the default for transformers",
+      "Ramachandran et al., \"Searching for Activation Functions\" (2017) -- used automated search to discover Swish, showing that activation design can be automated",
+      "Goodfellow, Bengio, Courville, \"Deep Learning\" Chapter 6.3 (https://www.deeplearningbook.org/) -- rigorous treatment of hidden units and activation functions"
+    ],
+    "commands": []
+  }
+]

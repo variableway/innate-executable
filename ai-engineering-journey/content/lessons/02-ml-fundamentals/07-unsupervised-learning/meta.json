@@ -1,0 +1,23 @@
+{
+  "id": "02-ml-fundamentals/07-unsupervised-learning",
+  "slug": "07-unsupervised-learning",
+  "phase": "02-ml-fundamentals",
+  "order": 7,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Unsupervised Learning",
+    "zh": ""
+  },
+  "hook": "No labels, no teacher. The algorithm finds structure on its own.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 (Norms & Distances",
+    "Probability & Distributions)",
+    "Phase 2 Lessons 1-6"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

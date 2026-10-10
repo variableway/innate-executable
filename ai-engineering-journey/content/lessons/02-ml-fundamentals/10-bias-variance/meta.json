@@ -1,0 +1,23 @@
+{
+  "id": "02-ml-fundamentals/10-bias-variance",
+  "slug": "10-bias-variance",
+  "phase": "02-ml-fundamentals",
+  "order": 10,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Bias-Variance Tradeoff",
+    "zh": ""
+  },
+  "hook": "Every model error comes from one of three sources: bias, variance, or noise. You can only control the first two.",
+  "type": "Learn",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lessons 01-09 (ML basics",
+    "regression",
+    "classification",
+    "evaluation)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

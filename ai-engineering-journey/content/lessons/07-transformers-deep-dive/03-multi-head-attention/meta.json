@@ -1,0 +1,21 @@
+{
+  "id": "07-transformers-deep-dive/03-multi-head-attention",
+  "slug": "03-multi-head-attention",
+  "phase": "07-transformers-deep-dive",
+  "order": 3,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Multi-Head Attention",
+    "zh": ""
+  },
+  "hook": "One attention head learns one relation at a time. Eight heads learn eight. Heads are free. Take more of them.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 02 (Self-Attention from Scratch)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

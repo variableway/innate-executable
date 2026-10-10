@@ -1,0 +1,23 @@
+{
+  "id": "09-reinforcement-learning/06-policy-gradients-reinforce",
+  "slug": "06-policy-gradients-reinforce",
+  "phase": "09-reinforcement-learning",
+  "order": 6,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Policy Gradient — REINFORCE from Scratch",
+    "zh": ""
+  },
+  "hook": "Stop estimating value. Parameterize the policy directly, compute the gradient of expected return, step uphill. Williams (1992) wrote it in one theorem. It is why PPO, GRPO, and every LLM RL loop exist.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 · 03 (Backpropagation)",
+    "Phase 9 · 03 (Monte Carlo)",
+    "Phase 9 · 04 (TD Learning)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

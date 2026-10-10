@@ -1,0 +1,119 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@atlas/ui/components/ui/card';
+import { Badge } from '@atlas/ui/components/ui/badge';
+import { buttonVariants } from '@atlas/ui/components/ui/button';
+import { Separator } from '@atlas/ui/components/ui/separator';
+import { frameworkMeta } from '@/lib/frameworks';
+import { formatDate } from '@/lib/utils';
+import { RecentViews } from '@/components/atlas/recent-views';
+import { useTranslations, type Locale } from '@/i18n/ui';
+import { localePath } from '@/i18n/utils';
+import { getLocalizedEntries } from '@/i18n/content';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+const dateLocale = locale === 'zh' ? 'zh-CN' : 'en-US';
+
+const lessons = (await getLocalizedEntries('lessons', locale, ({ data }) => !data.draft))
+  .sort((a, b) => b.entry.data.publishedAt.getTime() - a.entry.data.publishedAt.getTime());
+const useCases = await getLocalizedEntries('useCases', locale);
+
+const featured = lessons.slice(0, 6);
+
+const stats = [
+  { label: t('home.stats.lessons'), value: lessons.length },
+  { label: t('home.stats.frameworks'), value: Object.keys(frameworkMeta).length },
+  { label: t('home.stats.useCases'), value: useCases.length },
+  {
+    label: t('home.stats.readingTime'),
+    value: `${lessons.reduce((acc, l) => acc + (l.entry.data.duration ?? 0), 0)} ${t('lessons.minUnit')}`,
+  },
+];
+---
+
+<BaseLayout description={t('home.lede')}>
+  <section class="space-y-8">
+    <div class="space-y-4">
+      <Badge variant="outline">{t('home.badge')}</Badge>
+      <h1 class="text-4xl font-bold tracking-tight md:text-5xl">
+        {t('home.title')}
+      </h1>
+      <p class="max-w-2xl text-lg text-muted-foreground">
+        {t('home.lede')}
+      </p>
+      <div class="flex flex-wrap gap-3 pt-2">
+        <a href={localePath(locale, '/lessons')} data-astro-prefetch class={buttonVariants()}>{t('home.cta.start')}</a>
+        <a href={localePath(locale, '/frameworks')} class={buttonVariants({ variant: 'outline' })}>{t('home.cta.frameworks')}</a>
+      </div>
+    </div>
+
+    <Separator />
+
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {stats.map((stat) => (
+        <Card className="p-5">
+          <p class="text-2xl font-semibold tracking-tight">{stat.value}</p>
+          <p class="text-sm text-muted-foreground">{stat.label}</p>
+        </Card>
+      ))}
+    </div>
+  </section>
+
+  <div class="mt-16 grid gap-10 md:grid-cols-[1fr_280px]">
+    <section class="space-y-6">
+      <div class="flex items-end justify-between">
+        <h2 class="text-2xl font-bold tracking-tight">{t('home.latest')}</h2>
+        <a href={localePath(locale, '/lessons')} class="text-sm text-muted-foreground hover:text-foreground">
+          {t('home.viewAll')}
+        </a>
+      </div>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {featured.map((lesson) => (
+          <a href={localePath(locale, `/lessons/${lesson.slug}`)} class="group">
+            <Card className="h-full transition-colors group-hover:border-primary/40">
+              <CardHeader>
+                <div class="flex flex-wrap gap-1.5">
+                  <Badge variant="outline">{lesson.entry.data.framework}</Badge>
+                  <Badge variant="secondary">{lesson.entry.data.level}</Badge>
+                </div>
+                <CardTitle className="mt-2">{lesson.entry.data.title}</CardTitle>
+                <CardDescription>{lesson.entry.data.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p class="text-xs text-muted-foreground">
+                  {formatDate(lesson.entry.data.publishedAt, undefined, dateLocale)}
+                  {lesson.entry.data.duration ? ` · ${lesson.entry.data.duration} ${t('lessons.minUnit')}` : ''}
+                </p>
+              </CardContent>
+            </Card>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <aside class="md:sticky md:top-20 md:self-start">
+      <RecentViews client:load label={t('home.recentlyViewed')} />
+    </aside>
+  </div>
+
+  <section class="mt-16 space-y-6">
+    <h2 class="text-2xl font-bold tracking-tight">{t('home.frameworkMap')}</h2>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Object.entries(frameworkMeta).map(([slug, meta]) => (
+        <a href={localePath(locale, `/frameworks#${slug}`)}>
+          <Card className="h-full transition-colors hover:border-primary/40">
+            <CardHeader>
+              <CardTitle>{meta.name}</CardTitle>
+              <CardDescription>{meta.bestFor}</CardDescription>
+            </CardHeader>
+          </Card>
+        </a>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

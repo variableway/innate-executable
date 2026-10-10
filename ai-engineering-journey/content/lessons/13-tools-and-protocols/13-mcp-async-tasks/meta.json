@@ -1,0 +1,23 @@
+{
+  "id": "13-tools-and-protocols/13-mcp-async-tasks",
+  "slug": "13-mcp-async-tasks",
+  "phase": "13-tools-and-protocols",
+  "order": 13,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Tasks Extension: Durable Work on a Stateless Core",
+    "zh": ""
+  },
+  "hook": "Stateless MCP does not mean every operation must finish in one request. The official Tasks extension gives long-running work an explicit durable handle. A server can return that handle from `tools/call`, any instance can answer `tasks/get`, and client input arrives through `tasks/update` without reviving protocol sessions.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 · 09 (transports)",
+    "Phase 13 · 11 (stateless MRTR)",
+    "Phase 13 · 12 (elicitation)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

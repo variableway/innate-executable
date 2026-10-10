@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift",
+  "slug": "30-mcp-registry-supply-chain-and-drift",
+  "phase": "13-tools-and-protocols",
+  "order": 30,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Registry Supply Chain: Admission, Drift, and Rollback",
+    "zh": ""
+  },
+  "hook": "A registry entry tells you what a publisher declared. Production admission proves what you fetched, what you observed, what you approved, and what you can safely restore.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 · 17 (gateways and registries)",
+    "Phase 13 · 18 (production authentication)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

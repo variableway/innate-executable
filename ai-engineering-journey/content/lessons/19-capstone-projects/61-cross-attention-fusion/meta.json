@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/61-cross-attention-fusion",
+  "slug": "61-cross-attention-fusion",
+  "phase": "19-capstone-projects",
+  "order": 61,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Cross-Attention Fusion",
+    "zh": ""
+  },
+  "hook": "The projection layer aligns one image vector with one caption vector. A real vision-language decoder needs every text token to attend to every patch token, so the model can ground each word in a region. Cross-attention is how that grounding happens. The text queries; the vision keys and values answer. This lesson builds the cross-attention block, the causal text self-attention, and the mask shapes that keep both legal.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37 (Track B foundations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

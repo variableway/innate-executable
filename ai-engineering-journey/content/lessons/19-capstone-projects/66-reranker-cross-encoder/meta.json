@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/66-reranker-cross-encoder",
+  "slug": "66-reranker-cross-encoder",
+  "phase": "19-capstone-projects",
+  "order": 66,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Cross-Encoder Reranker",
+    "zh": ""
+  },
+  "hook": "A bi-encoder embeds query and document independently. A cross-encoder concatenates them and reads both at once. The cross-encoder is the smartest reader and the slowest. Used as a second stage on the bi-encoder's top-k, it pays for itself.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 lesson 06 (RAG)",
+    "Phase 11 lesson 07 (advanced RAG); Phase 19 Track B foundations (lessons 20-29); Phase 19 lesson 65 (hybrid retrieval feeding this stage)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

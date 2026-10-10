@@ -1,0 +1,24 @@
+{
+  "id": "09-reinforcement-learning/12-rl-for-games",
+  "slug": "12-rl-for-games",
+  "phase": "09-reinforcement-learning",
+  "order": 12,
+  "phaseOrder": 9,
+  "title": {
+    "en": "RL for Games — AlphaZero, MuZero, and the LLM-Reasoning Era",
+    "zh": ""
+  },
+  "hook": "1992: TD-Gammon beat human champions at backgammon with pure TD. 2016: AlphaGo beat Lee Sedol. 2017: AlphaZero dominated chess, shogi, and Go from scratch. 2024: DeepSeek-R1 proved the same recipe, with GRPO replacing PPO, works on reasoning. Games are the benchmark that drives every breakthrough in this phase.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 05 (DQN)",
+    "Phase 9 · 08 (PPO)",
+    "Phase 9 · 09 (RLHF)",
+    "Phase 9 · 10 (MARL)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

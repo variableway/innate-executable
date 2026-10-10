@@ -1,0 +1,112 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# The Perceptron\n\n> The perceptron is the atom of neural networks. Split it open and you find weights, a bias, and a decision.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 1 (Linear Algebra Intuition)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement a perceptron from scratch in Python, including the weight update rule and step activation function\n- Explain why a single perceptron can only solve linearly separable problems and demonstrate the XOR failure case\n- Construct a multi-layer perceptron by composing OR, NAND, and AND gates to solve XOR\n- Train a two-layer network with sigmoid activation and backpropagation to learn XOR automatically",
+    "keyPoints": [
+      "Implement a perceptron from scratch in Python, including the weight update rule and step activation function",
+      "Explain why a single perceptron can only solve linearly separable problems and demonstrate the XOR failure case",
+      "Construct a multi-layer perceptron by composing OR, NAND, and AND gates to solve XOR",
+      "Train a two-layer network with sigmoid activation and backpropagation to learn XOR automatically"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You know vectors and dot products. You know that a matrix transforms inputs into outputs. But how does a machine *learn* which transformation to use?\n\nThe perceptron answers this. It's the simplest possible learning machine: take some inputs, multiply by weights, add a bias, and make a binary decision. Then adjust. That's it. Every neural network ever built is layers of this idea stacked together.\n\nUnderstanding the perceptron means understanding what \"learning\" actually means in code: adjusting numbers until the output matches reality.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### One Neuron, One Decision\n\nA perceptron takes n inputs, multiplies each by a weight, sums them up, adds a bias, and passes the result through an activation function.\n\n```mermaid\ngraph LR\n    x1[\"x1\"] -- \"w1\" --> sum[\"Σ(wi*xi) + b\"]\n    x2[\"x2\"] -- \"w2\" --> sum\n    x3[\"x3\"] -- \"w3\" --> sum\n    bias[\"bias\"] --> sum\n    sum --> step[\"step(z)\"]\n    step --> out[\"output (0 or 1)\"]\n```\n\nThe step function is brutal: if the weighted sum plus bias is >= 0, output 1. Otherwise, output 0.\n\n```\nstep(z) = 1  if z >= 0\n           0  if z < 0\n```\n\nThis is a linear classifier. The weights and bias define a line (or hyperplane in higher dimensions) that splits the input space into two regions.\n\n### The Decision Boundary\n\nFor two inputs, the perceptron draws a line through 2D space:\n\n```\n  x2\n  ┤\n  │  Class 1        /\n  │    (0)          /\n  │                /\n  │               / w1·x1 + w2·x2 + b = 0\n  │              /\n  │             /     Class 2\n  │            /        (1)\n  ┼───────────/──────────── x1\n```\n\nEverything on one side of the line outputs 0. Everything on the other side outputs 1. Training moves this line until it correctly separates the classes.\n\n### The Learning Rule\n\nThe perceptron learning rule is simple:\n\n```\nFor each training example (x, y_true):\n    y_pred = predict(x)\n    error = y_true - y_pred\n\n    For each weight:\n        w_i = w_i + learning_rate * error * x_i\n    bias = bias + learning_rate * error\n```\n\nIf the prediction is correct, error = 0, nothing changes. If it predicts 0 but should be 1, weights increase. If it predicts 1 but should be 0, weights decrease. The learning rate controls how big each adjustment is.\n\n### The XOR Problem\n\nHere's where it breaks. Look at these logic gates:\n\n```\nAND gate:           OR gate:            XOR gate:\nx1  x2  out         x1  x2  out         x1  x2  out\n0   0   0           0   0   0           0   0   0\n0   1   0           0   1   1           0   1   1\n1   0   0           1   0   1           1   0   1\n1   1   1           1   1   1           1   1   0\n```\n\nAND and OR are linearly separable: you can draw a single line to separate the 0s from the 1s. XOR is not. No single line can separate [0,1] and [1,0] from [0,0] and [1,1].\n\n```\nAND (separable):        XOR (not separable):\n\n  x2                      x2\n  1 ┤  0     1            1 ┤  1     0\n    │     /                 │\n  0 ┤  0 / 0              0 ┤  0     1\n    ┼──/──────── x1         ┼──────────── x1\n       line works!          no single line works!\n```\n\nThis is a fundamental limit. A single perceptron can only solve linearly separable problems. Minsky and Papert proved this in 1969 and it nearly killed neural network research for a decade.\n\nThe fix: stack perceptrons into layers. A multi-layer perceptron can solve XOR by combining two linear decisions into a nonlinear one.\n\n```figure\nperceptron-boundary\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "step(z) = 1  if z >= 0\n           0  if z < 0"
+      },
+      {
+        "lang": "text",
+        "code": "  x2\n  ┤\n  │  Class 1        /\n  │    (0)          /\n  │                /\n  │               / w1·x1 + w2·x2 + b = 0\n  │              /\n  │             /     Class 2\n  │            /        (1)\n  ┼───────────/──────────── x1"
+      },
+      {
+        "lang": "text",
+        "code": "For each training example (x, y_true):\n    y_pred = predict(x)\n    error = y_true - y_pred\n\n    For each weight:\n        w_i = w_i + learning_rate * error * x_i\n    bias = bias + learning_rate * error"
+      },
+      {
+        "lang": "text",
+        "code": "AND gate:           OR gate:            XOR gate:\nx1  x2  out         x1  x2  out         x1  x2  out\n0   0   0           0   0   0           0   0   0\n0   1   0           0   1   1           0   1   1\n1   0   0           1   0   1           1   0   1\n1   1   1           1   1   1           1   1   0"
+      },
+      {
+        "lang": "text",
+        "code": "AND (separable):        XOR (not separable):\n\n  x2                      x2\n  1 ┤  0     1            1 ┤  1     0\n    │     /                 │\n  0 ┤  0 / 0              0 ┤  0     1\n    ┼──/──────── x1         ┼──────────── x1\n       line works!          no single line works!"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: The Perceptron class\n\n```python\nclass Perceptron:\n    def __init__(self, n_inputs, learning_rate=0.1):\n        self.weights = [0.0] * n_inputs\n        self.bias = 0.0\n        self.lr = learning_rate\n\n    def predict(self, inputs):\n        total = sum(w * x for w, x in zip(self.weights, inputs))\n        total += self.bias\n        return 1 if total >= 0 else 0\n\n    def train(self, training_data, epochs=100):\n        for epoch in range(epochs):\n            errors = 0\n            for inputs, target in training_data:\n                prediction = self.predict(inputs)\n                error = target - prediction\n                if error != 0:\n                    errors += 1\n                    for i in range(len(self.weights)):\n                        self.weights[i] += self.lr * error * inputs[i]\n                    self.bias += self.lr * error\n            if errors == 0:\n                print(f\"Converged at epoch {epoch + 1}\")\n                return\n        print(f\"Did not converge after {epochs} epochs\")\n```\n\n### Step 2: Train on logic gates\n\n```python\nand_data = [\n    ([0, 0], 0),\n    ([0, 1], 0),\n    ([1, 0], 0),\n    ([1, 1], 1),\n]\n\nor_data = [\n    ([0, 0], 0),\n    ([0, 1], 1),\n    ([1, 0], 1),\n    ([1, 1], 1),\n]\n\nnot_data = [\n    ([0], 1),\n    ([1], 0),\n]\n\nprint(\"=== AND Gate ===\")\np_and = Perceptron(2)\np_and.train(and_data)\nfor inputs, _ in and_data:\n    print(f\"  {inputs} -> {p_and.predict(inputs)}\")\n\nprint(\"\\n=== OR Gate ===\")\np_or = Perceptron(2)\np_or.train(or_data)\nfor inputs, _ in or_data:\n    print(f\"  {inputs} -> {p_or.predict(inputs)}\")\n\nprint(\"\\n=== NOT Gate ===\")\np_not = Perceptron(1)\np_not.train(not_data)\nfor inputs, _ in not_data:\n    print(f\"  {inputs} -> {p_not.predict(inputs)}\")\n```\n\n### Step 3: Watch XOR fail\n\n```python\nxor_data = [\n    ([0, 0], 0),\n    ([0, 1], 1),\n    ([1, 0], 1),\n    ([1, 1], 0),\n]\n\nprint(\"\\n=== XOR Gate (single perceptron) ===\")\np_xor = Perceptron(2)\np_xor.train(xor_data, epochs=1000)\nfor inputs, expected in xor_data:\n    result = p_xor.predict(inputs)\n    status = \"OK\" if result == expected else \"WRONG\"\n    print(f\"  {inputs} -> {result} (expected {expected}) {status}\")\n```\n\nIt will never converge. This is the hard proof that a single perceptron cannot learn XOR.\n\n### Step 4: Solve XOR with two layers\n\nThe trick: XOR = (x1 OR x2) AND NOT (x1 AND x2). Combine three perceptrons:\n\n```mermaid\ngraph LR\n    x1[\"x1\"] --> OR[\"OR neuron\"]\n    x1 --> NAND[\"NAND neuron\"]\n    x2[\"x2\"] --> OR\n    x2 --> NAND\n    OR --> AND[\"AND neuron\"]\n    NAND --> AND\n    AND --> out[\"output\"]\n```\n\n```python\ndef xor_network(x1, x2):\n    or_neuron = Perceptron(2)\n    or_neuron.weights = [1.0, 1.0]\n    or_neuron.bias = -0.5\n\n    nand_neuron = Perceptron(2)\n    nand_neuron.weights = [-1.0, -1.0]\n    nand_neuron.bias = 1.5\n\n    and_neuron = Perceptron(2)\n    and_neuron.weights = [1.0, 1.0]\n    and_neuron.bias = -1.5\n\n    hidden1 = or_neuron.predict([x1, x2])\n    hidden2 = nand_neuron.predict([x1, x2])\n    output = and_neuron.predict([hidden1, hidden2])\n    return output\n\n\nprint(\"\\n=== XOR Gate (multi-layer network) ===\")\nfor inputs, expected in xor_data:\n    result = xor_network(inputs[0], inputs[1])\n    print(f\"  {inputs} -> {result} (expected {expected})\")\n```\n\nAll four cases correct. Stacking perceptrons into layers creates decision boundaries that no single perceptron can produce.\n\n### Step 5: Train a Two-Layer Network\n\nStep 4 hand-wired the weights. That works for XOR, but not for real problems where you don't know the right weights in advance. The fix: replace the step function with sigmoid and learn the weights automatically through backpropagation.\n\n```python\nclass TwoLayerNetwork:\n    def __init__(self, learning_rate=0.5):\n        import random\n        random.seed(0)\n        self.w_hidden = [[random.uniform(-1, 1), random.uniform(-1, 1)] for _ in range(2)]\n        self.b_hidden = [random.uniform(-1, 1), random.uniform(-1, 1)]\n        self.w_output = [random.uniform(-1, 1), random.uniform(-1, 1)]\n        self.b_output = random.uniform(-1, 1)\n        self.lr = learning_rate\n\n    def sigmoid(self, x):\n        import math\n        x = max(-500, min(500, x))\n        return 1.0 / (1.0 + math.exp(-x))\n\n    def forward(self, inputs):\n        self.inputs = inputs\n        self.hidden_outputs = []\n        for i in range(2):\n            z = sum(w * x for w, x in zip(self.w_hidden[i], inputs)) + self.b_hidden[i]\n            self.hidden_outputs.append(self.sigmoid(z))\n        z_out = sum(w * h for w, h in zip(self.w_output, self.hidden_outputs)) + self.b_output\n        self.output = self.sigmoid(z_out)\n        return self.output\n\n    def train(self, training_data, epochs=10000):\n        for epoch in range(epochs):\n            total_error = 0\n            for inputs, target in training_data:\n                output = self.forward(inputs)\n                error = target - output\n                total_error += error ** 2\n\n                d_output = error * output * (1 - output)\n\n                saved_w_output = self.w_output[:]\n                hidden_deltas = []\n                for i in range(2):\n                    h = self.hidden_outputs[i]\n                    hd = d_output * saved_w_output[i] * h * (1 - h)\n                    hidden_deltas.append(hd)\n\n                for i in range(2):\n                    self.w_output[i] += self.lr * d_output * self.hidden_outputs[i]\n                self.b_output += self.lr * d_output\n\n                for i in range(2):\n                    for j in range(len(inputs)):\n                        self.w_hidden[i][j] += self.lr * hidden_deltas[i] * inputs[j]\n                    self.b_hidden[i] += self.lr * hidden_deltas[i]\n```\n\n```python\nnet = TwoLayerNetwork(learning_rate=2.0)\nnet.train(xor_data, epochs=10000)\nfor inputs, expected in xor_data:\n    result = net.forward(inputs)\n    predicted = 1 if result >= 0.5 else 0\n    print(f\"  {inputs} -> {result:.4f} (rounded: {predicted}, expected {expected})\")\n```\n\nTwo key differences from Step 4. First, sigmoid replaces the step function -- it's smooth, so gradients exist. Second, the `train` method propagates error backward from output to hidden layer, adjusting every weight proportionally to its contribution to the error. That's backpropagation in 20 lines.\n\nThis is the bridge to Lesson 03. The math behind `d_output` and `hidden_deltas` is the chain rule applied to the network graph. We'll derive it properly there.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Everything you just built from scratch exists in one import:\n\n```python\nfrom sklearn.linear_model import Perceptron as SkPerceptron\nimport numpy as np\n\nX = np.array([[0,0],[0,1],[1,0],[1,1]])\ny = np.array([0, 0, 0, 1])\n\nclf = SkPerceptron(max_iter=100, tol=1e-3)\nclf.fit(X, y)\nprint([clf.predict([x])[0] for x in X])\n```\n\nFive lines. Your 30-line `Perceptron` class does the same thing. The sklearn version adds convergence checks, multiple loss functions, and sparse input support -- but the core loop is identical: weighted sum, step function, weight update on error.\n\nThe real gap shows up at scale. What changes in production networks:\n\n- The step function becomes sigmoid, ReLU, or other smooth activations\n- Weights are learned automatically via backpropagation (Lesson 03)\n- Layers get deeper: 3, 10, 100+ layers\n- The same principle holds: each layer creates new features from the previous layer's outputs\n\nA single perceptron can only draw straight lines. Stack them, and you can draw any shape.",
+    "keyPoints": [
+      "The step function becomes sigmoid, ReLU, or other smooth activations",
+      "Weights are learned automatically via backpropagation (Lesson 03)",
+      "Layers get deeper: 3, 10, 100+ layers",
+      "The same principle holds: each layer creates new features from the previous layer's outputs"
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces:\n- `outputs/skill-perceptron.md` - a skill covering when single-layer vs multi-layer architectures are needed",
+    "keyPoints": [
+      "`outputs/skill-perceptron.md` - a skill covering when single-layer vs multi-layer architectures are needed"
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Train a perceptron on a NAND gate (the universal gate - any logic circuit can be built from NAND). Verify its weights and bias form a valid decision boundary.\n2. Modify the Perceptron class to track the decision boundary (w1*x1 + w2*x2 + b = 0) at each epoch. Print how the line shifts during training on the AND gate.\n3. Build a 3-input perceptron that outputs 1 only when at least 2 of the 3 inputs are 1 (a majority vote function). Is this linearly separable? Why?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|----------------------|\n| Perceptron | \"A fake neuron\" | A linear classifier: dot product of inputs and weights, plus bias, through a step function |\n| Weight | \"How important an input is\" | A multiplier that scales each input's contribution to the decision |\n| Bias | \"The threshold\" | A constant that shifts the decision boundary, letting the perceptron fire even with zero inputs |\n| Activation function | \"The thing that squishes values\" | A function applied after the weighted sum - step function for perceptrons, sigmoid/ReLU for modern networks |\n| Linearly separable | \"You can draw a line between them\" | A dataset where a single hyperplane can perfectly separate the classes |\n| XOR problem | \"The thing perceptrons can't do\" | Proof that single-layer networks cannot learn non-linearly-separable functions |\n| Decision boundary | \"Where the classifier switches\" | The hyperplane w*x + b = 0 that divides input space into two classes |\n| Multi-layer perceptron | \"A real neural network\" | Perceptrons stacked in layers, where each layer's output feeds the next layer's input |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- Frank Rosenblatt, \"The Perceptron: A Probabilistic Model for Information Storage and Organization in the Brain\" (1958) -- the original paper that started it all\n- Minsky & Papert, \"Perceptrons\" (1969) -- the book that proved XOR was unsolvable by single-layer networks and killed perceptron research for a decade\n- Michael Nielsen, \"Neural Networks and Deep Learning\", Chapter 1 (http://neuralnetworksanddeeplearning.com/) -- free online, best visual explanation of how perceptrons compose into networks",
+    "keyPoints": [
+      "Minsky & Papert, \"Perceptrons\" (1969) -- the book that proved XOR was unsolvable by single-layer networks and killed perceptron research for a decade"
+    ],
+    "commands": []
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "id": "09-reinforcement-learning/01-mdps-states-actions-rewards",
+  "slug": "01-mdps-states-actions-rewards",
+  "phase": "09-reinforcement-learning",
+  "order": 1,
+  "phaseOrder": 9,
+  "title": {
+    "en": "MDPs, States, Actions & Rewards",
+    "zh": ""
+  },
+  "hook": "A Markov Decision Process is five things: states, actions, transitions, rewards, a discount. Everything in RL — Q-learning, PPO, DPO, GRPO — optimizes over this shape. Learn it once, read the rest of reinforcement learning for free.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 · 06 (Probability & Distributions)",
+    "Phase 2 · 01 (ML Taxonomy)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/49-map-assumptions-and-risk",
+  "slug": "49-map-assumptions-and-risk",
+  "phase": "14-agent-engineering",
+  "order": 49,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Map Assumptions and Resolve the Riskiest One First",
+    "zh": ""
+  },
+  "hook": "A roadmap hides uncertainty inside features. An assumption map exposes what must be true before those features deserve to exist.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lesson 48"
+  ],
+  "timeMinutes": 65,
+  "needsTranslation": true
+}

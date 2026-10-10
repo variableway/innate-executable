@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/21-graph-theory",
+  "slug": "21-graph-theory",
+  "phase": "01-math-foundations",
+  "order": 21,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Graph Theory for Machine Learning",
+    "zh": "图论"
+  },
+  "hook": "Graphs are the data structure of relationships. If your data has connections, you need graph theory.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01-03 (linear algebra",
+    "matrices)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": false
+}

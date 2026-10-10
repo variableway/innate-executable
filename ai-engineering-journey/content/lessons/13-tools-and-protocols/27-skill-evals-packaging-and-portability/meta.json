@@ -1,0 +1,24 @@
+{
+  "id": "13-tools-and-protocols/27-skill-evals-packaging-and-portability",
+  "slug": "27-skill-evals-packaging-and-portability",
+  "phase": "13-tools-and-protocols",
+  "order": 27,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Skill Evals, Packaging, and Portability",
+    "zh": ""
+  },
+  "hook": "A skill is finished when its package survives linting, routes on the right requests, improves a measured task, stays inside policy, and degrades honestly on another host.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 22",
+    "24",
+    "25",
+    "and 26"
+  ],
+  "timeMinutes": 150,
+  "needsTranslation": true
+}

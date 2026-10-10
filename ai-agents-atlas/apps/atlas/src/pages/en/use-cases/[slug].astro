@@ -1,0 +1,10 @@
+---
+import { localizedStaticPaths } from '@/i18n/content';
+import UseCaseDetail from '@/components/pages/UseCaseDetail.astro';
+
+export const getStaticPaths = () => localizedStaticPaths('useCases', 'en');
+
+const { entry } = Astro.props;
+---
+
+<UseCaseDetail locale="en" entry={entry} />

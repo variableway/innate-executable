@@ -1,0 +1,24 @@
+{
+  "id": "12-multimodal-ai/21-embodied-vlas-openvla-pi0-groot",
+  "slug": "21-embodied-vlas-openvla-pi0-groot",
+  "phase": "12-multimodal-ai",
+  "order": 21,
+  "phaseOrder": 12,
+  "title": {
+    "en": "Embodied VLAs: RT-2, OpenVLA, π0, GR00T",
+    "zh": ""
+  },
+  "hook": "The first time a model read a recipe off a website and executed it in a kitchen robot was RT-2 (Google DeepMind, July 2023). RT-2 discretized actions as text tokens, co-fine-tuned a VLM on web data plus robot-action data, and proved that web-scale vision-language knowledge transfers to robotic control. OpenVLA (June 2024) shipped the open 7B reference. Physical Intelligence's π0 series (2024-2025) added flow-matching action experts. NVIDIA's GR00T N1 (March 2025) delivered dual-system (System 1 / System 2) control for humanoid robots at scale. The VLA primitive — vision-language-action, a single model that sees, reads, and acts — is the bridge between this phase's understanding models and the autonomous systems in Phase 15.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "action tokenizer + VLA inference skeleton)"
+  ],
+  "prerequisites": [
+    "Phase 12 · 05 (LLaVA)",
+    "Phase 15 (Autonomous Systems",
+    "referenced)"
+  ],
+  "timeMinutes": 180,
+  "needsTranslation": true
+}

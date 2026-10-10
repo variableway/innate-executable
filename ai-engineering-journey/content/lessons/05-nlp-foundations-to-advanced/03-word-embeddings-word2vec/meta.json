@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/03-word-embeddings-word2vec",
+  "slug": "03-word-embeddings-word2vec",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 3,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Word Embeddings — Word2Vec from Scratch",
+    "zh": ""
+  },
+  "hook": "A word is the company it keeps. Train a shallow net on that idea and geometry falls out.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 02 (BoW + TF-IDF)",
+    "Phase 3 · 03 (Backpropagation from Scratch)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

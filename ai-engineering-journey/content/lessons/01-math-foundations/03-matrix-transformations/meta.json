@@ -1,0 +1,24 @@
+{
+  "id": "01-math-foundations/03-matrix-transformations",
+  "slug": "03-matrix-transformations",
+  "phase": "01-math-foundations",
+  "order": 3,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Matrix Transformations",
+    "zh": "矩阵变换"
+  },
+  "hook": "A matrix is a machine that reshapes space. Learn what it does to every point, and you understand the whole transformation.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "Julia"
+  ],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01-02 (Linear Algebra Intuition",
+    "Vectors & Matrices Operations)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": false
+}

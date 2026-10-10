@@ -1,0 +1,23 @@
+{
+  "id": "13-tools-and-protocols/07-building-an-mcp-server",
+  "slug": "07-building-an-mcp-server",
+  "phase": "13-tools-and-protocols",
+  "order": 7,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Building an MCP Server: Stateless Python and TypeScript",
+    "zh": ""
+  },
+  "hook": "A modern MCP server does not remember a handshake. It validates the metadata on every request, runs one handler, and returns one typed result.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "TypeScript"
+  ],
+  "prerequisites": [
+    "Phase 13",
+    "Lesson 06"
+  ],
+  "timeMinutes": 85,
+  "needsTranslation": true
+}

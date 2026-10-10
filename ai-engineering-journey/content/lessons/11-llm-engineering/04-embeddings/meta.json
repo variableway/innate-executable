@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/04-embeddings",
+  "slug": "04-embeddings",
+  "phase": "11-llm-engineering",
+  "order": 4,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Embeddings & Vector Representations",
+    "zh": ""
+  },
+  "hook": "Text is discrete. Math is continuous. Every time you ask an LLM to find \"similar\" documents, compare meanings, or search beyond keywords, you're relying on a bridge between these two worlds. That bridge is an embedding. If you don't understand embeddings, you don't understand modern AI. You just use it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11",
+    "Lesson 01 (Prompt Engineering)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

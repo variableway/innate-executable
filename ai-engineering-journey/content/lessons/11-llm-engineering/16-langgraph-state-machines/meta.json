@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/16-langgraph-state-machines",
+  "slug": "16-langgraph-state-machines",
+  "phase": "11-llm-engineering",
+  "order": 16,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Agent State Machines — Graphs, Nodes, Checkpoints",
+    "zh": ""
+  },
+  "hook": "A ReAct loop written by hand is a `while True`. The same loop written as an explicit graph is something you can checkpoint, interrupt, branch, and time-travel through. The agent hasn't changed. The harness around it has.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 · 09 (Function Calling)",
+    "Phase 11 · 14 (Model Context Protocol)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

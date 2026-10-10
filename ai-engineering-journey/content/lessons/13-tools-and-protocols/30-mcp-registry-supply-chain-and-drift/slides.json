@@ -1,0 +1,156 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# MCP Registry Supply Chain: Admission, Drift, and Rollback\n\n> A registry entry tells you what a publisher declared. Production admission proves what you fetched, what you observed, what you approved, and what you can safely restore.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13 · 17 (gateways and registries), Phase 13 · 18 (production authentication)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Separate Registry publication, package provenance, runtime discovery, and local approval.\n- Verify an MCP server namespace without trusting the name inside its own record.\n- Pin immutable publication, execution-source, provenance, and live descriptor evidence.\n- Detect registry status changes and runtime drift after admission.\n- Roll back routing to a previously admitted version without rewriting history.\n- Maintain a tamper-evident admission ledger that explains every decision.",
+    "keyPoints": [
+      "Separate Registry publication, package provenance, runtime discovery, and local approval.",
+      "Verify an MCP server namespace without trusting the name inside its own record.",
+      "Pin immutable publication, execution-source, provenance, and live descriptor evidence.",
+      "Detect registry status changes and runtime drift after admission.",
+      "Roll back routing to a previously admitted version without rewriting history.",
+      "Maintain a tamper-evident admission ledger that explains every decision."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You find `com.example/inventory` in a registry. Its description looks right. Its package exists. The server answers `server/discover`.\n\nThat is not one fact. It is a chain of facts from different authorities:\n\n1. A publisher authenticated for a namespace submitted a record.\n2. A package registry served an artifact with a specific identity and digest.\n3. A running endpoint reported a protocol version, capabilities, tools, and diagnostic server information.\n4. Your organization decided that this exact combination was allowed.\n\nCollapsing those facts into “it is in the registry, so trust it” creates a supply chain blind spot. A valid publication can still be deprecated. A package tag can point at an unexpected artifact if you do not pin its digest. A server can add a destructive tool after review. A rollback can silently choose a version that was never admitted.\n\nThe fix is an admission controller with evidence at every boundary.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-registry-is-an-index-not-your-approval-system",
+    "title": "The Registry Is an Index, Not Your Approval System",
+    "bodyMarkdown": "The official MCP Registry stores server metadata. Its `server.json` record names a server version and declares one or more packages or remote endpoints. Publication rules add namespace authentication, package ownership checks, restricted registry rules, and a narrow publisher metadata location.\n\nThose controls answer publication questions. Your production policy still answers deployment questions:\n\n| Boundary | Question | Evidence owner |\n|---|---|---|\n| Namespace | Was the publisher allowed to use this name? | Registry authentication plus your verified namespace input |\n| Record | What did the publisher declare for this version? | Immutable `server.json` digest |\n| Execution source | Which package or remote endpoint will execute? | Declared source fields, verified ownership result, transport, and trusted digest |\n| Runtime | What does the endpoint expose now? | `server/discover` and tool descriptors |\n| Admission | Did your policy approve this exact set? | Local pin and ledger entry |\n| Operations | Is it still safe, and what can replace it? | Drift checks, status sync, health, and rollback route |\n\nThe Registry schema version and the MCP protocol version are independent. A record may use the published `2025-12-11` server schema while the live server supports MCP `2026-07-28`. Never infer one from the other.\n\n```figure\nmcp-registry-admission\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "seven-controls-in-one-admission-decision",
+    "title": "Seven Controls in One Admission Decision",
+    "bodyMarkdown": "### 1. Namespace verification\n\nOfficial Registry names use authenticated namespaces. A verified domain can map to a reversed domain prefix. For example, control of `example.com` can establish `com.example/*`.\n\nDo not accept a string prefix check:\n\n```python\nserver_name.startswith(\"com.example\")\n```\n\nThat also accepts `com.exampleevil/tool`. Split the name at `/`, require a non-empty slug, and compare the namespace segment exactly. More importantly, pass the verified namespace into admission from the authentication result. Do not derive trust from the untrusted record.\n\nGitHub-backed namespaces and domain-backed namespaces use different authentication paths. Normalize either path into one admission input: the exact verified namespace string.\n\n### 2. Provenance join\n\nFor a package record, the declaration and fetched artifact must join on explicit fields:\n\n- package registry type\n- package identifier\n- package version\n- verified ownership result\n- downloaded artifact digest\n\nAlso validate the declared package transport. A record with only a remote endpoint is valid and must not be rejected for lacking a package. For a remote source, join the declared URL and transport type to independently verified endpoint ownership and a digest of the trusted connection or deployment evidence.\n\nThe lesson code supports both source kinds and hashes the selected source together with the Registry source, server name, Registry version, record digest, and evidence digest. The resulting provenance digest is a compact pointer to the full evidence set. It is not a substitute for retaining the evidence.\n\nNever accept a digest supplied only by the artifact you are trying to verify. Calculate it at a trusted fetch boundary, or receive it from a package service whose verification result you validate.\n\n### 3. Pin the decision, not only the version\n\nRegistry versions are unique publication identifiers. Published metadata is immutable. A changed record requires a new version. Semantic versioning is recommended, but the Registry does not require it and does not accept version ranges.\n\nThis means `^1.4` is not an admission pin. Neither is “latest.” A useful pin contains:\n\n```json\n{\n  \"server\": \"com.example/inventory\",\n  \"version\": \"1.0.0\",\n  \"recordDigest\": \"...\",\n  \"source\": {\"kind\": \"package\", \"registryType\": \"pypi\"},\n  \"sourceDigest\": \"...\",\n  \"toolsetDigest\": \"...\",\n  \"provenanceDigest\": \"...\",\n  \"registryStatus\": \"active\"\n}\n```\n\nPinning several layers lets you identify which boundary changed. A record digest change under the same Registry version is a Registry integrity failure. A source digest change under the same package coordinate or remote deployment is an execution-source integrity failure. A toolset digest change is runtime drift.\n\n### 4. Live drift detection\n\nAdmission should observe the server that will actually receive traffic. Call `server/discover`, list or otherwise obtain the exposed tool descriptors through your trusted path, and verify:\n\n- `2026-07-28` is in `supportedVersions`\n- all locally required capabilities are present\n- every tool descriptor has the required identity and schema surface\n- the normalized descriptor digest matches the admitted pin on later checks\n\nThe optional result `_meta[\"io.modelcontextprotocol/serverInfo\"]` value is self-reported display, log, and debugging context. Record it as diagnostic evidence, but never use it to establish namespace, package ownership, endpoint ownership, admission, or any other security decision. A direct `serverInfo` alias outside `_meta` is not the contract field and should not be promoted into diagnostic evidence.\n\nNormalize only fields whose order has no meaning. The sample sorts the tool list by stable name before hashing, so a harmless list-order change does not cause drift. It does not discard descriptor fields. A new tool, changed schema, changed description, or new annotations changes the pin.\n\nThe sample treats malformed descriptors and any descriptor digest change as drift, quarantines the pin, removes its active route, and blocks that version as a rollback target. A production policy may allow an editorial change only through a new review, because descriptions influence model tool selection. “Cosmetic” metadata can alter agent behavior.\n\n### 5. Registry status is live state\n\nThe Registry API attaches a response-level `_meta` object beside each server record. Registry-managed fields live under `_meta[\"io.modelcontextprotocol.registry/official\"]`. Pass the response `_meta` object to admission and read `_meta[\"io.modelcontextprotocol.registry/official\"].status`. A direct `_meta.status` value is not the official wire shape. Do not confuse response metadata with the publication record's own `_meta`. Status can be:\n\n- `active`: returned by default and eligible for local admission\n- `deprecated`: still discoverable with a warning, but no longer a safe automatic choice\n- `deleted`: hidden by default while its historical record remains available through deleted or incremental views\n\nSync status after admission. If an active version becomes deprecated or deleted, quarantine its pin and stop routing new work to it. Keep the evidence. Deletion from the default listing is not permission to erase your audit trail.\n\nPublisher-provided custom metadata belongs only under `_meta.io.modelcontextprotocol.registry/publisher-provided` in a publication record. Registry-managed response metadata is separate. Do not let a publisher set its own official status.\n\n### 6. Rollback means route restoration\n\nAn immutable publication is not edited during rollback. Rollback selects a previously admitted, currently eligible pin and changes the active route.\n\nA safe target must:\n\n1. Have a completed admission record.\n2. Still have an active Registry status under your policy.\n3. Not be quarantined by runtime or security evidence.\n4. Still resolve to the pinned package and live descriptor set.\n5. Pass current health checks.\n\nThe sample focuses on the first three conditions. A real reconciler should re-fetch the package and re-check the live endpoint before activation.\n\n### 7. Append an admission ledger\n\nAn admission database says what is active. A ledger explains why.\n\nEach sample entry contains a sequence, time, event, server, version, outcome, reasons, evidence, the previous entry hash, and its own hash. Changing an older outcome breaks verification of that entry and every later link.\n\nThis is tamper-evident, not magically tamper-proof. Anchor periodic ledger heads in a separate trust domain, such as signed release metadata or write-once storage. Restrict who can append. Keep authorization tokens, package credentials, tool arguments, and private endpoint data out of evidence.",
+    "keyPoints": [
+      "package registry type",
+      "package identifier",
+      "package version",
+      "verified ownership result",
+      "downloaded artifact digest",
+      "`2026-07-28` is in `supportedVersions`"
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The runnable controller is in `code/main.py`. It uses only the Python standard library.\n\nStart with the finite demonstration:\n\n```bash\ncd phases/13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift\npython3 code/main.py\n```\n\nThe demonstration performs five operations:\n\n1. Admit `1.0.0` with matching namespace, package provenance, protocol, capabilities, and tools.\n2. Admit `1.1.0` and make it active.\n3. Observe an unexpected delete tool at runtime.\n4. Observe the Registry status for `1.1.0` become `deprecated`.\n5. Restore routing to the still-admitted `1.0.0` pin.\n\nExpected shape:\n\n```json\n{\n  \"admitted\": [true, true],\n  \"driftAllowed\": false,\n  \"rollbackAllowed\": true,\n  \"activeVersion\": \"1.0.0\",\n  \"ledgerValid\": true\n}\n```\n\nRead the implementation in this order:\n\n1. `namespace_for_domain()` and `namespace_matches()` establish exact naming authority.\n2. `digest()` and `normalized_tools()` produce deterministic evidence.\n3. `RegistryAdmissionController.admit()` joins publication, provenance, runtime, and policy.\n4. `check_live()` compares a new observation with the pin.\n5. `observe_registry_status()` quarantines versions whose Registry state changes.\n6. `rollback()` activates only a previously admitted eligible target.\n7. `AdmissionLedger.verify()` detects changes to recorded history.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift\npython3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Put the controller between discovery and routing:\n\n```text\nRegistry sync -> artifact verifier -> live discovery -> admission controller -> route table\n                                               |                 |\n                                               v                 v\n                                          evidence store    admission ledger\n```\n\nUse separate identities for these jobs. A Registry sync worker needs read access to metadata. An artifact verifier needs package fetch access. A route reconciler needs permission to activate an approved pin. None of them needs every credential.\n\nMake rollout state explicit. “Approved” means the evidence passed policy. “Active” means the route currently selects it. “Quarantined” means it cannot receive new work. “Superseded” means another admitted version is active. Do not encode all four meanings in one Boolean.\n\nRun admission before exposing a server in `tools/list`. Otherwise a client can discover a tool during the gap between publication and policy evaluation.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Registry sync -> artifact verifier -> live discovery -> admission controller -> route table\n                                               |                 |\n                                               v                 v\n                                          evidence store    admission ledger"
+      }
+    ]
+  },
+  {
+    "id": "interactive-lab",
+    "title": "Interactive Lab",
+    "bodyMarkdown": "You will watch one boundary fail at a time.\n\n### Lab A: namespace collision\n\nOpen a Python shell from the code directory:\n\n```bash\ncd phases/13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift/code\npython3 -q\n```\n\nThen run:\n\n```python\nfrom main import namespace_matches\nnamespace_matches(\"com.example/inventory\", \"com.example\")\nnamespace_matches(\"com.exampleevil/inventory\", \"com.example\")\n```\n\nThe first result is `True`; the second is `False`. Replace the exact comparison with `startswith` locally and observe why the second name crosses the boundary. Restore the exact comparison before continuing.\n\n### Lab B: descriptor drift\n\n```python\nfrom main import *\ntimes = iter(f\"2026-08-21T12:00:{n:02d}+00:00\" for n in range(10))\nc = RegistryAdmissionController(clock=lambda: next(times))\nmeta = {OFFICIAL_META_KEY: {\"status\": \"active\"}}\nc.admit(sample_record(\"1.0.0\"), meta, \"com.example\", evidence_for(\"1.0.0\"), sample_live(\"1.0.0\"))\nc.check_live(\"com.example/inventory\", \"1.0.0\", sample_live(\"1.0.0\", True))\n```\n\nInspect the reasons and route state. The package and Registry record did not change. The runtime tool surface did, so the controller quarantined and deactivated the pin. This is why supply chain control must continue after installation.\n\n### Lab C: status and rollback\n\nAdmit `1.1.0`, mark it deprecated, and try both rollback targets:\n\n```python\nc.admit(sample_record(\"1.1.0\"), meta, \"com.example\", evidence_for(\"1.1.0\"), sample_live(\"1.1.0\"))\nc.observe_registry_status(\"com.example/inventory\", \"1.1.0\", \"deprecated\")\nc.rollback(\"com.example/inventory\", \"1.1.0\", \"unsafe retry\")\nc.rollback(\"com.example/inventory\", \"1.0.0\", \"restore known release\")\nc.ledger.verify()\n```\n\nThe quarantined target is rejected. The earlier active pin is accepted. The ledger remains valid.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift/code\npython3 -q"
+      }
+    ]
+  },
+  {
+    "id": "practice-lab",
+    "title": "Practice Lab",
+    "bodyMarkdown": "Extend the controller with a two-person approval gate.\n\nRequirements:\n\n- Store approvals as signed evidence references, not mutable names in the pin.\n- Require two different reviewer identities for a toolset that contains a tool with `destructiveHint: true`.\n- Reject duplicate reviewer identities.\n- Preserve the original admission attempt in the ledger when approval is incomplete.\n- Add tests for zero, one, duplicate, and two distinct approvals.\n- Do not log signatures, credentials, or full private tool arguments.\n\nSuccess means a destructive tool cannot become active until both identities approved the exact record, package, and toolset digests.",
+    "keyPoints": [
+      "Store approvals as signed evidence references, not mutable names in the pin.",
+      "Require two different reviewer identities for a toolset that contains a tool with `destructiveHint: true`.",
+      "Reject duplicate reviewer identities.",
+      "Preserve the original admission attempt in the ledger when approval is incomplete.",
+      "Add tests for zero, one, duplicate, and two distinct approvals.",
+      "Do not log signatures, credentials, or full private tool arguments."
+    ],
+    "commands": []
+  },
+  {
+    "id": "shipped-artifact",
+    "title": "Shipped Artifact",
+    "bodyMarkdown": "This lesson ships `outputs/skill-mcp-registry-admission.md`. Use it as a flat, reusable runbook when reviewing a new Registry version or investigating drift. It defines the inputs, refusal rules, evidence bundle, status reconciliation, and rollback proof without depending on the sample class names.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "verify-it",
+    "title": "Verify It",
+    "bodyMarkdown": "Run the demonstration and the deterministic suite:\n\n```bash\ncd phases/13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v\n```\n\nVerification should prove:\n\n- exact namespace boundaries reject lookalike prefixes\n- only the official namespaced Registry status can make a version eligible\n- unverified or mismatched package and remote evidence is rejected\n- publisher metadata cannot impersonate Registry-managed metadata\n- tool ordering is normalized without hiding descriptor changes\n- malformed package and tool structures refuse safely\n- `serverInfo` remains diagnostic and never supplies admission authority\n- descriptor drift quarantines, deactivates, and blocks rollback to the pin\n- status changes quarantine active pins\n- rollback cannot select a quarantined or unknown version\n- ledger tampering is detected",
+    "keyPoints": [
+      "exact namespace boundaries reject lookalike prefixes",
+      "only the official namespaced Registry status can make a version eligible",
+      "unverified or mismatched package and remote evidence is rejected",
+      "publisher metadata cannot impersonate Registry-managed metadata",
+      "tool ordering is normalized without hiding descriptor changes",
+      "malformed package and tool structures refuse safely"
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "production-failure-modes",
+    "title": "Production Failure Modes",
+    "bodyMarkdown": "| Failure | Why it happens | Required response |\n|---|---|---|\n| Name looks valid but namespace was never authenticated | Policy trusted record text | Reject until a trusted namespace verifier supplies the exact prefix |\n| Same package coordinate returns new bytes | Mutable upstream or compromised distribution | Stop activation, retain both digests, investigate the fetch boundary |\n| “Latest” changes without review | Floating selection escaped the pin | Resolve only exact admitted versions and digests |\n| New tool appears after approval | Runtime drift or a different deployment | Quarantine the route and capture a fresh descriptor observation |\n| Deprecated version remains active | Status sync is missing or delayed | Reconcile status on a schedule and before activation |\n| Deleted record disappears from default sync | Client requested only active records | Use incremental or deleted-aware reconciliation and preserve local history |\n| Rollback target was never admitted | Route control and approval state are disconnected | Refuse rollback and run a new admission for the target |\n| Ledger verifies locally after an attacker rewrites all entries | Hash chain has no external anchor | Publish signed ledger heads to a separate trust domain |\n| Evidence contains bearer tokens or tool arguments | Logging copied whole requests | Redact at collection time and store only the minimum proof |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "operational-rule",
+    "title": "Operational Rule",
+    "bodyMarkdown": "Publication answers “can this identity publish this name?” Admission answers “will we execute this exact artifact and expose this exact behavior?” Keep those decisions separate, pin every join, and make rollback choose evidence rather than memory.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Official Registry server.json requirements](https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/official-registry-requirements.md)\n- [Official Registry OpenAPI contract](https://registry.modelcontextprotocol.io/openapi.yaml)\n- [MCP 2026-07-28 server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)",
+    "keyPoints": [
+      "[Official Registry OpenAPI contract](https://registry.modelcontextprotocol.io/openapi.yaml)",
+      "[MCP 2026-07-28 server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)"
+    ],
+    "commands": []
+  }
+]

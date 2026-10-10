@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/06-object-detection-yolo",
+  "slug": "06-object-detection-yolo",
+  "phase": "04-computer-vision",
+  "order": 6,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Object Detection — YOLO from Scratch",
+    "zh": ""
+  },
+  "hook": "Detection is classification plus regression, run at every position in a feature map, then cleaned up with non-maximum suppression.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 03 (CNNs)",
+    "Phase 4 Lesson 04 (Image Classification)",
+    "Phase 4 Lesson 05 (Transfer Learning)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

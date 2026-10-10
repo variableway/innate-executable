@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/19-ocr-document-understanding",
+  "slug": "19-ocr-document-understanding",
+  "phase": "04-computer-vision",
+  "order": 19,
+  "phaseOrder": 4,
+  "title": {
+    "en": "OCR & Document Understanding",
+    "zh": ""
+  },
+  "hook": "OCR is a three-stage pipeline — detect text boxes, recognise the characters, then lay them out. Every modern OCR system reorders these stages or merges them.",
+  "type": "Learn + Use",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 06 (Detection)",
+    "Phase 7 Lesson 02 (Self-Attention)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

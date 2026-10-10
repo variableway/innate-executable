@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/85-content-classifier-integration",
+  "slug": "85-content-classifier-integration",
+  "phase": "19-capstone-projects",
+  "order": 85,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 85 — Content Classifier Integration",
+    "zh": ""
+  },
+  "hook": "Classifiers on the output side answer a different question than rules on the input side. Both need a policy router.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 18 safety lessons",
+    "Phase 19 Track A lessons 25-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

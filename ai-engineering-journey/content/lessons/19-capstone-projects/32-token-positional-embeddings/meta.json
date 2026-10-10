@@ -1,0 +1,23 @@
+{
+  "id": "19-capstone-projects/32-token-positional-embeddings",
+  "slug": "32-token-positional-embeddings",
+  "phase": "19-capstone-projects",
+  "order": 32,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Token and Positional Embeddings",
+    "zh": ""
+  },
+  "hook": "Ids are integers. The model wants vectors. Two lookup tables sit between them, and the choice of the positional one shapes what the model can learn.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 04 lessons",
+    "Phase 07 transformer lessons",
+    "Lessons 30 and 31 of this phase"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

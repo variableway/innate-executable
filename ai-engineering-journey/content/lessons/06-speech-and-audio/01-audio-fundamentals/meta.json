@@ -1,0 +1,22 @@
+{
+  "id": "06-speech-and-audio/01-audio-fundamentals",
+  "slug": "01-audio-fundamentals",
+  "phase": "06-speech-and-audio",
+  "order": 1,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Audio Fundamentals — Waveforms, Sampling, Fourier Transform",
+    "zh": ""
+  },
+  "hook": "Waveforms are the raw signal. Spectrograms are the representation. Mel features are the ML-friendly form. Every modern ASR and TTS pipeline walks this ladder, and the first rung is understanding sampling and Fourier.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 · 06 (Vectors & Matrices)",
+    "Phase 1 · 14 (Probability Distributions)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

@@ -1,0 +1,131 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Support Vector Machines\n\n> Find the widest street between two classes. That is the entire idea.\n\n**Type:** Build\n**Language:** Python\n**Prerequisites:** Phase 1 (Lessons 08 Optimization, 14 Norms and Distances, 18 Convex Optimization)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Language:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement a linear SVM from scratch using hinge loss and gradient descent on the primal formulation\n- Explain the maximum margin principle and identify support vectors from a trained model\n- Compare linear, polynomial, and RBF kernels and explain how the kernel trick avoids explicit high-dimensional mapping\n- Evaluate the tradeoff controlled by the C parameter between margin width and classification errors",
+    "keyPoints": [
+      "Implement a linear SVM from scratch using hinge loss and gradient descent on the primal formulation",
+      "Explain the maximum margin principle and identify support vectors from a trained model",
+      "Compare linear, polynomial, and RBF kernels and explain how the kernel trick avoids explicit high-dimensional mapping",
+      "Evaluate the tradeoff controlled by the C parameter between margin width and classification errors"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You have two classes of data points and need to draw a line (or hyperplane) separating them. Infinitely many lines could work. Which one should you pick?\n\nThe one with the biggest margin. The margin is the distance between the decision boundary and the nearest data points on each side. A wider margin means the classifier is more confident and generalizes better to unseen data.\n\nThis intuition leads to Support Vector Machines, one of the most mathematically elegant algorithms in ML. SVMs were the dominant classification method before deep learning and remain the best choice for small datasets, high-dimensional data, and problems where you need a principled, well-understood model with theoretical guarantees.\n\nSVMs connect directly to Phase 1: the optimization is convex (Lesson 18), the margin is measured with norms (Lesson 14), and the kernel trick exploits dot products to handle nonlinear boundaries without ever computing in the high-dimensional space.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### The maximum margin classifier\n\nGiven linearly separable data with labels y_i in {-1, +1} and feature vectors x_i, we want a hyperplane w^T x + b = 0 that separates the classes.\n\nThe distance from a point x_i to the hyperplane is:\n\n```\ndistance = |w^T x_i + b| / ||w||\n```\n\nFor a correctly classified point: y_i * (w^T x_i + b) > 0. The margin is twice the distance from the hyperplane to the nearest point on either side.\n\n```mermaid\ngraph LR\n    subgraph Margin\n        direction TB\n        A[\"w^T x + b = +1\"] ~~~ B[\"w^T x + b = 0\"] ~~~ C[\"w^T x + b = -1\"]\n    end\n    D[\"+ class points\"] --> A\n    E[\"- class points\"] --> C\n    B --- F[\"Decision boundary\"]\n```\n\nThe optimization problem:\n\n```\nmaximize    2 / ||w||     (the margin width)\nsubject to  y_i * (w^T x_i + b) >= 1  for all i\n```\n\nEquivalently (minimizing ||w||^2 is easier to optimize):\n\n```\nminimize    (1/2) ||w||^2\nsubject to  y_i * (w^T x_i + b) >= 1  for all i\n```\n\nThis is a convex quadratic program. It has a unique global solution. The data points that sit exactly on the margin boundaries (where y_i * (w^T x_i + b) = 1) are the support vectors. They are the only points that determine the decision boundary. Move or remove any non-support-vector point, and the boundary does not change.\n\n### Support vectors: the critical few\n\n```mermaid\ngraph TD\n    subgraph Classification\n        SV1[\"Support Vector (+ class)<br>y(w'x+b) = 1\"] --- DB[\"Decision Boundary<br>w'x+b = 0\"]\n        DB --- SV2[\"Support Vector (- class)<br>y(w'x+b) = 1\"]\n    end\n    O1[\"Other + points<br>(do not affect boundary)\"] -.-> SV1\n    O2[\"Other - points<br>(do not affect boundary)\"] -.-> SV2\n```\n\nMost training points are irrelevant. Only the support vectors matter. This is why SVMs are memory-efficient at prediction time: you only need to store the support vectors, not the entire training set.\n\nThe number of support vectors also gives a bound on generalization error. Fewer support vectors relative to the dataset size means better generalization.\n\n### Soft margin: handling noise with the C parameter\n\nReal data is rarely perfectly separable. Some points may be on the wrong side of the boundary, or inside the margin. The soft margin formulation allows violations by introducing slack variables.\n\n```\nminimize    (1/2) ||w||^2 + C * sum(xi_i)\nsubject to  y_i * (w^T x_i + b) >= 1 - xi_i\n            xi_i >= 0  for all i\n```\n\nThe slack variable xi_i measures how much point i violates the margin. C controls the trade-off:\n\n| C value | Behavior |\n|---------|----------|\n| Large C | Penalizes violations heavily. Narrow margin, fewer misclassifications. Overfits |\n| Small C | Allows more violations. Wide margin, more misclassifications. Underfits |\n\nC is the regularization strength, inverted. Large C = less regularization. Small C = more regularization.\n\n### Hinge loss: the SVM loss function\n\nThe soft margin SVM can be rewritten as an unconstrained optimization:\n\n```\nminimize    (1/2) ||w||^2 + C * sum(max(0, 1 - y_i * (w^T x_i + b)))\n```\n\nThe term max(0, 1 - y_i * f(x_i)) is the hinge loss. It is zero when the point is correctly classified and beyond the margin. It is linear when the point is inside the margin or misclassified.\n\n```\nHinge loss for a single point:\n\nloss\n  |\n  | \\\n  |  \\\n  |   \\\n  |    \\\n  |     \\_______________\n  |\n  +-----|-----|-------->  y * f(x)\n       0     1\n\nZero loss when y*f(x) >= 1 (correctly classified, outside margin).\nLinear penalty when y*f(x) < 1.\n```\n\nCompare with logistic loss (logistic regression):\n\n```\nHinge:     max(0, 1 - y*f(x))          Hard cutoff at margin\nLogistic:  log(1 + exp(-y*f(x)))        Smooth, never exactly zero\n```\n\nHinge loss produces sparse solutions (only support vectors have nonzero contribution). Logistic loss uses all data points. This makes SVMs more memory-efficient at prediction time.\n\n### Training a linear SVM with gradient descent\n\nYou can train a linear SVM using gradient descent on the hinge loss plus L2 regularization, without solving the constrained QP:\n\n```\nL(w, b) = (lambda/2) * ||w||^2 + (1/n) * sum(max(0, 1 - y_i * (w^T x_i + b)))\n\nGradient with respect to w:\n  If y_i * (w^T x_i + b) >= 1:  dL/dw = lambda * w\n  If y_i * (w^T x_i + b) < 1:   dL/dw = lambda * w - y_i * x_i\n\nGradient with respect to b:\n  If y_i * (w^T x_i + b) >= 1:  dL/db = 0\n  If y_i * (w^T x_i + b) < 1:   dL/db = -y_i\n```\n\nThis is called the primal formulation. It runs in O(n * d) per epoch, where n is the number of samples and d is the number of features. For large, sparse, high-dimensional data (text classification), this is fast.\n\n### The dual formulation and the kernel trick\n\nThe Lagrangian dual of the SVM problem (from Phase 1 Lesson 18, KKT conditions) is:\n\n```\nmaximize    sum(alpha_i) - (1/2) * sum_ij(alpha_i * alpha_j * y_i * y_j * (x_i . x_j))\nsubject to  0 <= alpha_i <= C\n            sum(alpha_i * y_i) = 0\n```\n\nThe dual only involves dot products x_i . x_j between data points. This is the key insight. Replace every dot product with a kernel function K(x_i, x_j) and the SVM can learn nonlinear boundaries without ever computing the transformation explicitly.\n\n```\nLinear kernel:      K(x, z) = x . z\nPolynomial kernel:  K(x, z) = (x . z + c)^d\nRBF (Gaussian):     K(x, z) = exp(-gamma * ||x - z||^2)\n```\n\nThe RBF kernel maps data into an infinite-dimensional space. Points that are close in input space have kernel value near 1. Points that are far apart have kernel value near 0. It can learn any smooth decision boundary.\n\n```mermaid\ngraph LR\n    subgraph \"Input Space (not separable)\"\n        A[\"Data points in 2D<br>circular boundary\"]\n    end\n    subgraph \"Feature Space (separable)\"\n        B[\"Data points in higher dim<br>linear boundary\"]\n    end\n    A -->|\"Kernel trick<br>K(x,z) = phi(x).phi(z)\"| B\n```\n\nThe kernel trick computes the dot product in the high-dimensional space without ever going there. For the polynomial kernel of degree d in D dimensions, the explicit feature space has O(D^d) dimensions. But K(x, z) is computed in O(D) time.\n\n### SVM for regression (SVR)\n\nSupport Vector Regression fits a tube of width epsilon around the data. Points inside the tube have zero loss. Points outside the tube are penalized linearly.\n\n```\nminimize    (1/2) ||w||^2 + C * sum(xi_i + xi_i*)\nsubject to  y_i - (w^T x_i + b) <= epsilon + xi_i\n            (w^T x_i + b) - y_i <= epsilon + xi_i*\n            xi_i, xi_i* >= 0\n```\n\nThe epsilon parameter controls the tube width. Wider tube = fewer support vectors = smoother fit. Narrower tube = more support vectors = tighter fit.\n\n### Why SVMs lost to deep learning (and when they still win)\n\nSVMs dominated ML from the late 1990s through the early 2010s. Deep learning surpassed them for several reasons:\n\n| Factor | SVMs | Deep learning |\n|--------|------|---------------|\n| Feature engineering | Requires it | Learns features |\n| Scalability | O(n^2) to O(n^3) for kernel | O(n) per epoch with SGD |\n| Image/text/audio | Needs handcrafted features | Learns from raw data |\n| Large datasets (>100k) | Slow | Scales well |\n| GPU acceleration | Limited benefit | Massive speedup |\n\nSVMs still win in these situations:\n- Small datasets (hundreds to low thousands of samples)\n- High-dimensional sparse data (text with TF-IDF features)\n- When you need mathematical guarantees (margin bounds)\n- When training time must be minimal (linear SVM is very fast)\n- Binary classification with clear margin structure\n- Anomaly detection (one-class SVM)\n\n```figure\nsvm-margin\n```",
+    "keyPoints": [
+      "Small datasets (hundreds to low thousands of samples)",
+      "High-dimensional sparse data (text with TF-IDF features)",
+      "When you need mathematical guarantees (margin bounds)",
+      "When training time must be minimal (linear SVM is very fast)",
+      "Binary classification with clear margin structure",
+      "Anomaly detection (one-class SVM)"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "distance = |w^T x_i + b| / ||w||"
+      },
+      {
+        "lang": "text",
+        "code": "maximize    2 / ||w||     (the margin width)\nsubject to  y_i * (w^T x_i + b) >= 1  for all i"
+      },
+      {
+        "lang": "text",
+        "code": "minimize    (1/2) ||w||^2\nsubject to  y_i * (w^T x_i + b) >= 1  for all i"
+      },
+      {
+        "lang": "text",
+        "code": "minimize    (1/2) ||w||^2 + C * sum(xi_i)\nsubject to  y_i * (w^T x_i + b) >= 1 - xi_i\n            xi_i >= 0  for all i"
+      },
+      {
+        "lang": "text",
+        "code": "minimize    (1/2) ||w||^2 + C * sum(max(0, 1 - y_i * (w^T x_i + b)))"
+      },
+      {
+        "lang": "text",
+        "code": "Hinge loss for a single point:\n\nloss\n  |\n  | \\\n  |  \\\n  |   \\\n  |    \\\n  |     \\_______________\n  |\n  +-----|-----|-------->  y * f(x)\n       0     1\n\nZero loss when y*f(x) >= 1 (correctly classified, outside margin).\nLinear penalty when y*f(x) < 1."
+      },
+      {
+        "lang": "text",
+        "code": "Hinge:     max(0, 1 - y*f(x))          Hard cutoff at margin\nLogistic:  log(1 + exp(-y*f(x)))        Smooth, never exactly zero"
+      },
+      {
+        "lang": "text",
+        "code": "L(w, b) = (lambda/2) * ||w||^2 + (1/n) * sum(max(0, 1 - y_i * (w^T x_i + b)))\n\nGradient with respect to w:\n  If y_i * (w^T x_i + b) >= 1:  dL/dw = lambda * w\n  If y_i * (w^T x_i + b) < 1:   dL/dw = lambda * w - y_i * x_i\n\nGradient with respect to b:\n  If y_i * (w^T x_i + b) >= 1:  dL/db = 0\n  If y_i * (w^T x_i + b) < 1:   dL/db = -y_i"
+      },
+      {
+        "lang": "text",
+        "code": "maximize    sum(alpha_i) - (1/2) * sum_ij(alpha_i * alpha_j * y_i * y_j * (x_i . x_j))\nsubject to  0 <= alpha_i <= C\n            sum(alpha_i * y_i) = 0"
+      },
+      {
+        "lang": "text",
+        "code": "Linear kernel:      K(x, z) = x . z\nPolynomial kernel:  K(x, z) = (x . z + c)^d\nRBF (Gaussian):     K(x, z) = exp(-gamma * ||x - z||^2)"
+      },
+      {
+        "lang": "text",
+        "code": "minimize    (1/2) ||w||^2 + C * sum(xi_i + xi_i*)\nsubject to  y_i - (w^T x_i + b) <= epsilon + xi_i\n            (w^T x_i + b) - y_i <= epsilon + xi_i*\n            xi_i, xi_i* >= 0"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: Hinge loss and gradient\n\nThe foundation. Compute hinge loss for a batch and its gradient.\n\n```python\ndef hinge_loss(X, y, w, b):\n    n = len(X)\n    total_loss = 0.0\n    for i in range(n):\n        margin = y[i] * (dot(w, X[i]) + b)\n        total_loss += max(0.0, 1.0 - margin)\n    return total_loss / n\n```\n\n### Step 2: Linear SVM via gradient descent\n\nTrain by minimizing regularized hinge loss. No QP solver needed.\n\n```python\nclass LinearSVM:\n    def __init__(self, lr=0.001, lambda_param=0.01, n_epochs=1000):\n        self.lr = lr\n        self.lambda_param = lambda_param\n        self.n_epochs = n_epochs\n        self.w = None\n        self.b = 0.0\n\n    def fit(self, X, y):\n        n_features = len(X[0])\n        self.w = [0.0] * n_features\n        self.b = 0.0\n\n        for epoch in range(self.n_epochs):\n            for i in range(len(X)):\n                margin = y[i] * (dot(self.w, X[i]) + self.b)\n                if margin >= 1:\n                    self.w = [wj - self.lr * self.lambda_param * wj\n                              for wj in self.w]\n                else:\n                    self.w = [wj - self.lr * (self.lambda_param * wj - y[i] * X[i][j])\n                              for j, wj in enumerate(self.w)]\n                    self.b -= self.lr * (-y[i])\n\n    def predict(self, X):\n        return [1 if dot(self.w, x) + self.b >= 0 else -1 for x in X]\n```\n\n### Step 3: Kernel functions\n\nImplement linear, polynomial, and RBF kernels.\n\n```python\ndef linear_kernel(x, z):\n    return dot(x, z)\n\ndef polynomial_kernel(x, z, degree=3, c=1.0):\n    return (dot(x, z) + c) ** degree\n\ndef rbf_kernel(x, z, gamma=0.5):\n    diff = [xi - zi for xi, zi in zip(x, z)]\n    return math.exp(-gamma * dot(diff, diff))\n```\n\n### Step 4: Margin and support vector identification\n\nAfter training, identify which points are support vectors and compute the margin width.\n\n```python\ndef find_support_vectors(X, y, w, b, tol=1e-3):\n    support_vectors = []\n    for i in range(len(X)):\n        margin = y[i] * (dot(w, X[i]) + b)\n        if abs(margin - 1.0) < tol:\n            support_vectors.append(i)\n    return support_vectors\n```\n\nSee `code/svm.py` for the complete implementation with all demos.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "With scikit-learn:\n\n```python\nfrom sklearn.svm import SVC, LinearSVC, SVR\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import Pipeline\n\nclf = Pipeline([\n    (\"scaler\", StandardScaler()),\n    (\"svm\", SVC(kernel=\"rbf\", C=1.0, gamma=\"scale\")),\n])\nclf.fit(X_train, y_train)\nprint(f\"Accuracy: {clf.score(X_test, y_test):.4f}\")\nprint(f\"Support vectors: {clf['svm'].n_support_}\")\n```\n\nImportant: always scale your features before training an SVM. SVMs are sensitive to feature magnitudes because the margin depends on ||w||, and unscaled features distort the geometry.\n\nFor large datasets, use `LinearSVC` (primal formulation, O(n) per epoch) instead of `SVC` (dual formulation, O(n^2) to O(n^3)):\n\n```python\nfrom sklearn.svm import LinearSVC\n\nclf = Pipeline([\n    (\"scaler\", StandardScaler()),\n    (\"svm\", LinearSVC(C=1.0, max_iter=10000)),\n])\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Generate a 2D linearly separable dataset. Train your LinearSVM and identify the support vectors. Verify that the support vectors are the points closest to the decision boundary.\n\n2. Vary C from 0.001 to 1000 on a noisy dataset. Plot the decision boundary for each C value. Observe the transition from wide margin (underfitting) to narrow margin (overfitting).\n\n3. Create a dataset where class boundaries are circular (not linear). Show that a linear SVM fails. Compute the RBF kernel matrix and show that the classes become separable in the kernel-induced feature space.\n\n4. Compare hinge loss vs logistic loss on the same dataset. Train a linear SVM and logistic regression. Count how many training points contribute to each model's decision boundary (support vectors vs all points).\n\n5. Implement SVR (epsilon-insensitive loss). Fit it to y = sin(x) + noise. Plot the epsilon tube around the predictions and highlight the support vectors (points outside the tube).",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What it actually means |\n|------|----------------------|\n| Support vectors | The training points closest to the decision boundary. The only points that determine the hyperplane |\n| Margin | The distance between the decision boundary and the nearest support vectors. SVMs maximize this |\n| Hinge loss | max(0, 1 - y*f(x)). Zero when correctly classified and outside the margin. Linear penalty otherwise |\n| C parameter | Trade-off between margin width and classification errors. Large C = narrow margin, small C = wide margin |\n| Soft margin | SVM formulation that allows margin violations via slack variables. Handles non-separable data |\n| Kernel trick | Computing dot products in a high-dimensional feature space without explicitly mapping to that space |\n| Linear kernel | K(x, z) = x . z. Equivalent to standard dot product. For linearly separable data |\n| RBF kernel | K(x, z) = exp(-gamma * \\|\\|x-z\\|\\|^2). Maps to infinite dimensions. Learns any smooth boundary |\n| Polynomial kernel | K(x, z) = (x . z + c)^d. Maps to a feature space of polynomial combinations |\n| Dual formulation | Reformulation of the SVM problem that depends only on dot products between data points. Enables kernels |\n| SVR | Support Vector Regression. Fits an epsilon-tube around the data. Points inside the tube have zero loss |\n| Slack variables | xi_i: measures how much a point violates the margin. Zero for correctly classified points outside margin |\n| Maximum margin | The principle of choosing the hyperplane that maximizes the distance to the nearest points of each class |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Vapnik: The Nature of Statistical Learning Theory (1995)](https://link.springer.com/book/10.1007/978-1-4757-3264-1) - the foundational text on SVMs and statistical learning\n- [Cortes & Vapnik: Support-vector networks (1995)](https://link.springer.com/article/10.1007/BF00994018) - the original SVM paper\n- [Platt: Sequential Minimal Optimization (1998)](https://www.microsoft.com/en-us/research/publication/sequential-minimal-optimization-a-fast-algorithm-for-training-support-vector-machines/) - the SMO algorithm that made SVM training practical\n- [scikit-learn SVM documentation](https://scikit-learn.org/stable/modules/svm.html) - practical guide with implementation details\n- [LIBSVM: A Library for Support Vector Machines](https://www.csie.ntu.edu.tw/~cjlin/libsvm/) - the C++ library behind most SVM implementations",
+    "keyPoints": [
+      "[Cortes & Vapnik: Support-vector networks (1995)](https://link.springer.com/article/10.1007/BF00994018) - the original SVM paper",
+      "[scikit-learn SVM documentation](https://scikit-learn.org/stable/modules/svm.html) - practical guide with implementation details",
+      "[LIBSVM: A Library for Support Vector Machines](https://www.csie.ntu.edu.tw/~cjlin/libsvm/) - the C++ library behind most SVM implementations"
+    ],
+    "commands": []
+  }
+]

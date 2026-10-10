@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/35-gpt-model-assembly",
+  "slug": "35-gpt-model-assembly",
+  "phase": "19-capstone-projects",
+  "order": 35,
+  "phaseOrder": 19,
+  "title": {
+    "en": "GPT Model Assembly",
+    "zh": ""
+  },
+  "hook": "Twelve blocks stacked, a token embedding, a learned position embedding, a final LayerNorm, and a tied language model head. That is the entire 124 million parameter GPT model. This lesson assembles those pieces into a working class, counts the parameters to confirm the model matches the reference 124M shape, and generates text with multinomial sampling, temperature, and top-k.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30 to 34"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

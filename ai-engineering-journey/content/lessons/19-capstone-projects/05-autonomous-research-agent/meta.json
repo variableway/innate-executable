@@ -1,0 +1,29 @@
+{
+  "id": "19-capstone-projects/05-autonomous-research-agent",
+  "slug": "05-autonomous-research-agent",
+  "phase": "19-capstone-projects",
+  "order": 5,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 05 — Autonomous Research Agent (AI-Scientist Class)",
+    "zh": ""
+  },
+  "hook": "Sakana's AI-Scientist-v2 published full papers. Agent Laboratory ran the experiments. Allen AI shared traces. The 2026 shape is plan-execute-verify tree search over experiments, budgeted cost, sandboxed code execution, a vision-feedback LaTeX writer, and an automated NeurIPS-style reviewer ensemble. The capstone is to build one, run it end to end within $30 per paper, and survive the sandbox-escape red team that Sakana documented.",
+  "type": "Capstone",
+  "languages": [
+    "Python (agent + sandbox)",
+    "LaTeX (output)"
+  ],
+  "prerequisites": [
+    "Phase 2 (ML)",
+    "Phase 3 (deep learning)",
+    "Phase 7 (transformers)",
+    "Phase 10 (LLMs from scratch)",
+    "Phase 14 (agents)",
+    "Phase 15 (autonomous)",
+    "Phase 16 (multi-agent)",
+    "Phase 18 (safety)"
+  ],
+  "timeMinutes": 40,
+  "needsTranslation": true
+}

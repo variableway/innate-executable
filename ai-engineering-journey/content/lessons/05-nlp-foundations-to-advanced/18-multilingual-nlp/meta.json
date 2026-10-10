@@ -1,0 +1,24 @@
+{
+  "id": "05-nlp-foundations-to-advanced/18-multilingual-nlp",
+  "slug": "18-multilingual-nlp",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 18,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Multilingual NLP",
+    "zh": ""
+  },
+  "hook": "One model, 100+ languages, zero training data for most of them. Cross-lingual transfer is the practical miracle of the 2020s.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 04 (GloVe",
+    "FastText",
+    "Subword)",
+    "Phase 5 · 11 (Machine Translation)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

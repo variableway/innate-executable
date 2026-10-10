@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/58-vision-encoder-patches",
+  "slug": "58-vision-encoder-patches",
+  "phase": "19-capstone-projects",
+  "order": 58,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Vision Encoder Patches",
+    "zh": ""
+  },
+  "hook": "A vision model that reads pixels needs a tokenizer for pixels. Patch embedding is that tokenizer. Cut the image into a grid of squares, flatten each square, project it through one linear layer, then add a 2D position signal so the transformer knows where each square sat in the original image.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37 (Track B foundations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

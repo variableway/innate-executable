@@ -1,0 +1,22 @@
+{
+  "id": "06-speech-and-audio/06-speaker-recognition-verification",
+  "slug": "06-speaker-recognition-verification",
+  "phase": "06-speech-and-audio",
+  "order": 6,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Speaker Recognition & Verification",
+    "zh": ""
+  },
+  "hook": "ASR asks \"what did they say?\" Speaker recognition asks \"who said it?\" The math looks the same — embeddings plus cosine — but every production decision hinges on a single EER number.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 02 (Spectrograms & Mel)",
+    "Phase 5 · 22 (Embedding Models)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

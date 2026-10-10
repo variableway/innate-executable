@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/21-nli-textual-entailment",
+  "slug": "21-nli-textual-entailment",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 21,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Natural Language Inference — Textual Entailment",
+    "zh": ""
+  },
+  "hook": "\"t entails h\" means a human reading t would conclude h is true. NLI is the task of predicting entailment / contradiction / neutral. Boring on the surface, load-bearing in production.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 05 (Sentiment Analysis)",
+    "Phase 5 · 13 (Question Answering)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

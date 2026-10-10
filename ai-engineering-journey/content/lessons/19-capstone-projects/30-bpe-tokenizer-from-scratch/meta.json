@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/30-bpe-tokenizer-from-scratch",
+  "slug": "30-bpe-tokenizer-from-scratch",
+  "phase": "19-capstone-projects",
+  "order": 30,
+  "phaseOrder": 19,
+  "title": {
+    "en": "BPE Tokenizer From Scratch",
+    "zh": ""
+  },
+  "hook": "Bytes in, ids out, ids back to the same bytes. Build the tokenizer that every modern text model still starts from.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 04 lessons",
+    "Phase 07 transformer lessons"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

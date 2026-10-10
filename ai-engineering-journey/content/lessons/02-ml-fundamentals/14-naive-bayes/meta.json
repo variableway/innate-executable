@@ -1,0 +1,21 @@
+{
+  "id": "02-ml-fundamentals/14-naive-bayes",
+  "slug": "14-naive-bayes",
+  "phase": "02-ml-fundamentals",
+  "order": 14,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Naive Bayes",
+    "zh": ""
+  },
+  "hook": "The \"naive\" assumption is wrong, and it works anyway. That's the beauty of it.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lessons 01-07 (classification",
+    "Bayes' theorem)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

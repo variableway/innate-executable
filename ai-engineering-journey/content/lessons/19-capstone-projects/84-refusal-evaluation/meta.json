@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/84-refusal-evaluation",
+  "slug": "84-refusal-evaluation",
+  "phase": "19-capstone-projects",
+  "order": 84,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 84 — Refusal Evaluation",
+    "zh": ""
+  },
+  "hook": "Helpfulness on benign prompts and refusal on harmful prompts are two metrics, not one. Measure both.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 18 safety lessons",
+    "Phase 19 Track A lessons 25-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,23 @@
+{
+  "id": "16-multi-agent-and-swarms/13-shared-memory-blackboard",
+  "slug": "13-shared-memory-blackboard",
+  "phase": "16-multi-agent-and-swarms",
+  "order": 13,
+  "phaseOrder": 16,
+  "title": {
+    "en": "Shared Memory and Blackboard Patterns",
+    "zh": ""
+  },
+  "hook": "Two approaches coexist in 2026 multi-agent systems: the **message pool** (everyone sees everyone's messages, as in AutoGen GroupChat or MetaGPT) and the **blackboard with subscription** (agents subscribe to relevant events, as in Context-Aware MCP or the Matrix framework). Both are the only stateful part of a multi-agent system — which means both are where the interesting bugs live. The reference failure mode is **memory poisoning**: one agent hallucinates a \"fact,\" other agents treat it as verified, and accuracy decays gradually in a way that is much harder to debug than an immediate crash. This lesson builds both structures from stdlib, injects a poisoning attack, and shows the three mitigations that actually work in production.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib",
+    "`threading`)"
+  ],
+  "prerequisites": [
+    "Phase 16 · 04 (Primitive Model)",
+    "Phase 16 · 09 (Parallel Swarm Networks)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

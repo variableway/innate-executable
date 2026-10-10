@@ -1,0 +1,22 @@
+{
+  "id": "09-reinforcement-learning/07-actor-critic-a2c-a3c",
+  "slug": "07-actor-critic-a2c-a3c",
+  "phase": "09-reinforcement-learning",
+  "order": 7,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Actor-Critic — A2C and A3C",
+    "zh": ""
+  },
+  "hook": "REINFORCE is noisy. Add a critic that learns `V̂(s)`, subtract it from the return, and you get an advantage that has the same expectation but far lower variance. That is actor-critic. A2C runs it synchronously; A3C runs it across threads. Both are the mental model for every modern deep-RL method.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 04 (TD Learning)",
+    "Phase 9 · 06 (REINFORCE)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

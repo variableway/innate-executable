@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/04-tree-of-thoughts-lats",
+  "slug": "04-tree-of-thoughts-lats",
+  "phase": "14-agent-engineering",
+  "order": 4,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Tree of Thoughts and LATS: Deliberate Search",
+    "zh": ""
+  },
+  "hook": "A single chain-of-thought trajectory has no room to backtrack. ToT (Yao et al., 2023) turns reasoning into a tree with self-evaluation on each node. LATS (Zhou et al., 2024) unifies ToT with ReAct and Reflexion under Monte Carlo Tree Search. Game of 24 goes from 4% (CoT) to 74% (ToT); LATS hits 92.7% pass@1 on HumanEval.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 01 (Agent Loop)",
+    "Phase 14 · 03 (Reflexion)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

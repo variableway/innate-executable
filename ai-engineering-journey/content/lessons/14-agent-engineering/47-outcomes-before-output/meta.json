@@ -1,0 +1,19 @@
+{
+  "id": "14-agent-engineering/47-outcomes-before-output",
+  "slug": "47-outcomes-before-output",
+  "phase": "14-agent-engineering",
+  "order": 47,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Define the Outcome Before You Choose the Output",
+    "zh": ""
+  },
+  "hook": "Fast implementation increases the penalty for choosing the wrong problem. Shape the outcome first so speed points in the right direction.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

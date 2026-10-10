@@ -1,0 +1,25 @@
+{
+  "id": "19-capstone-projects/63-multimodal-eval",
+  "slug": "63-multimodal-eval",
+  "phase": "19-capstone-projects",
+  "order": 63,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Multimodal Evaluation",
+    "zh": ""
+  },
+  "hook": "Training is half the loop. The other half is measurement. This lesson builds three evaluation surfaces from primitives: image-caption retrieval reported as R@1, R@5, R@10; visual question answering reported as exact match accuracy; and image captioning reported as BLEU-4. Each metric is a function over the model's outputs and a synthetic eval suite that runs in seconds.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 58-62 (Track E foundations: encoder",
+    "transformer",
+    "projection",
+    "cross-attention fusion",
+    "pretraining)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,100 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Audio Transformers — Whisper Architecture\n\n> Audio is an image of frequency over time. Whisper is a ViT that eats mel spectrograms and speaks back.\n\n**Type:** Learn\n**Languages:** Python\n**Prerequisites:** Phase 7 · 05 (Full Transformer), Phase 7 · 08 (Encoder-Decoder), Phase 7 · 09 (ViT)\n**Time:** ~45 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Before Whisper (OpenAI, Radford et al. 2022), state-of-the-art automatic speech recognition (ASR) meant wav2vec 2.0 and HuBERT — self-supervised feature extractors plus a fine-tuned head. High quality, expensive data pipelines, domain-brittle. Multilingual speech recognition needed separate models per language family.\n\nWhisper made three bets:\n\n1. **Train on everything.** 680,000 hours of weakly-labeled audio scraped from the internet across 97 languages. No clean academic corpus. No phoneme labels.\n2. **Multi-task single model.** One decoder trained jointly on transcription, translation, voice activity detection, language ID, and timestamping via task tokens.\n3. **Standard encoder-decoder transformer.** Encoder consumes log-mel spectrograms. Decoder produces text tokens autoregressively. No vocoder, no CTC, no HMM.\n\nThe result: Whisper large-v3 is robust across accents, noise, and languages that have zero clean labeled data. It is the default speech front-end for every open-source voice assistant and most commercial ones in 2026.",
+    "keyPoints": [
+      "Train on everything.",
+      "Multi-task single model.",
+      "Standard encoder-decoder transformer."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Whisper pipeline: audio → mel → encoder → decoder → text](../assets/whisper.svg)\n\n### Step 1 — resample + window\n\nAudio at 16 kHz. Clip/pad to 30 seconds. Compute log-mel spectrogram: 80 mel bins, 10 ms stride → ~3,000 frames × 80 features. This is the \"input image\" that Whisper sees.\n\n### Step 2 — convolutional stem\n\nTwo Conv1D layers with kernel 3 and stride 2 reduce the 3,000 frames to 1,500. Halves sequence length without adding a lot of parameters.\n\n### Step 3 — encoder\n\nA 24-layer (for large) transformer encoder over 1,500 timesteps. Sinusoidal positional encoding, self-attention, GELU FFN. Produces 1,500 × 1,280 hidden states.\n\n### Step 4 — decoder\n\nA 24-layer transformer decoder. It autoregressively produces tokens from a BPE vocabulary that is a superset of GPT-2's with a few audio-specific special tokens.\n\n### Step 5 — task tokens\n\nThe decoder prompt starts with control tokens that tell the model what to do:\n\n```\n<|startoftranscript|>  <|en|>  <|transcribe|>  <|0.00|>\n```\n\nor\n\n```\n<|startoftranscript|>  <|fr|>  <|translate|>   <|0.00|>\n```\n\nThe model was trained on this convention. You control task by prefix. The 2026 equivalent of instruction-tuning, but applied to speech.\n\n### Step 6 — output\n\nBeam search (width 5) with a log-prob threshold. Timestamps are predicted every 0.02 seconds of audio when the `<|notimestamps|>` token is absent.\n\n### Whisper sizes\n\n| Model | Params | Layers | d_model | Heads | VRAM (fp16) |\n|-------|--------|--------|---------|-------|-------------|\n| Tiny | 39M | 4 | 384 | 6 | ~1 GB |\n| Base | 74M | 6 | 512 | 8 | ~1 GB |\n| Small | 244M | 12 | 768 | 12 | ~2 GB |\n| Medium | 769M | 24 | 1024 | 16 | ~5 GB |\n| Large | 1550M | 32 | 1280 | 20 | ~10 GB |\n| Large-v3 | 1550M | 32 | 1280 | 20 | ~10 GB |\n| Large-v3-turbo | 809M | 32 | 1280 | 20 | ~6 GB (4-layer decoder) |\n\nLarge-v3-turbo (2024) cut the decoder from 32 layers to 4. 8× faster decoding with <1 WER point regression. That decode speed unlock is why Whisper-turbo is the default for real-time voice agents in 2026.\n\n### What Whisper does not do\n\n- No diarization (who is speaking). Pair with pyannote for that.\n- No real-time streaming natively — the 30-second window is fixed. Modern wrappers (`faster-whisper`, `WhisperX`) bolt on streaming via VAD + overlap.\n- No long-form context beyond 30 s without external chunking. Works well in practice because human speech rarely needs long-range context for transcription.\n\n### 2026 landscape\n\n| Task | Model | Notes |\n|------|-------|-------|\n| English ASR | Whisper-turbo, Moonshine | Moonshine is 4× faster on edge |\n| Multilingual ASR | Whisper-large-v3 | 97 languages |\n| Streaming ASR | faster-whisper + VAD | 150 ms latency targets achievable |\n| TTS | Piper, XTTS-v2, Kokoro | Encoder-decoder pattern, but Whisper-shaped |\n| Audio + language | AudioLM, SeamlessM4T | Text tokens + audio tokens in one transformer |\n\n```figure\nn5-mel-decode\n```",
+    "keyPoints": [
+      "No diarization (who is speaking). Pair with pyannote for that.",
+      "No real-time streaming natively — the 30-second window is fixed. Modern wrappers (`faster-whisper`, `WhisperX`) bolt on streaming via VAD + overlap.",
+      "No long-form context beyond 30 s without external chunking. Works well in practice because human speech rarely needs long-range context for transcription."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "<|startoftranscript|>  <|en|>  <|transcribe|>  <|0.00|>"
+      },
+      {
+        "lang": "text",
+        "code": "<|startoftranscript|>  <|fr|>  <|translate|>   <|0.00|>"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "See `code/main.py`. We don't train Whisper — we build the log-mel spectrogram pipeline + task-token prompt formatter. Those are the parts you actually touch in production.\n\n### Step 1: synthesize audio\n\nGenerate a 1-second sine wave at 440 Hz sampled at 16 kHz. 16,000 samples.\n\n### Step 2: log-mel spectrogram (simplified)\n\nFull mel spectrogram needs FFT. We do a simplified framing + per-frame energy version that shows the pipeline without requiring `librosa`:\n\n```python\ndef frame_signal(x, frame_size=400, hop=160):\n    frames = []\n    for start in range(0, len(x) - frame_size + 1, hop):\n        frames.append(x[start:start + frame_size])\n    return frames\n```\n\nFrame = 25 ms, hop = 10 ms. Matches Whisper's windowing. Per-frame energy stands in for mel bins for pedagogy.\n\n### Step 3: pad to 30 s\n\nWhisper always processes 30-second chunks. Pad (or clip) the spectrogram to 3,000 frames.\n\n### Step 4: build the prompt tokens\n\n```python\ndef whisper_prompt(lang=\"en\", task=\"transcribe\", timestamps=True):\n    tokens = [\"<|startoftranscript|>\", f\"<|{lang}|>\", f\"<|{task}|>\"]\n    if not timestamps:\n        tokens.append(\"<|notimestamps|>\")\n    return tokens\n```\n\nThat is the whole task-control surface. A 4-token prefix.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "```python\nimport whisper\nmodel = whisper.load_model(\"large-v3-turbo\")\nresult = model.transcribe(\"meeting.wav\", language=\"en\", task=\"transcribe\")\nprint(result[\"text\"])\nprint(result[\"segments\"][0][\"start\"], result[\"segments\"][0][\"end\"])\n```\n\nFaster, OpenAI-compatible:\n\n```python\nfrom faster_whisper import WhisperModel\nmodel = WhisperModel(\"large-v3-turbo\", compute_type=\"int8_float16\")\nsegments, info = model.transcribe(\"meeting.wav\", vad_filter=True)\nfor s in segments:\n    print(f\"{s.start:.2f} - {s.end:.2f}: {s.text}\")\n```\n\n**When to pick Whisper in 2026:**\n\n- Multilingual ASR with one model.\n- Robust transcription of noisy, diverse audio.\n- Research / prototype ASR — fastest starting point.\n\n**When to pick something else:**\n\n- Ultra-low latency streaming on edge — Moonshine beats Whisper at matched quality.\n- Real-time conversational AI needing <200 ms — dedicated streaming ASR.\n- Speaker diarization — Whisper does not do this; bolt on pyannote.",
+    "keyPoints": [
+      "When to pick Whisper in 2026:",
+      "Multilingual ASR with one model.",
+      "Robust transcription of noisy, diverse audio.",
+      "Research / prototype ASR — fastest starting point.",
+      "When to pick something else:",
+      "Ultra-low latency streaming on edge — Moonshine beats Whisper at matched quality."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "See `outputs/skill-asr-configurator.md`. The skill picks an ASR model, decoding parameters, and preprocessing pipeline for a new speech application.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Run `code/main.py`. Confirm the frame count for a 1-second signal at 16 kHz with 10 ms hop is ~100 frames. For 30 seconds: ~3,000 frames.\n2. **Medium.** Build the full log-mel spectrogram using `numpy.fft`. Verify 80 mel bins match `librosa.feature.melspectrogram(n_mels=80)` within numerical error.\n3. **Hard.** Implement streaming inference: chunk audio into 10 s windows with 2 s overlap, run Whisper on each chunk, merge transcripts. Measure word-error rate vs single-pass on a 5-minute podcast sample.",
+    "keyPoints": [
+      "Easy.",
+      "Medium."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| Mel spectrogram | \"Audio image\" | 2D representation: frequency bins on one axis, time frames on the other; log-scaled energy per cell. |\n| Log-mel | \"What Whisper sees\" | Mel spectrogram passed through log; approximates human perception of loudness. |\n| Frame | \"One time slice\" | A 25 ms window of samples; overlapping at 10 ms stride. |\n| Task token | \"Prompt prefix for speech\" | Special tokens like `<\\|transcribe\\|>` / `<\\|translate\\|>` in the decoder prompt. |\n| Voice activity detection (VAD) | \"Find the speech\" | Gate that removes silence before ASR; cuts cost massively. |\n| CTC | \"Connectionist Temporal Classification\" | Classic ASR loss for alignment-free training; Whisper does NOT use it. |\n| Whisper-turbo | \"Small decoder, full encoder\" | large-v3 encoder + 4-layer decoder; 8× faster decoding. |\n| Faster-whisper | \"The production wrapper\" | CTranslate2 reimplementation; int8 quantization; 4× faster than OpenAI's reference. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Radford et al. (2022). Robust Speech Recognition via Large-Scale Weak Supervision](https://arxiv.org/abs/2212.04356) — Whisper paper.\n- [OpenAI Whisper repo](https://github.com/openai/whisper) — reference code + model weights. Read `whisper/model.py` to see the Conv1D stem + encoder + decoder top-to-bottom in ~400 lines.\n- [OpenAI Whisper — `whisper/decoding.py`](https://github.com/openai/whisper/blob/main/whisper/decoding.py) — the beam-search + task-token logic described in Steps 5–6 is here; 500 lines, fully readable.\n- [Baevski et al. (2020). wav2vec 2.0: A Framework for Self-Supervised Learning of Speech Representations](https://arxiv.org/abs/2006.11477) — precursor; still SOTA features in some settings.\n- [SYSTRAN/faster-whisper](https://github.com/SYSTRAN/faster-whisper) — production wrapper, 4× faster than reference.\n- [Jia et al. (2024). Moonshine: Speech Recognition for Live Transcription and Voice Commands](https://arxiv.org/abs/2410.15608) — 2024 edge-friendly ASR, Whisper-shaped but smaller.\n- [HuggingFace blog — \"Fine-Tune Whisper For Multilingual ASR with 🤗 Transformers\"](https://huggingface.co/blog/fine-tune-whisper) — canonical fine-tuning recipe including mel spectrogram preprocessor and token-timestamp handling.\n- [HuggingFace `modeling_whisper.py`](https://github.com/huggingface/transformers/blob/main/src/transformers/models/whisper/modeling_whisper.py) — full implementation (encoder, decoder, cross-attention, generation) that mirrors the lesson's architecture diagram.",
+    "keyPoints": [
+      "[Radford et al. (2022). Robust Speech Recognition via Large-Scale Weak Supervision](https://arxiv.org/abs/2212.04356) — Whisper paper.",
+      "[SYSTRAN/faster-whisper](https://github.com/SYSTRAN/faster-whisper) — production wrapper, 4× faster than reference."
+    ],
+    "commands": []
+  }
+]

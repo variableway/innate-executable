@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/18-mcp-auth-production",
+  "slug": "18-mcp-auth-production",
+  "phase": "13-tools-and-protocols",
+  "order": 18,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Auth in Production: Issuer-Bound Enrollment and Tokens",
+    "zh": ""
+  },
+  "hook": "Lesson 16 built the OAuth 2.1 state machine. This lesson hardens its production boundaries for MCP 2026-07-28: Client ID Metadata Documents first, deprecated dynamic registration only for compatibility, authorization-response issuer validation, issuer-keyed client credentials, JWKS refresh, and audience-pinned tokens on every stateless request.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 16 (OAuth 2.1 state machine)",
+    "Phase 13 · 17 (gateways)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

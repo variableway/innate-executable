@@ -1,0 +1,21 @@
+{
+  "id": "03-deep-learning-core/01-the-perceptron",
+  "slug": "01-the-perceptron",
+  "phase": "03-deep-learning-core",
+  "order": 1,
+  "phaseOrder": 3,
+  "title": {
+    "en": "The Perceptron",
+    "zh": ""
+  },
+  "hook": "The perceptron is the atom of neural networks. Split it open and you find weights, a bias, and a decision.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 (Linear Algebra Intuition)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "09-reinforcement-learning/02-dynamic-programming",
+  "slug": "02-dynamic-programming",
+  "phase": "09-reinforcement-learning",
+  "order": 2,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Dynamic Programming — Policy Iteration & Value Iteration",
+    "zh": ""
+  },
+  "hook": "Dynamic programming is RL with cheating. You already know the transition and reward functions; you just iterate the Bellman equation until `V` or `π` stops moving. It is the benchmark every sampling-based method tries to approach.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 01 (MDPs)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

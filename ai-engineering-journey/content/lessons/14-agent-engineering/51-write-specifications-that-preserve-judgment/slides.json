@@ -1,0 +1,104 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Write Specifications That Preserve Judgment\n\n> A useful specification fixes invariants and evidence while leaving reversible implementation choices open. It is a decision boundary, not a screenplay.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lesson 50\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Separate outcome, invariants, examples, non-goals, and proof.\n- Mark decisions as locked, bounded, or delegated.\n- Preserve agent judgment where choices are cheap and reversible.\n- Require human checkpoints where consequence or public behavior changes.",
+    "keyPoints": [
+      "Separate outcome, invariants, examples, non-goals, and proof.",
+      "Mark decisions as locked, bounded, or delegated.",
+      "Preserve agent judgment where choices are cheap and reversible.",
+      "Require human checkpoints where consequence or public behavior changes."
+    ],
+    "commands": []
+  },
+  {
+    "id": "two-bad-extremes",
+    "title": "Two Bad Extremes",
+    "bodyMarkdown": "An underspecified task asks an agent to guess the system. An overspecified task asks it to transcribe a design that may already be wrong.\n\nThe useful middle is an executable contract:\n\n| Surface | Purpose |\n|---|---|\n| Outcome | The observable result |\n| Invariants | Conditions that must always remain true |\n| Examples | Concrete cases that reveal intent |\n| Non-goals | Adjacent behavior intentionally excluded |\n| Decision policy | Which choices are locked, bounded, or delegated |\n| Proof | Evidence required before completion |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "three-decision-modes",
+    "title": "Three Decision Modes",
+    "bodyMarkdown": "- **Locked:** the agent must not choose. Use for public compatibility, authority, safety, irreversible cost, or a product commitment.\n- **Bounded:** the agent may choose inside explicit limits. Use for search budgets, retry counts, allowed dependencies, or a known interface family.\n- **Delegated:** the agent owns the choice and must explain it. Use for local structure, names, reversible refactors, and implementation details.\n\n```mermaid\nflowchart LR\n  D[Decision] --> C{Consequence and reversibility}\n  C -->|High consequence| L[Locked]\n  C -->|Known safe range| B[Bounded]\n  C -->|Cheap and reversible| A[Delegated]\n  L --> H[Human checkpoint]\n  B --> P[Agent proposes within limits]\n  A --> I[Agent implements and proves]\n```",
+    "keyPoints": [
+      "Locked:: the agent must not choose. Use for public compatibility, authority, safety, irreversible cost, or a product commitment.",
+      "Bounded:: the agent may choose inside explicit limits. Use for search budgets, retry counts, allowed dependencies, or a known interface family.",
+      "Delegated:: the agent owns the choice and must explain it. Use for local structure, names, reversible refactors, and implementation details."
+    ],
+    "commands": []
+  },
+  {
+    "id": "specify-behavior-through-examples",
+    "title": "Specify Behavior Through Examples",
+    "bodyMarkdown": "Examples compress intent better than adjectives. “Helpful,” “robust,” and “production-ready” are not executable. A small set of normal, edge, failure, and forbidden examples gives both the builder and verifier something concrete.\n\nExamples do not replace invariants. One passing case cannot prove a universal safety rule.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "proof-must-match-the-claim",
+    "title": "Proof Must Match the Claim",
+    "bodyMarkdown": "- A unit test proves a local function contract.\n- A wire test proves serialization and transport behavior.\n- A browser journey proves an interface path.\n- A replay set proves behavior over representative cases.\n- An audit log proves that authority boundaries held.\n\nDo not accept a lower layer as proof of a higher-layer claim.",
+    "keyPoints": [
+      "A unit test proves a local function contract.",
+      "A wire test proves serialization and transport behavior.",
+      "A browser journey proves an interface path.",
+      "A replay set proves behavior over representative cases.",
+      "An audit log proves that authority boundaries held."
+    ],
+    "commands": []
+  },
+  {
+    "id": "preserve-unknowns-deliberately",
+    "title": "Preserve Unknowns Deliberately",
+    "bodyMarkdown": "A specification can say “the implementation may choose any read-only source that returns within the time budget.” That is not vagueness. It is an intentional delegated decision with a boundary and proof.\n\nSpecifications should evolve when evidence changes. Preserve the reason behind locked and bounded choices so later teams can revise them without archaeology.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab validates every contract surface, checks decision modes, and writes `outputs/executable-specification.json`.\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nMove the production-write decision from locked to delegated. Explain why the schema accepts the value but the product risk does not.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Convert a backlog ticket into the six specification surfaces.\n2. Replace three implementation instructions with one invariant and two examples.\n3. Mark every decision and justify each locked or bounded choice.\n4. Add a proof receipt for every invariant.\n5. Remove a constraint that has no evidence or risk rationale.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Nuseibeh and Easterbrook, Requirements Engineering: A Roadmap](https://www.cs.toronto.edu/~sme/papers/2000/ICSE2000.pdf), for the relationship among goals, precise specifications, validation, agreement, and evolution.\n- [Zave and Jackson, Four Dark Corners of Requirements Engineering](https://doi.org/10.1145/267895.267896), for separating environmental assumptions, requirements, and specifications.\n- [Gotel and Finkelstein, An Analysis of the Requirements Traceability Problem](https://doi.org/10.1109/ICRE.1994.292398), for preserving why a requirement exists and where it came from.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/executable-specification.json`. It becomes the contract that coding agents and human reviewers share.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

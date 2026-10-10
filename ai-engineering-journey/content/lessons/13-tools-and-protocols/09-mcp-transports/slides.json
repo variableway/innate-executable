@@ -1,0 +1,110 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# MCP Transports: stdio and Stateless Streamable HTTP\n\n> Transport carries MCP messages. It does not supply missing protocol state. In `2026-07-28`, local stdio and remote Streamable HTTP both carry self-describing requests.\n\n**Type:** Learn\n**Languages:** Python\n**Prerequisites:** Phase 13, Lessons 07 and 08\n**Time:** ~65 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Choose stdio for local child processes and Streamable HTTP for network services.\n- Implement the modern single-endpoint, POST-only Streamable HTTP contract.\n- Mirror and validate MCP version, method, and name headers against the JSON-RPC body.\n- Deliver request-scoped SSE and long-lived `subscriptions/listen` streams correctly.\n- Migrate session-based and legacy HTTP+SSE deployments without presenting legacy behavior as modern.",
+    "keyPoints": [
+      "Choose stdio for local child processes and Streamable HTTP for network services.",
+      "Implement the modern single-endpoint, POST-only Streamable HTTP contract.",
+      "Mirror and validate MCP version, method, and name headers against the JSON-RPC body.",
+      "Deliver request-scoped SSE and long-lived `subscriptions/listen` streams correctly.",
+      "Migrate session-based and legacy HTTP+SSE deployments without presenting legacy behavior as modern."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Earlier Streamable HTTP revisions combined protocol negotiation with connection and session behavior. A server could mint `Mcp-Session-Id`, expose a standalone GET stream, accept DELETE for session termination, and resume SSE with `Last-Event-ID`.\n\nMCP `2026-07-28` removes those mechanisms from the modern wire. Every request can land on any healthy worker because its protocol version and client capabilities travel in the request body. HTTP headers mirror selected fields for routing and policy, but the server validates those headers against the body before execution.\n\nThe result is easier to scale and easier to reason about. It also means that a server teaching the 2025 transport as current is teaching the wrong failure and security model.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### stdio\n\nThe stdio binding is for a client-launched subprocess:\n\n- Client writes one UTF-8 JSON-RPC message per line to stdin.\n- Server writes one UTF-8 JSON-RPC message per line to stdout.\n- Server writes diagnostics to stderr.\n- Server exits promptly on stdin EOF.\n- Every modern request carries version and client capabilities in `params._meta`.\n\nThe process may live for many calls, but it is not a modern protocol session. If it exits unexpectedly, in-flight requests are lost. Restart the process, rediscover, relist, reopen subscriptions, and retry safe operations with new request ids.\n\n### Streamable HTTP in 2026-07-28\n\nA modern server exposes one MCP endpoint, such as `/mcp`, that accepts POST.\n\nEvery JSON-RPC request or notification is a new HTTP POST. The body contains one JSON-RPC message. Clients do not send JSON-RPC responses to the server.\n\nFor a request, the server returns either:\n\n- `Content-Type: application/json` with one JSON-RPC response; or\n- `Content-Type: text/event-stream` with notifications related to that request, followed by the final JSON-RPC response.\n\nFor an accepted notification, the server returns `202 Accepted` with no body.\n\nClients advertise both response types:\n\n```http\nAccept: application/json, text/event-stream\n```\n\n### POST-only means POST-only\n\nModern Streamable HTTP has no standalone GET stream and no DELETE session endpoint.\n\n- `GET /mcp` returns `405 Method Not Allowed`.\n- `DELETE /mcp` returns `405 Method Not Allowed`.\n- `Mcp-Session-Id` is ignored and never minted or echoed.\n- `Last-Event-ID` is ignored because modern streams are not resumable.\n\nIf a request-scoped stream breaks before its final response, the client has lost that in-flight request. It may issue a new request with a new JSON-RPC id when retry is safe. It must not attempt stream resumption.\n\n### Origin validation\n\nServers validate `Origin` on incoming connections to prevent DNS rebinding. If the header is present and not explicitly allowed, return `403 Forbidden`. A non-browser client may omit `Origin`, which the official transport rules permit.\n\nLocal servers should bind to `127.0.0.1`, not every interface. Network services still need authentication and authorization on every request. Origin validation is not authentication.\n\nUse exact origin matching after canonical configuration. Prefix checks such as `origin.startswith(\"https://trusted.example\")` are unsafe because they can accept attacker-controlled suffixes.\n\n### Required HTTP metadata headers\n\nEvery modern POST request includes:\n\n```http\nMCP-Protocol-Version: 2026-07-28\nMcp-Method: tools/call\nMcp-Name: notes_search\n```\n\nHeader rules:\n\n- `MCP-Protocol-Version` is required and must equal `params._meta.io.modelcontextprotocol/protocolVersion`.\n- `Mcp-Method` is required and must equal the JSON-RPC `method`.\n- `Mcp-Name` is required for `tools/call`, `resources/read`, and `prompts/get`.\n- `Mcp-Name` equals `params.name`, or `params.uri` for `resources/read`.\n- Header values are case-sensitive even though header names are case-insensitive.\n\nUnsafe or non-ASCII `Mcp-Name` values use the exact UTF-8 Base64 sentinel:\n\n```text\n=?base64?{Base64EncodedValue}?=\n```\n\nThe server decodes that value before comparing it with the body.\n\nMissing, malformed, or mismatched mirrored headers return HTTP `400` with JSON-RPC code `-32020`. If header and body agree on a version the server does not support, return HTTP `400` with `-32022` and exact error data such as `{\"supported\":[\"2026-07-28\"],\"requested\":\"2027-01-01\"}`.\n\nAn unknown modern method returns HTTP `404` with JSON-RPC `-32601`. The JSON-RPC body is important because a dual-era client uses it to distinguish a modern error from a legacy endpoint miss.\n\n### Request-scoped SSE\n\nA server may choose SSE for one long-running request:\n\n```text\nPOST tools/call id=41\n  <- notifications/progress related to id=41\n  <- notifications/progress related to id=41\n  <- JSON-RPC response id=41\nstream closes\n```\n\nThe server must not send independent JSON-RPC requests on this stream. Sampling, elicitation, and roots interactions use Multi Round-Trip Request results. Closing the response stream cancels that request.\n\nDo not add SSE event ids for replay. `Last-Event-ID` resumption is not part of the modern revision.\n\n### Long-lived changes use subscriptions/listen\n\nChange notifications use a client-opened request, not standalone GET:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": \"listen-1\",\n  \"method\": \"subscriptions/listen\",\n  \"params\": {\n    \"notifications\": {\n      \"toolsListChanged\": true,\n      \"resourceSubscriptions\": [\"notes://note-1\"]\n    },\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {},\n      \"io.modelcontextprotocol/clientInfo\": {\n        \"name\": \"course-client\",\n        \"version\": \"1.0.0\"\n      }\n    }\n  }\n}\n```\n\nThe POST response is a long-lived SSE stream. Its first protocol message is `notifications/subscriptions/acknowledged`. The acknowledgement, every change notification, and the final result carry `io.modelcontextprotocol/subscriptionId` in `_meta`, equal to the listen request id. The server may emit SSE comments as keepalives. When the stream drops, the client reissues `subscriptions/listen` with a new request id and refetches affected data.\n\n`resources/subscribe` and `resources/unsubscribe` belong to the legacy era. Do not use them on a modern connection.\n\n### Explicit application state\n\nRemoving protocol sessions does not forbid workflows with state. The server may mint an opaque state handle and return it as a normal tool result. The client passes that handle as an explicit argument on later calls.\n\nBind handles to the authenticated principal, make them unguessable, expire them, and authorize every use. This makes state visible at the application layer instead of hiding it in transport affinity.\n\nThe failure caused by hidden replica state is mechanical:\n\n1. Request A reaches replica 1 and creates a draft in that process's memory.\n2. The response does not return a draft handle because the implementation assumes the connection identifies the draft.\n3. Request B is a fresh POST and reaches replica 2.\n4. Replica 2 has valid protocol metadata but no way to name or load the draft, so the workflow fails or reads the wrong local object.\n5. Sticky routing appears to fix the symptom until a restart, rollout, reschedule, or failover moves the next request.\n\nThe correct boundary has two parts. Protocol context stays in each request. Durable application state lives in a shared store under a server-minted handle returned to the client. The next call supplies that handle, any replica loads the same record, and authorization binds the record to the authenticated principal and tenant. Replica memory may cache a record, but it cannot be the only copy required for correctness.\n\nChoose the state mechanism by lifetime. Request-local variables can serve one call. A short MRTR continuation can use integrity-protected `requestState`. A draft or durable task needs an explicit handle plus shared persistence, expiry, concurrency control, and idempotency. None of those objects is an MCP protocol session.\n\n### HTTP dual-era compatibility\n\nA client that supports modern and legacy servers attempts a modern POST first. If it receives HTTP `400`, `404`, or `405`, it inspects the body:\n\n- A recognized modern JSON-RPC error proves the server is modern. Correct the request or retry an advertised version. Do not downgrade.\n- An empty body or an unrecognized response may indicate a legacy HTTP+SSE server. Only then try the old GET endpoint and expect its legacy `endpoint` event.\n\nA server can support both eras during migration by routing modern metadata to the modern POST-only implementation and retaining separate legacy endpoints for old clients. Never describe the legacy GET, DELETE, session id, or replay behavior as part of `2026-07-28`.\n\n```figure\ntp-transport-handshake\n```",
+    "keyPoints": [
+      "Client writes one UTF-8 JSON-RPC message per line to stdin.",
+      "Server writes one UTF-8 JSON-RPC message per line to stdout.",
+      "Server writes diagnostics to stderr.",
+      "Server exits promptly on stdin EOF.",
+      "Every modern request carries version and client capabilities in `params._meta`.",
+      "`Content-Type: application/json` with one JSON-RPC response; or"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "=?base64?{Base64EncodedValue}?="
+      },
+      {
+        "lang": "text",
+        "code": "POST tools/call id=41\n  <- notifications/progress related to id=41\n  <- notifications/progress related to id=41\n  <- JSON-RPC response id=41\nstream closes"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`code/main.py` implements a finite, modern Streamable HTTP server with the Python standard library. It validates Origin and mirrored headers, ignores removed session headers, returns JSON for normal calls, and demonstrates a finite `subscriptions/listen` SSE stream.\n\n```bash\ncd code\npython3 main.py --probe\npython3 -m unittest discover tests -v\n```\n\nThe probe checks:\n\n- invalid Origin is rejected;\n- discovery succeeds without a session id;\n- `Mcp-Session-Id` and `Last-Event-ID` are ignored;\n- header mismatch returns `-32020`;\n- unsupported version returns `-32022` with exact `supported` and `requested` data;\n- an accepted id-less notification returns HTTP `202` with no body;\n- GET and DELETE return `405`;\n- `subscriptions/listen` is a POST response stream whose acknowledgement, notifications, and final result carry its subscription id.",
+    "keyPoints": [
+      "invalid Origin is rejected;",
+      "discovery succeeds without a session id;",
+      "`Mcp-Session-Id` and `Last-Event-ID` are ignored;",
+      "header mismatch returns `-32020`;",
+      "unsupported version returns `-32022` with exact `supported` and `requested` data;",
+      "an accepted id-less notification returns HTTP `202` with no body;"
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd code\npython3 main.py --probe\npython3 -m unittest discover tests -v"
+      }
+    ]
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson ships `outputs/skill-mcp-transport-migrator.md`. It removes modern protocol sessions, adds header-body validation, replaces standalone GET with `subscriptions/listen`, and keeps any legacy bridge visibly separate.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Remove `Mcp-Method` from a POST. Confirm HTTP `400` and error `-32020`.\n2. Send matching header and body version `2027-01-01`. Confirm HTTP `400`, error `-32022`, and exact data `{\"supported\":[\"2026-07-28\"],\"requested\":\"2027-01-01\"}`.\n3. Send a Base64 sentinel `Mcp-Name` for a non-ASCII resource URI. Confirm the decoded value is compared with `params.uri`.\n4. Break the finite listen stream before its final response. Reissue it with a new JSON-RPC id and refetch tools.\n5. Add an explicit workflow handle to the ping tool. Bind it to an authorization subject without using connection affinity.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | Meaning |\n|------|---------|\n| stdio | Newline-delimited JSON-RPC over a client-launched subprocess |\n| Streamable HTTP | Single endpoint where each modern message is a new POST |\n| Request-scoped SSE | POST response stream containing related notifications and final response |\n| `subscriptions/listen` | Long-lived POST request for opted-in change notifications |\n| Header mismatch | HTTP `400` and JSON-RPC `-32020` when mirrored headers disagree with body |\n| Origin validation | DNS-rebinding defense for incoming connections, not authentication |\n| Explicit state handle | Application token passed as an ordinary argument instead of hidden session state |\n| Legacy bridge | Separate earlier-era behavior kept only for compatibility |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [MCP Transport Overview](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports)\n- [MCP stdio Transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)\n- [MCP Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)\n- [MCP Subscriptions](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions)\n- [MCP 2026-07-28 Changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)",
+    "keyPoints": [
+      "[MCP Transport Overview](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports)",
+      "[MCP stdio Transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)",
+      "[MCP Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)",
+      "[MCP Subscriptions](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions)",
+      "[MCP 2026-07-28 Changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)"
+    ],
+    "commands": []
+  }
+]

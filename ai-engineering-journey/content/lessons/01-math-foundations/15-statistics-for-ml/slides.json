@@ -1,0 +1,196 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# 机器学习统计\n\n> 统计让你知道模型是真的有效，还是只是走运。\n\n**类型:** Build\n**语言:** Python\n**先修:** Phase 1, Lessons 06 (Probability and Distributions), 07 (Bayes' Theorem)\n**时长:** ~120 分钟",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "学习目标",
+    "title": "学习目标",
+    "bodyMarkdown": "- 从零计算描述统计、Pearson/Spearman 相关和协方差矩阵\n- 进行假设检验（t 检验、卡方检验），并正确解读 p 值与置信区间\n- 用自助重采样（bootstrap）在无分布假设下为任意指标构造置信区间\n- 用效应量度量区分统计显著与实际显著",
+    "keyPoints": [
+      "从零计算描述统计、Pearson/Spearman 相关和协方差矩阵",
+      "进行假设检验（t 检验、卡方检验），并正确解读 p 值与置信区间",
+      "用自助重采样（bootstrap）在无分布假设下为任意指标构造置信区间",
+      "用效应量度量区分统计显著与实际显著"
+    ],
+    "commands": []
+  },
+  {
+    "id": "问题",
+    "title": "问题",
+    "bodyMarkdown": "你训练了两个模型。模型 A 在测试集上得分 0.87。模型 B 得分 0.89。你部署了模型 B。三周后，线上指标比以前更差。发生了什么？\n\n模型 B 其实并没有胜过模型 A。那 0.02 的差距是噪声。你的测试集太小，或者方差太大，或者两者都有。你把随机性包装成改进发了出去。\n\n这种事不断发生。Kaggle 排行榜洗牌。论文复现失败。A/B 测试用几百个样本就宣布赢家。根因始终一样：有人跳过了统计。\n\n统计给你区分信号与噪声的工具。它告诉你差异何时是真实的、你该有多自信、以及在信任一个结果之前需要多少数据。每条 ML 流水线、每次模型比较、每个实验都需要统计。没有它，你就是在瞎猜。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "概念",
+    "title": "概念",
+    "bodyMarkdown": "### 描述统计：概括你的数据\n\n在建模之前，你需要知道数据长什么样。描述统计把数据集压缩成几个能刻画其形状的数字。\n\n**集中趋势度量**回答「中间在哪？」\n\n```\nMean:   sum of all values / count\n        mu = (1/n) * sum(x_i)\n\nMedian: middle value when sorted\n        Robust to outliers. If you have [1, 2, 3, 4, 1000], the mean is 202\n        but the median is 3.\n\nMode:   most frequent value\n        Useful for categorical data. For continuous data, rarely informative.\n```\n\n均值是平衡点。中位数是半程标记。当它们分歧时，分布是偏斜的。收入分布的均值远大于中位数（来自亿万富翁的右偏）。训练中的损失分布往往均值远小于中位数（来自简单样本的左偏）。\n\n**离散度度量**回答「数据有多分散？」\n\n```\nVariance:   average squared deviation from the mean\n            sigma^2 = (1/n) * sum((x_i - mu)^2)\n\nStandard deviation:  square root of variance\n                     sigma = sqrt(sigma^2)\n                     Same units as the data, so more interpretable.\n\nRange:      max - min\n            Sensitive to outliers. Almost never useful alone.\n\nIQR:        Q3 - Q1 (interquartile range)\n            The range of the middle 50% of the data.\n            Robust to outliers. Used for box plots and outlier detection.\n```\n\n**百分位数**把排序后的数据分成 100 等份。第 25 百分位（Q1）表示 25% 的值落在这个点以下。第 50 百分位是中位数。第 75 百分位是 Q3。\n\n```\nFor latency monitoring:\n  P50 = median latency        (typical user experience)\n  P95 = 95th percentile       (bad but not worst case)\n  P99 = 99th percentile       (tail latency, often 10x the median)\n```\n\n在 ML 中，你关心推理延迟、预测置信度分布以及理解误差分布的百分位数。一个平均误差低但 P99 误差很差的模型，对安全关键应用可能毫无用处。\n\n**样本统计 vs 总体统计。** 从样本计算方差时，除以 (n-1) 而不是 n。这就是贝塞尔校正（Bessel's correction）。它补偿了样本均值并非真实总体均值这一事实。分母用 n 会系统性低估真实方差。用 (n-1)，估计才是无偏的。\n\n```\nPopulation variance: sigma^2 = (1/N) * sum((x_i - mu)^2)\nSample variance:     s^2     = (1/(n-1)) * sum((x_i - x_bar)^2)\n```\n\n实践中：如果 n 很大（数千个样本），差别可以忽略。如果 n 很小（几十个样本），就有影响。\n\n### 相关性：变量如何一起变化\n\n相关性度量两个变量之间线性关系的强度和方向。\n\n**Pearson 相关系数**度量线性关联：\n\n```\nr = sum((x_i - x_bar)(y_i - y_bar)) / (n * s_x * s_y)\n\nr = +1:  perfect positive linear relationship\nr = -1:  perfect negative linear relationship\nr =  0:  no linear relationship (but there might be a nonlinear one!)\n\nRange: [-1, 1]\n```\n\nPearson 假设关系是线性的，且两个变量大致正态分布。它对离群点敏感。单个极端点可以把 r 从 0.1 拖到 0.9。\n\n**Spearman 秩相关**度量单调关联：\n\n```\n1. Replace each value with its rank (1, 2, 3, ...)\n2. Compute Pearson correlation on the ranks\n\nSpearman catches any monotonic relationship, not just linear.\nIf y = x^3, Pearson gives r < 1 but Spearman gives rho = 1.\n```\n\n**何时用哪个：**\n\n```\nPearson:    Both variables are continuous and roughly normal.\n            You care about the linear relationship specifically.\n            No extreme outliers.\n\nSpearman:   Ordinal data (rankings, ratings).\n            Data is not normally distributed.\n            You suspect a monotonic but not linear relationship.\n            Outliers are present.\n```\n\n**黄金法则：** 相关不等于因果。冰淇淋销量和溺水死亡人数相关，因为两者都在夏天上升。你模型的准确率和参数量相关，但增加参数并不会自动提升准确率（参见：过拟合）。\n\n### 协方差矩阵\n\n两个变量之间的协方差度量它们如何一起变化：\n\n```\nCov(X, Y) = (1/n) * sum((x_i - x_bar)(y_i - y_bar))\n\nCov(X, Y) > 0:  X and Y tend to increase together\nCov(X, Y) < 0:  when X increases, Y tends to decrease\nCov(X, Y) = 0:  no linear co-movement\n```\n\n对 d 个特征，协方差矩阵 C 是 d x d 矩阵，其中 C[i][j] = Cov(feature_i, feature_j)。对角线条目 C[i][i] 是每个特征的方差。\n\n```\nC = | Var(x1)      Cov(x1,x2)  Cov(x1,x3) |\n    | Cov(x2,x1)  Var(x2)      Cov(x2,x3) |\n    | Cov(x3,x1)  Cov(x3,x2)  Var(x3)     |\n\nProperties:\n  - Symmetric: C[i][j] = C[j][i]\n  - Positive semi-definite: all eigenvalues >= 0\n  - Diagonal = variances\n  - Off-diagonal = covariances\n```\n\n**与 PCA 的联系。** PCA 对协方差矩阵做特征分解。特征向量就是主成分（最大方差的方向）。特征值告诉你每个成分捕获了多少方差。这正是第 10 课讲的内容，但现在你明白为什么协方差矩阵是该分解的对象：它编码了数据中所有的成对线性关系。\n\n**与相关性的联系。** 相关矩阵是标准化变量（各除以其标准差）的协方差矩阵。相关把协方差归一化，使所有值落在 [-1, 1] 内。\n\n### 假设检验\n\n假设检验是在不确定性下做决策的框架。你从一个主张出发，收集数据，然后判断数据是否与该主张一致。\n\n**基本设置：**\n\n```\nNull hypothesis (H0):        the default assumption, usually \"no effect\"\nAlternative hypothesis (H1): what you are trying to show\n\nExample:\n  H0: Model A and Model B have the same accuracy\n  H1: Model B has higher accuracy than Model A\n```\n\n**p 值**是在假设 H0 为真的前提下，观察到与你观测数据同样极端的数据的概率。它不是 H0 为真的概率。这是统计中最常见的误解。\n\n```\np-value = P(data this extreme | H0 is true)\n\nIf p-value < alpha (typically 0.05):\n    Reject H0. The result is \"statistically significant.\"\nIf p-value >= alpha:\n    Fail to reject H0. You do not have enough evidence.\n    This does NOT mean H0 is true.\n```\n\n**置信区间**给出参数的合理取值范围：\n\n```\n95% confidence interval for the mean:\n    x_bar +/- z * (s / sqrt(n))\n\nwhere z = 1.96 for 95% confidence\n\nInterpretation: if you repeated this experiment many times, 95% of the\ncomputed intervals would contain the true mean. It does NOT mean there\nis a 95% probability the true mean is in this specific interval.\n```\n\n置信区间的宽度告诉你精度。宽区间意味着高不确定性。窄区间意味着你的估计很精确（但如果数据有偏，不一定准确）。\n\n### t 检验\n\nt 检验比较均值。有几种变体。\n\n**单样本 t 检验：** 总体均值是否不同于某个假设值？\n\n```\nt = (x_bar - mu_0) / (s / sqrt(n))\n\ndegrees of freedom = n - 1\n```\n\n**双样本 t 检验（独立）：** 两组均值是否不同？\n\n```\nt = (x_bar_1 - x_bar_2) / sqrt(s1^2/n1 + s2^2/n2)\n\nThis is Welch's t-test, which does not assume equal variances.\nAlways use Welch's unless you have a specific reason for equal variances.\n```\n\n**配对 t 检验：** 当测量成对出现时（同一模型在相同数据划分上评估）：\n\n```\nCompute d_i = x_i - y_i for each pair\nThen run a one-sample t-test on the d_i values against mu_0 = 0\n```\n\n在 ML 中，配对 t 检验很常见：你在相同的 10 个交叉验证折上跑两个模型，逐对比较它们的得分。\n\n### 卡方检验\n\n卡方检验检查观测频数是否与期望频数匹配。对分类数据有用。\n\n```\nchi^2 = sum((observed - expected)^2 / expected)\n\nExample: does a language model's output distribution match the\ntraining distribution across categories?\n\nCategory    Observed   Expected\nPositive       120        100\nNegative        80        100\nchi^2 = (120-100)^2/100 + (80-100)^2/100 = 4 + 4 = 8\n\nWith 1 degree of freedom, chi^2 = 8 gives p < 0.005.\nThe difference is significant.\n```\n\n### ML 模型的 A/B 测试\n\nML 中的 A/B 测试与网页 A/B 测试不同。模型比较有特定的挑战：\n\n```\n1. Same test set:    Both models must be evaluated on identical data.\n                     Different test sets make comparison meaningless.\n\n2. Multiple metrics: Accuracy alone is not enough. You need precision,\n                     recall, F1, latency, and fairness metrics.\n\n3. Variance:         Use cross-validation or bootstrap to estimate\n                     the variance of each metric, not just point estimates.\n\n4. Data leakage:     If the test set was used during model selection,\n                     your comparison is biased. Hold out a final test set.\n```\n\n**流程：**\n\n```\n1. Define your metric and significance level (alpha = 0.05)\n2. Run both models on the same k-fold cross-validation splits\n3. Collect paired scores: [(a1, b1), (a2, b2), ..., (ak, bk)]\n4. Compute differences: d_i = b_i - a_i\n5. Run a paired t-test on the differences\n6. Check: is the mean difference significantly different from 0?\n7. Compute a confidence interval for the mean difference\n8. Compute effect size (Cohen's d) to judge practical significance\n```\n\n### 统计显著 vs 实际显著\n\n一个结果可以统计显著但实际毫无意义。数据足够多时，哪怕微不足道的差异也会变得统计显著。\n\n```\nExample:\n  Model A accuracy: 0.9234\n  Model B accuracy: 0.9237\n  n = 1,000,000 test samples\n  p-value = 0.001\n\nStatistically significant? Yes.\nPractically significant? A 0.03% improvement is not worth the\nengineering cost of deploying a new model.\n```\n\n**效应量**量化差异有多大，与样本量无关：\n\n```\nCohen's d = (mean_1 - mean_2) / pooled_std\n\nd = 0.2:  small effect\nd = 0.5:  medium effect\nd = 0.8:  large effect\n```\n\n永远同时报告 p 值和效应量。p 值告诉你差异是否真实。效应量告诉你差异是否重要。\n\n### 多重比较问题\n\n当你检验多个假设时，有些会偶然「显著」。如果你在 alpha = 0.05 下检验 20 件事，即使全都是假的，也期望出现 1 个假阳性。\n\n```\nP(at least one false positive) = 1 - (1 - alpha)^m\n\nm = 20 tests, alpha = 0.05:\nP(false positive) = 1 - 0.95^20 = 0.64\n\nYou have a 64% chance of at least one false positive.\n```\n\n**Bonferroni 校正：** 把 alpha 除以检验次数。\n\n```\nAdjusted alpha = alpha / m = 0.05 / 20 = 0.0025\n\nOnly reject H0 if p-value < 0.0025.\nConservative but simple. Works when tests are independent.\n```\n\n在 ML 中，当你在多个指标上比较模型、测试许多超参配置、或在多个数据集上评估时，这就很重要。\n\n### Bootstrap 方法\n\nBootstrap 通过对数据有放回重采样来估计统计量的抽样分布。不需要对底层分布做任何假设。\n\n**算法：**\n\n```\n1. You have n data points\n2. Draw n samples WITH replacement (some points appear multiple times,\n   some not at all)\n3. Compute your statistic on this bootstrap sample\n4. Repeat B times (typically B = 1000 to 10000)\n5. The distribution of bootstrap statistics approximates the\n   sampling distribution\n```\n\n**Bootstrap 置信区间（百分位法）：**\n\n```\nSort the B bootstrap statistics\n95% CI = [2.5th percentile, 97.5th percentile]\n```\n\n**为什么 bootstrap 对 ML 重要：**\n\n```\n- Test set accuracy is a point estimate. Bootstrap gives you\n  confidence intervals.\n- You cannot assume metric distributions are normal (especially\n  for AUC, F1, precision at k).\n- Bootstrap works for ANY statistic: median, ratio of two means,\n  difference in AUC between two models.\n- No closed-form formula needed.\n```\n\n**用 bootstrap 做模型比较：**\n\n```\n1. You have predictions from Model A and Model B on the same test set\n2. For each bootstrap iteration:\n   a. Resample test indices with replacement\n   b. Compute metric_A and metric_B on the resampled set\n   c. Store diff = metric_B - metric_A\n3. 95% CI for the difference:\n   [2.5th percentile of diffs, 97.5th percentile of diffs]\n4. If the CI does not contain 0, the difference is significant\n```\n\n这比配对 t 检验更稳健，因为它不做任何分布假设。\n\n### 参数检验 vs 非参数检验\n\n**参数检验**假设特定分布（通常是正态）：\n\n```\nt-test:         assumes normally distributed data (or large n by CLT)\nANOVA:          assumes normality and equal variances\nPearson r:      assumes bivariate normality\n```\n\n**非参数检验**不做分布假设：\n\n```\nMann-Whitney U:     compares two groups (replaces independent t-test)\nWilcoxon signed-rank: compares paired data (replaces paired t-test)\nSpearman rho:       correlation on ranks (replaces Pearson)\nKruskal-Wallis:     compares multiple groups (replaces ANOVA)\n```\n\n**何时用非参数：**\n\n```\n- Small sample size (n < 30) and data is clearly non-normal\n- Ordinal data (ratings, rankings)\n- Heavy outliers you cannot remove\n- Skewed distributions\n```\n\n**何时用参数：**\n\n```\n- Large sample size (CLT makes the test statistic approximately normal)\n- Data is roughly symmetric without extreme outliers\n- More statistical power (better at detecting real differences)\n```\n\n在 ML 实验中，你通常 n 很小（5 或 10 个交叉验证折），所以像 Wilcoxon 符号秩检验这样的非参数检验往往比 t 检验更合适。\n\n### 中心极限定理：实际含义\n\n中心极限定理（CLT）指出：样本均值的分布随 n 增大趋近正态分布，无论底层总体分布如何。\n\n```\nIf X_1, X_2, ..., X_n are iid with mean mu and variance sigma^2:\n\n    X_bar ~ Normal(mu, sigma^2 / n)    as n -> infinity\n\nWorks for n >= 30 in most cases.\nFor highly skewed distributions, you might need n >= 100.\n```\n\n**为什么这对 ML 重要：**\n\n```\n1. Justifies confidence intervals and t-tests on aggregated metrics\n2. Explains why averaging over cross-validation folds gives stable\n   estimates even when individual folds vary wildly\n3. Mini-batch gradient descent works because the average gradient\n   over a batch approximates the true gradient (CLT in action)\n4. Ensemble methods: averaging predictions from many models gives\n   more stable output than any single model\n```\n\n**CLT 做不到的事：**\n\n```\n- Does NOT make your data normal. It makes the MEAN of samples normal.\n- Does NOT work for heavy-tailed distributions with infinite variance\n  (Cauchy distribution).\n- Does NOT apply to dependent data (time series without correction).\n```\n\n### ML 论文中常见的统计错误\n\n1. **在训练集上测试。** 这保证过拟合。永远留出模型在训练中从未见过的数据。\n\n2. **没有置信区间。** 只报告一个准确率数字而没有不确定性，结果就不可复现、不可验证。\n\n3. **忽略多重比较。** 测试 50 个配置却报告最好的那个而不做校正，会推高假阳性率。\n\n4. **混淆统计显著与实际显著。** 在 0.01% 的准确率提升上得到 p = 0.001 并没有意义。\n\n5. **在不平衡数据上用准确率。** 在 99% 为负类的数据集上达到 99% 准确率，意味着模型什么都没学到。请用精确率、召回率、F1 或 AUC。\n\n6. **挑选指标。** 只报告你的模型胜出的那个指标。诚实的评估会报告所有相关指标。\n\n7. **训练/测试划分之间泄漏信息。** 划分前做归一化，或用未来数据预测过去。\n\n8. **小测试集且无方差估计。** 在 100 个样本上评估并宣称 2% 的提升是噪声，不是信号。\n\n9. **在数据不独立时假设独立。** 同一患者的医学图像、同一文档中的多句话。组内观测是相关的。\n\n10. **P-hacking。** 不断尝试不同的检验、子集或排除标准，直到得到 p < 0.05。结果是搜索过程的伪影。",
+    "keyPoints": [
+      "**在训练集上测试。** 这保证过拟合。永远留出模型在训练中从未见过的数据。",
+      "**没有置信区间。** 只报告一个准确率数字而没有不确定性，结果就不可复现、不可验证。",
+      "**忽略多重比较。** 测试 50 个配置却报告最好的那个而不做校正，会推高假阳性率。",
+      "**混淆统计显著与实际显著。** 在 0.01% 的准确率提升上得到 p = 0.001 并没有意义。",
+      "**在不平衡数据上用准确率。** 在 99% 为负类的数据集上达到 99% 准确率，意味着模型什么都没学到。请用精确率、召回率、F1 或 AUC。",
+      "**挑选指标。** 只报告你的模型胜出的那个指标。诚实的评估会报告所有相关指标。"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Mean:   sum of all values / count\n        mu = (1/n) * sum(x_i)\n\nMedian: middle value when sorted\n        Robust to outliers. If you have [1, 2, 3, 4, 1000], the mean is 202\n        but the median is 3.\n\nMode:   most frequent value\n        Useful for categorical data. For continuous data, rarely informative."
+      },
+      {
+        "lang": "text",
+        "code": "Variance:   average squared deviation from the mean\n            sigma^2 = (1/n) * sum((x_i - mu)^2)\n\nStandard deviation:  square root of variance\n                     sigma = sqrt(sigma^2)\n                     Same units as the data, so more interpretable.\n\nRange:      max - min\n            Sensitive to outliers. Almost never useful alone.\n\nIQR:        Q3 - Q1 (interquartile range)\n            The range of the middle 50% of the data.\n            Robust to outliers. Used for box plots and outlier detection."
+      },
+      {
+        "lang": "text",
+        "code": "For latency monitoring:\n  P50 = median latency        (typical user experience)\n  P95 = 95th percentile       (bad but not worst case)\n  P99 = 99th percentile       (tail latency, often 10x the median)"
+      },
+      {
+        "lang": "text",
+        "code": "Population variance: sigma^2 = (1/N) * sum((x_i - mu)^2)\nSample variance:     s^2     = (1/(n-1)) * sum((x_i - x_bar)^2)"
+      },
+      {
+        "lang": "text",
+        "code": "r = sum((x_i - x_bar)(y_i - y_bar)) / (n * s_x * s_y)\n\nr = +1:  perfect positive linear relationship\nr = -1:  perfect negative linear relationship\nr =  0:  no linear relationship (but there might be a nonlinear one!)\n\nRange: [-1, 1]"
+      },
+      {
+        "lang": "text",
+        "code": "1. Replace each value with its rank (1, 2, 3, ...)\n2. Compute Pearson correlation on the ranks\n\nSpearman catches any monotonic relationship, not just linear.\nIf y = x^3, Pearson gives r < 1 but Spearman gives rho = 1."
+      },
+      {
+        "lang": "text",
+        "code": "Pearson:    Both variables are continuous and roughly normal.\n            You care about the linear relationship specifically.\n            No extreme outliers.\n\nSpearman:   Ordinal data (rankings, ratings).\n            Data is not normally distributed.\n            You suspect a monotonic but not linear relationship.\n            Outliers are present."
+      },
+      {
+        "lang": "text",
+        "code": "Cov(X, Y) = (1/n) * sum((x_i - x_bar)(y_i - y_bar))\n\nCov(X, Y) > 0:  X and Y tend to increase together\nCov(X, Y) < 0:  when X increases, Y tends to decrease\nCov(X, Y) = 0:  no linear co-movement"
+      },
+      {
+        "lang": "text",
+        "code": "C = | Var(x1)      Cov(x1,x2)  Cov(x1,x3) |\n    | Cov(x2,x1)  Var(x2)      Cov(x2,x3) |\n    | Cov(x3,x1)  Cov(x3,x2)  Var(x3)     |\n\nProperties:\n  - Symmetric: C[i][j] = C[j][i]\n  - Positive semi-definite: all eigenvalues >= 0\n  - Diagonal = variances\n  - Off-diagonal = covariances"
+      },
+      {
+        "lang": "text",
+        "code": "Null hypothesis (H0):        the default assumption, usually \"no effect\"\nAlternative hypothesis (H1): what you are trying to show\n\nExample:\n  H0: Model A and Model B have the same accuracy\n  H1: Model B has higher accuracy than Model A"
+      },
+      {
+        "lang": "text",
+        "code": "p-value = P(data this extreme | H0 is true)\n\nIf p-value < alpha (typically 0.05):\n    Reject H0. The result is \"statistically significant.\"\nIf p-value >= alpha:\n    Fail to reject H0. You do not have enough evidence.\n    This does NOT mean H0 is true."
+      },
+      {
+        "lang": "text",
+        "code": "95% confidence interval for the mean:\n    x_bar +/- z * (s / sqrt(n))\n\nwhere z = 1.96 for 95% confidence\n\nInterpretation: if you repeated this experiment many times, 95% of the\ncomputed intervals would contain the true mean. It does NOT mean there\nis a 95% probability the true mean is in this specific interval."
+      },
+      {
+        "lang": "text",
+        "code": "t = (x_bar - mu_0) / (s / sqrt(n))\n\ndegrees of freedom = n - 1"
+      },
+      {
+        "lang": "text",
+        "code": "t = (x_bar_1 - x_bar_2) / sqrt(s1^2/n1 + s2^2/n2)\n\nThis is Welch's t-test, which does not assume equal variances.\nAlways use Welch's unless you have a specific reason for equal variances."
+      },
+      {
+        "lang": "text",
+        "code": "Compute d_i = x_i - y_i for each pair\nThen run a one-sample t-test on the d_i values against mu_0 = 0"
+      },
+      {
+        "lang": "text",
+        "code": "chi^2 = sum((observed - expected)^2 / expected)\n\nExample: does a language model's output distribution match the\ntraining distribution across categories?\n\nCategory    Observed   Expected\nPositive       120        100\nNegative        80        100\nchi^2 = (120-100)^2/100 + (80-100)^2/100 = 4 + 4 = 8\n\nWith 1 degree of freedom, chi^2 = 8 gives p < 0.005.\nThe difference is significant."
+      },
+      {
+        "lang": "text",
+        "code": "1. Same test set:    Both models must be evaluated on identical data.\n                     Different test sets make comparison meaningless.\n\n2. Multiple metrics: Accuracy alone is not enough. You need precision,\n                     recall, F1, latency, and fairness metrics.\n\n3. Variance:         Use cross-validation or bootstrap to estimate\n                     the variance of each metric, not just point estimates.\n\n4. Data leakage:     If the test set was used during model selection,\n                     your comparison is biased. Hold out a final test set."
+      },
+      {
+        "lang": "text",
+        "code": "1. Define your metric and significance level (alpha = 0.05)\n2. Run both models on the same k-fold cross-validation splits\n3. Collect paired scores: [(a1, b1), (a2, b2), ..., (ak, bk)]\n4. Compute differences: d_i = b_i - a_i\n5. Run a paired t-test on the differences\n6. Check: is the mean difference significantly different from 0?\n7. Compute a confidence interval for the mean difference\n8. Compute effect size (Cohen's d) to judge practical significance"
+      },
+      {
+        "lang": "text",
+        "code": "Example:\n  Model A accuracy: 0.9234\n  Model B accuracy: 0.9237\n  n = 1,000,000 test samples\n  p-value = 0.001\n\nStatistically significant? Yes.\nPractically significant? A 0.03% improvement is not worth the\nengineering cost of deploying a new model."
+      },
+      {
+        "lang": "text",
+        "code": "Cohen's d = (mean_1 - mean_2) / pooled_std\n\nd = 0.2:  small effect\nd = 0.5:  medium effect\nd = 0.8:  large effect"
+      },
+      {
+        "lang": "text",
+        "code": "P(at least one false positive) = 1 - (1 - alpha)^m\n\nm = 20 tests, alpha = 0.05:\nP(false positive) = 1 - 0.95^20 = 0.64\n\nYou have a 64% chance of at least one false positive."
+      },
+      {
+        "lang": "text",
+        "code": "Adjusted alpha = alpha / m = 0.05 / 20 = 0.0025\n\nOnly reject H0 if p-value < 0.0025.\nConservative but simple. Works when tests are independent."
+      },
+      {
+        "lang": "text",
+        "code": "1. You have n data points\n2. Draw n samples WITH replacement (some points appear multiple times,\n   some not at all)\n3. Compute your statistic on this bootstrap sample\n4. Repeat B times (typically B = 1000 to 10000)\n5. The distribution of bootstrap statistics approximates the\n   sampling distribution"
+      },
+      {
+        "lang": "text",
+        "code": "Sort the B bootstrap statistics\n95% CI = [2.5th percentile, 97.5th percentile]"
+      },
+      {
+        "lang": "text",
+        "code": "- Test set accuracy is a point estimate. Bootstrap gives you\n  confidence intervals.\n- You cannot assume metric distributions are normal (especially\n  for AUC, F1, precision at k).\n- Bootstrap works for ANY statistic: median, ratio of two means,\n  difference in AUC between two models.\n- No closed-form formula needed."
+      },
+      {
+        "lang": "text",
+        "code": "1. You have predictions from Model A and Model B on the same test set\n2. For each bootstrap iteration:\n   a. Resample test indices with replacement\n   b. Compute metric_A and metric_B on the resampled set\n   c. Store diff = metric_B - metric_A\n3. 95% CI for the difference:\n   [2.5th percentile of diffs, 97.5th percentile of diffs]\n4. If the CI does not contain 0, the difference is significant"
+      },
+      {
+        "lang": "text",
+        "code": "t-test:         assumes normally distributed data (or large n by CLT)\nANOVA:          assumes normality and equal variances\nPearson r:      assumes bivariate normality"
+      },
+      {
+        "lang": "text",
+        "code": "Mann-Whitney U:     compares two groups (replaces independent t-test)\nWilcoxon signed-rank: compares paired data (replaces paired t-test)\nSpearman rho:       correlation on ranks (replaces Pearson)\nKruskal-Wallis:     compares multiple groups (replaces ANOVA)"
+      },
+      {
+        "lang": "text",
+        "code": "- Small sample size (n < 30) and data is clearly non-normal\n- Ordinal data (ratings, rankings)\n- Heavy outliers you cannot remove\n- Skewed distributions"
+      },
+      {
+        "lang": "text",
+        "code": "- Large sample size (CLT makes the test statistic approximately normal)\n- Data is roughly symmetric without extreme outliers\n- More statistical power (better at detecting real differences)"
+      },
+      {
+        "lang": "text",
+        "code": "If X_1, X_2, ..., X_n are iid with mean mu and variance sigma^2:\n\n    X_bar ~ Normal(mu, sigma^2 / n)    as n -> infinity\n\nWorks for n >= 30 in most cases.\nFor highly skewed distributions, you might need n >= 100."
+      },
+      {
+        "lang": "text",
+        "code": "1. Justifies confidence intervals and t-tests on aggregated metrics\n2. Explains why averaging over cross-validation folds gives stable\n   estimates even when individual folds vary wildly\n3. Mini-batch gradient descent works because the average gradient\n   over a batch approximates the true gradient (CLT in action)\n4. Ensemble methods: averaging predictions from many models gives\n   more stable output than any single model"
+      },
+      {
+        "lang": "text",
+        "code": "- Does NOT make your data normal. It makes the MEAN of samples normal.\n- Does NOT work for heavy-tailed distributions with infinite variance\n  (Cauchy distribution).\n- Does NOT apply to dependent data (time series without correction)."
+      }
+    ]
+  },
+  {
+    "id": "动手做",
+    "title": "动手做",
+    "bodyMarkdown": "你将实现：\n\n1. **从零实现描述统计**（均值、中位数、众数、标准差、百分位数、IQR）\n2. **相关函数**（Pearson 和 Spearman，以及协方差矩阵）\n3. **假设检验**（单样本 t 检验、双样本 t 检验、卡方检验）\n4. **Bootstrap 置信区间**（适用于任意统计量，无需假设）\n5. **A/B 测试模拟器**（生成数据、检验、检查第一类与第二类错误）\n6. **统计显著 vs 实际显著演示**（展示大 n 如何让一切「显著」）\n\n全部从零实现，只用 `math` 和 `random`。不用 numpy，不用 scipy。\n\n```figure\nf3-bootstrap-resample\n```",
+    "keyPoints": [
+      "**从零实现描述统计**（均值、中位数、众数、标准差、百分位数、IQR）",
+      "**相关函数**（Pearson 和 Spearman，以及协方差矩阵）",
+      "**假设检验**（单样本 t 检验、双样本 t 检验、卡方检验）",
+      "**Bootstrap 置信区间**（适用于任意统计量，无需假设）",
+      "**A/B 测试模拟器**（生成数据、检验、检查第一类与第二类错误）",
+      "**统计显著 vs 实际显著演示**（展示大 n 如何让一切「显著」）"
+    ],
+    "commands": []
+  },
+  {
+    "id": "关键术语",
+    "title": "关键术语",
+    "bodyMarkdown": "| 术语 | 定义 |\n|---|---|\n| 均值（Mean） | 值的总和除以个数。对离群点敏感。 |\n| 中位数（Median） | 排序后数据的中间值。对离群点稳健。 |\n| 标准差（Standard deviation） | 方差的平方根。以原始单位度量离散程度。 |\n| 百分位数（Percentile） | 给定百分比的数据落在其下的值。 |\n| IQR | 四分位距。Q3 减 Q1。中间 50% 的离散程度。 |\n| Pearson 相关 | 度量两个变量之间的线性关联。范围 [-1, 1]。 |\n| Spearman 相关 | 基于秩度量单调关联。 |\n| 协方差矩阵 | 所有特征之间成对协方差构成的矩阵。 |\n| 零假设（Null hypothesis） | 无效应或无差异的默认假设。 |\n| p 值 | 在零假设为真时观察到如此极端数据的概率。 |\n| 置信区间 | 在给定置信水平下参数的合理取值范围。 |\n| t 检验 | 检验均值是否显著不同。使用 t 分布。 |\n| 卡方检验 | 检验观测频数是否不同于期望频数。 |\n| 效应量（Effect size） | 差异的大小，与样本量无关。常用 Cohen's d。 |\n| Bonferroni 校正 | 把显著性阈值除以检验次数以控制假阳性。 |\n| Bootstrap | 有放回重采样以估计抽样分布。 |\n| 第一类错误（Type I error） | 假阳性。H0 为真时却拒绝了它。 |\n| 第二类错误（Type II error） | 假阴性。H0 为假时却未能拒绝它。 |\n| 统计功效（Statistical power） | 正确拒绝假 H0 的概率。功效 = 1 减第二类错误率。 |\n| 中心极限定理 | 样本均值随样本量增大收敛到正态分布。 |\n| 参数检验 | 假设数据服从特定分布（通常是正态）。 |\n| 非参数检验 | 不做分布假设。基于秩或符号。 |",
+    "keyPoints": [],
+    "commands": []
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/71-classical-metrics",
+  "slug": "71-classical-metrics",
+  "phase": "19-capstone-projects",
+  "order": 71,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Classical Metrics",
+    "zh": ""
+  },
+  "hook": "BLEU, ROUGE-L, F1, exact-match, accuracy. Five metrics that still account for most published LLM eval numbers. Implement each from first principles so you know what the number means.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track B foundations",
+    "lesson 70"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

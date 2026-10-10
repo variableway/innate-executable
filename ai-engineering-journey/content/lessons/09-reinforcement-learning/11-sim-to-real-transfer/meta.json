@@ -1,0 +1,22 @@
+{
+  "id": "09-reinforcement-learning/11-sim-to-real-transfer",
+  "slug": "11-sim-to-real-transfer",
+  "phase": "09-reinforcement-learning",
+  "order": 11,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Sim-to-Real Transfer",
+    "zh": ""
+  },
+  "hook": "A policy trained in a simulator that fails on hardware is a policy that memorized the simulator. Domain randomization, domain adaptation, and system identification are the three tools to make learned controllers cross the reality gap.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 08 (PPO)",
+    "Phase 2 · 10 (Bias/Variance)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "03-deep-learning-core/04-activation-functions",
+  "slug": "04-activation-functions",
+  "phase": "03-deep-learning-core",
+  "order": 4,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Activation Functions",
+    "zh": ""
+  },
+  "hook": "Without nonlinearity, your 100-layer network is a fancy matrix multiply. Activations are the gates that let neural networks think in curves.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.03 (Backpropagation)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

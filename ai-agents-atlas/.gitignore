@@ -1,0 +1,34 @@
+# Build outputs
+dist/
+.output/
+.astro/
+
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Misc
+*.tsbuildinfo
+.eslintcache
+.cache/

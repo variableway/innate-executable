@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/70-task-spec-format",
+  "slug": "70-task-spec-format",
+  "phase": "19-capstone-projects",
+  "order": 70,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Task Spec Format",
+    "zh": ""
+  },
+  "hook": "An eval harness is only as good as the contract its tasks honour. Freeze the JSONL shape and the metric vocabulary before you write a single scoring function.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track B foundations"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,109 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Ensemble Methods\n\n> A group of weak learners, combined correctly, becomes a strong learner. This is not a metaphor. It is a theorem.\n\n**Type:** Build\n**Language:** Python\n**Prerequisites:** Phase 2, Lesson 10 (Bias-Variance Tradeoff)\n**Time:** ~120 minutes",
+    "keyPoints": [
+      "Type:",
+      "Language:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement AdaBoost and gradient boosting from scratch and explain how boosting sequentially reduces bias\n- Build a bagging ensemble and demonstrate how averaging decorrelated models reduces variance without increasing bias\n- Compare bagging, boosting, and stacking in terms of what error component each method targets\n- Evaluate ensemble diversity and explain why majority voting accuracy improves with more independent weak learners",
+    "keyPoints": [
+      "Implement AdaBoost and gradient boosting from scratch and explain how boosting sequentially reduces bias",
+      "Build a bagging ensemble and demonstrate how averaging decorrelated models reduces variance without increasing bias",
+      "Compare bagging, boosting, and stacking in terms of what error component each method targets",
+      "Evaluate ensemble diversity and explain why majority voting accuracy improves with more independent weak learners"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "A single decision tree is fast to train and easy to interpret, but it overfits. A single linear model underfits on complex boundaries. You could spend days engineering the perfect model architecture. Or you could combine a bunch of imperfect models and get something better than any of them individually.\n\nEnsemble methods do exactly this. They are the most reliable technique for winning Kaggle competitions on tabular data, they power most production ML systems, and they illustrate the bias-variance tradeoff in action. Bagging reduces variance. Boosting reduces bias. Stacking learns which models to trust on which inputs.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Why Ensembles Work\n\nSuppose you have N independent classifiers, each with accuracy p > 0.5. The majority vote has accuracy:\n\n```\nP(majority correct) = sum over k > N/2 of C(N,k) * p^k * (1-p)^(N-k)\n```\n\nFor 21 classifiers each with 60% accuracy, majority vote accuracy is about 74%. With 101 classifiers, it rises to 84%. The errors cancel out when the models make different mistakes.\n\nThe key requirement is **diversity**. If all models make the same errors, combining them helps nothing. Ensembles work because they produce diverse models through:\n\n- Different training subsets (bagging)\n- Different feature subsets (random forests)\n- Sequential error correction (boosting)\n- Different model families (stacking)\n\n### Bagging (Bootstrap Aggregating)\n\nBagging creates diversity by training each model on a different bootstrap sample of the training data.\n\n```mermaid\nflowchart TD\n    D[Training Data] --> B1[Bootstrap Sample 1]\n    D --> B2[Bootstrap Sample 2]\n    D --> B3[Bootstrap Sample 3]\n    D --> BN[Bootstrap Sample N]\n\n    B1 --> M1[Model 1]\n    B2 --> M2[Model 2]\n    B3 --> M3[Model 3]\n    BN --> MN[Model N]\n\n    M1 --> V[Average or Majority Vote]\n    M2 --> V\n    M3 --> V\n    MN --> V\n\n    V --> P[Final Prediction]\n```\n\nA bootstrap sample is drawn with replacement from the original data, same size as the original. About 63.2% of unique samples appear in each bootstrap. The remaining 36.8% (out-of-bag samples) provide a free validation set.\n\nBagging reduces variance without increasing bias much. Each individual tree overfits to its bootstrap sample, but the overfitting is different for each tree, so averaging cancels out the noise.\n\n**Random Forests** are bagging with an extra twist: at each split, only a random subset of features is considered. This forces even more diversity among trees. The typical number of candidate features is `sqrt(n_features)` for classification and `n_features / 3` for regression.\n\n### Boosting (Sequential Error Correction)\n\nBoosting trains models sequentially. Each new model focuses on the examples that previous models got wrong.\n\n```mermaid\nflowchart LR\n    D[Data with weights] --> M1[Model 1]\n    M1 --> E1[Find errors]\n    E1 --> W1[Increase weights on errors]\n    W1 --> M2[Model 2]\n    M2 --> E2[Find errors]\n    E2 --> W2[Increase weights on errors]\n    W2 --> M3[Model 3]\n    M3 --> F[Weighted sum of all models]\n```\n\nBoosting reduces bias. Each new model corrects the systematic errors of the ensemble so far. The final prediction is a weighted sum of all models, where better models get higher weights.\n\nThe tradeoff: boosting can overfit if you run too many rounds, because it keeps fitting harder examples, some of which may be noise.\n\n### AdaBoost\n\nAdaBoost (Adaptive Boosting) was the first practical boosting algorithm. It works with any base learner, typically decision stumps (depth-1 trees).\n\nThe algorithm:\n\n```\n1. Initialize sample weights: w_i = 1/N for all i\n\n2. For t = 1 to T:\n   a. Train weak learner h_t on weighted data\n   b. Compute weighted error:\n      err_t = sum(w_i * I(h_t(x_i) != y_i)) / sum(w_i)\n   c. Compute model weight:\n      alpha_t = 0.5 * ln((1 - err_t) / err_t)\n   d. Update sample weights:\n      w_i = w_i * exp(-alpha_t * y_i * h_t(x_i))\n   e. Normalize weights to sum to 1\n\n3. Final prediction: H(x) = sign(sum(alpha_t * h_t(x)))\n```\n\nModels with lower error get higher alpha. Misclassified samples get higher weights so the next model focuses on them.\n\n### Gradient Boosting\n\nGradient boosting generalizes boosting to arbitrary loss functions. Instead of reweighting samples, it fits each new model to the residuals (negative gradient of the loss) of the current ensemble.\n\n```\n1. Initialize: F_0(x) = argmin_c sum(L(y_i, c))\n\n2. For t = 1 to T:\n   a. Compute pseudo-residuals:\n      r_i = -dL(y_i, F_{t-1}(x_i)) / dF_{t-1}(x_i)\n   b. Fit a tree h_t to the residuals r_i\n   c. Find optimal step size:\n      gamma_t = argmin_gamma sum(L(y_i, F_{t-1}(x_i) + gamma * h_t(x_i)))\n   d. Update:\n      F_t(x) = F_{t-1}(x) + learning_rate * gamma_t * h_t(x)\n\n3. Final prediction: F_T(x)\n```\n\nFor squared error loss, the pseudo-residuals are just the actual residuals: `r_i = y_i - F_{t-1}(x_i)`. Each tree literally fits the errors of the previous ensemble.\n\nThe learning rate (shrinkage) controls how much each tree contributes. Smaller learning rates require more trees but generalize better. Typical values: 0.01 to 0.3.\n\n### XGBoost: Why It Dominates Tabular Data\n\nXGBoost (eXtreme Gradient Boosting) is gradient boosting with engineering optimizations that make it fast, accurate, and resistant to overfitting:\n\n- **Regularized objective:** L1 and L2 penalties on leaf weights prevent individual trees from being too confident\n- **Second-order approximation:** Uses both first and second derivatives of the loss, giving better split decisions\n- **Sparsity-aware splits:** Handles missing values natively by learning the best direction for missing data at each split\n- **Column subsampling:** Like random forests, samples features at each split for diversity\n- **Weighted quantile sketch:** Efficiently finds split points for continuous features on distributed data\n- **Cache-aware block structure:** Memory layout optimized for CPU cache lines\n\nFor tabular data, XGBoost (and its successor LightGBM) consistently outperforms neural networks. This is not changing anytime soon. If your data fits in a table with rows and columns, start with gradient boosting.\n\n### Stacking (Meta-Learning)\n\nStacking uses the predictions of multiple base models as features for a meta-learner.\n\n```mermaid\nflowchart TD\n    D[Training Data] --> M1[Model 1: Random Forest]\n    D --> M2[Model 2: SVM]\n    D --> M3[Model 3: Logistic Regression]\n\n    M1 --> P1[Predictions 1]\n    M2 --> P2[Predictions 2]\n    M3 --> P3[Predictions 3]\n\n    P1 --> META[Meta-Learner]\n    P2 --> META\n    P3 --> META\n\n    META --> F[Final Prediction]\n```\n\nThe meta-learner learns which base model to trust for which inputs. If the random forest is better at certain regions and the SVM at others, the meta-learner will learn to route accordingly.\n\nTo avoid data leakage, base model predictions must be generated via cross-validation on the training set. You never train base models and generate meta-features on the same data.\n\n### Voting\n\nThe simplest ensemble. Just combine predictions directly.\n\n- **Hard voting:** Majority vote on class labels.\n- **Soft voting:** Average predicted probabilities, pick the class with highest average probability. Usually better because it uses confidence information.\n\n```figure\nf3-ensemble-average\n```",
+    "keyPoints": [
+      "diversity",
+      "Different training subsets (bagging)",
+      "Different feature subsets (random forests)",
+      "Sequential error correction (boosting)",
+      "Different model families (stacking)",
+      "Regularized objective:: L1 and L2 penalties on leaf weights prevent individual trees from being too confident"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "P(majority correct) = sum over k > N/2 of C(N,k) * p^k * (1-p)^(N-k)"
+      },
+      {
+        "lang": "text",
+        "code": "1. Initialize sample weights: w_i = 1/N for all i\n\n2. For t = 1 to T:\n   a. Train weak learner h_t on weighted data\n   b. Compute weighted error:\n      err_t = sum(w_i * I(h_t(x_i) != y_i)) / sum(w_i)\n   c. Compute model weight:\n      alpha_t = 0.5 * ln((1 - err_t) / err_t)\n   d. Update sample weights:\n      w_i = w_i * exp(-alpha_t * y_i * h_t(x_i))\n   e. Normalize weights to sum to 1\n\n3. Final prediction: H(x) = sign(sum(alpha_t * h_t(x)))"
+      },
+      {
+        "lang": "text",
+        "code": "1. Initialize: F_0(x) = argmin_c sum(L(y_i, c))\n\n2. For t = 1 to T:\n   a. Compute pseudo-residuals:\n      r_i = -dL(y_i, F_{t-1}(x_i)) / dF_{t-1}(x_i)\n   b. Fit a tree h_t to the residuals r_i\n   c. Find optimal step size:\n      gamma_t = argmin_gamma sum(L(y_i, F_{t-1}(x_i) + gamma * h_t(x_i)))\n   d. Update:\n      F_t(x) = F_{t-1}(x) + learning_rate * gamma_t * h_t(x)\n\n3. Final prediction: F_T(x)"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: Decision Stump (Base Learner)\n\nThe code in `code/ensembles.py` implements everything from scratch. We start with a decision stump: a tree with a single split.\n\n```python\nclass DecisionStump:\n    def __init__(self):\n        self.feature_idx = None\n        self.threshold = None\n        self.polarity = 1\n        self.alpha = None\n\n    def fit(self, X, y, weights):\n        n_samples, n_features = X.shape\n        best_error = float(\"inf\")\n\n        for f in range(n_features):\n            thresholds = np.unique(X[:, f])\n            for thresh in thresholds:\n                for polarity in [1, -1]:\n                    pred = np.ones(n_samples)\n                    pred[polarity * X[:, f] < polarity * thresh] = -1\n                    error = np.sum(weights[pred != y])\n                    if error < best_error:\n                        best_error = error\n                        self.feature_idx = f\n                        self.threshold = thresh\n                        self.polarity = polarity\n\n    def predict(self, X):\n        n = X.shape[0]\n        pred = np.ones(n)\n        idx = self.polarity * X[:, self.feature_idx] < self.polarity * self.threshold\n        pred[idx] = -1\n        return pred\n```\n\n### Step 2: AdaBoost from Scratch\n\n```python\nclass AdaBoostScratch:\n    def __init__(self, n_estimators=50):\n        self.n_estimators = n_estimators\n        self.stumps = []\n        self.alphas = []\n\n    def fit(self, X, y):\n        n = X.shape[0]\n        weights = np.full(n, 1 / n)\n\n        for _ in range(self.n_estimators):\n            stump = DecisionStump()\n            stump.fit(X, y, weights)\n            pred = stump.predict(X)\n\n            err = np.sum(weights[pred != y])\n            err = np.clip(err, 1e-10, 1 - 1e-10)\n\n            alpha = 0.5 * np.log((1 - err) / err)\n            weights *= np.exp(-alpha * y * pred)\n            weights /= weights.sum()\n\n            stump.alpha = alpha\n            self.stumps.append(stump)\n            self.alphas.append(alpha)\n\n    def predict(self, X):\n        total = sum(a * s.predict(X) for a, s in zip(self.alphas, self.stumps))\n        return np.sign(total)\n```\n\n### Step 3: Gradient Boosting from Scratch\n\n```python\nclass GradientBoostingScratch:\n    def __init__(self, n_estimators=100, learning_rate=0.1, max_depth=3):\n        self.n_estimators = n_estimators\n        self.lr = learning_rate\n        self.max_depth = max_depth\n        self.trees = []\n        self.initial_pred = None\n\n    def fit(self, X, y):\n        self.initial_pred = np.mean(y)\n        current_pred = np.full(len(y), self.initial_pred)\n\n        for _ in range(self.n_estimators):\n            residuals = y - current_pred\n            tree = SimpleRegressionTree(max_depth=self.max_depth)\n            tree.fit(X, residuals)\n            update = tree.predict(X)\n            current_pred += self.lr * update\n            self.trees.append(tree)\n\n    def predict(self, X):\n        pred = np.full(X.shape[0], self.initial_pred)\n        for tree in self.trees:\n            pred += self.lr * tree.predict(X)\n        return pred\n```\n\n### Step 4: Compare against sklearn\n\nThe code verifies that our from-scratch implementations produce similar accuracy to sklearn's `AdaBoostClassifier` and `GradientBoostingClassifier`, and compares all methods side by side.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "### When to Use Each Method\n\n| Method | Reduces | Best for | Watch out for |\n|--------|---------|----------|---------------|\n| Bagging / Random Forest | Variance | Noisy data, many features | Does not help with bias |\n| AdaBoost | Bias | Clean data, simple base learners | Sensitive to outliers and noise |\n| Gradient Boosting | Bias | Tabular data, competitions | Slow to train, easy to overfit without tuning |\n| XGBoost / LightGBM | Both | Production tabular ML | Many hyperparameters |\n| Stacking | Both | Getting last 1-2% accuracy | Complex, risk of overfitting meta-learner |\n| Voting | Variance | Quick combination of diverse models | Only helps if models are diverse |\n\n### The Production Stack for Tabular Data\n\nFor most tabular prediction problems, this is the order to try:\n\n1. **LightGBM or XGBoost** with default parameters\n2. Tune n_estimators, learning_rate, max_depth, min_child_weight\n3. If you need the last 0.5%, build a stacking ensemble with 3-5 diverse models\n4. Use cross-validation throughout\n\nNeural networks on tabular data are almost always worse than gradient boosting, despite continued research attempts. TabNet, NODE, and similar architectures occasionally match but rarely beat a well-tuned XGBoost.",
+    "keyPoints": [
+      "LightGBM or XGBoost"
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces `outputs/prompt-ensemble-selector.md` -- a prompt that helps you pick the right ensemble method for a given dataset. Describe your data (size, feature types, noise level, class balance) and the problem you are solving. The prompt walks through a decision checklist, recommends a method, suggests starting hyperparameters, and warns about common mistakes for that method. Also produces `outputs/skill-ensemble-builder.md` with the full selection guide.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Modify the AdaBoost implementation to track training accuracy after each round. Plot accuracy vs. number of estimators. When does it converge?\n\n2. Implement a random forest from scratch by adding random feature subsampling to the regression tree. Train 100 trees with `max_features=sqrt(n_features)` and average predictions. Compare variance reduction to a single tree.\n\n3. In the gradient boosting implementation, add early stopping: track validation loss after each round and stop when it has not improved for 10 consecutive rounds. How many trees does it actually need?\n\n4. Build a stacking ensemble with three base models (logistic regression, decision tree, k-nearest neighbors) and a logistic regression meta-learner. Use 5-fold cross-validation to generate meta-features. Compare to each base model alone.\n\n5. Run XGBoost on the same dataset with default parameters. Compare its accuracy to your from-scratch gradient boosting. Time both. How large is the speed difference?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|----------------------|\n| Bagging | \"Train on random subsets\" | Bootstrap aggregating: train models on bootstrap samples, average predictions to reduce variance |\n| Boosting | \"Focus on hard examples\" | Train models sequentially, each correcting errors of the ensemble so far, to reduce bias |\n| AdaBoost | \"Reweight the data\" | Boosting via sample weight updates; misclassified points get higher weight for the next learner |\n| Gradient boosting | \"Fit the residuals\" | Boosting via fitting each new model to the negative gradient of the loss function |\n| XGBoost | \"The Kaggle weapon\" | Gradient boosting with regularization, second-order optimization, and systems-level speed tricks |\n| Stacking | \"Models on top of models\" | Use predictions of base models as input features for a meta-learner |\n| Random forest | \"Many randomized trees\" | Bagging with decision trees, adding random feature subsampling at each split for diversity |\n| Ensemble diversity | \"Make different mistakes\" | Models must be uncorrelated in their errors for the ensemble to improve over individuals |\n| Out-of-bag error | \"Free validation\" | Samples not in a bootstrap draw (~36.8%) serve as a validation set without needing a holdout |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Schapire & Freund: Boosting: Foundations and Algorithms](https://mitpress.mit.edu/9780262526036/) -- the book by AdaBoost's creators\n- [Friedman: Greedy Function Approximation: A Gradient Boosting Machine (2001)](https://statweb.stanford.edu/~jhf/ftp/trebst.pdf) -- the original gradient boosting paper\n- [Chen & Guestrin: XGBoost (2016)](https://arxiv.org/abs/1603.02754) -- the XGBoost paper\n- [Wolpert: Stacked Generalization (1992)](https://www.sciencedirect.com/science/article/abs/pii/S0893608005800231) -- the original stacking paper\n- [scikit-learn Ensemble Methods](https://scikit-learn.org/stable/modules/ensemble.html) -- practical reference",
+    "keyPoints": [
+      "[Schapire & Freund: Boosting: Foundations and Algorithms](https://mitpress.mit.edu/9780262526036/) -- the book by AdaBoost's creators",
+      "[Chen & Guestrin: XGBoost (2016)](https://arxiv.org/abs/1603.02754) -- the XGBoost paper",
+      "[Wolpert: Stacked Generalization (1992)](https://www.sciencedirect.com/science/article/abs/pii/S0893608005800231) -- the original stacking paper",
+      "[scikit-learn Ensemble Methods](https://scikit-learn.org/stable/modules/ensemble.html) -- practical reference"
+    ],
+    "commands": []
+  }
+]

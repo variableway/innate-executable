@@ -1,0 +1,24 @@
+{
+  "id": "10-llms-from-scratch/02-building-a-tokenizer",
+  "slug": "02-building-a-tokenizer",
+  "phase": "10-llms-from-scratch",
+  "order": 2,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Building a Tokenizer from Scratch",
+    "zh": ""
+  },
+  "hook": "Lesson 01 gave you a toy. This lesson gives you a weapon.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lesson 01 (Tokenizers: BPE",
+    "WordPiece",
+    "SentencePiece)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

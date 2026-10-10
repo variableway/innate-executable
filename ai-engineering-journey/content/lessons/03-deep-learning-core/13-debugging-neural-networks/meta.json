@@ -1,0 +1,24 @@
+{
+  "id": "03-deep-learning-core/13-debugging-neural-networks",
+  "slug": "13-debugging-neural-networks",
+  "phase": "03-deep-learning-core",
+  "order": 13,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Debugging Neural Networks",
+    "zh": ""
+  },
+  "hook": "Your network compiled. It ran. It produced a number. The number is wrong and nothing crashed. Welcome to the hardest kind of debugging -- the kind where there is no error message.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "PyTorch"
+  ],
+  "prerequisites": [
+    "Phase 03 Lessons 01-10 (especially backpropagation",
+    "loss functions",
+    "optimizers)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

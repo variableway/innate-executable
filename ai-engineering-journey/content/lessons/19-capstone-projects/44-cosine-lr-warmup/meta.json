@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/44-cosine-lr-warmup",
+  "slug": "44-cosine-lr-warmup",
+  "phase": "19-capstone-projects",
+  "order": 44,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Cosine LR with Linear Warmup",
+    "zh": ""
+  },
+  "hook": "The learning-rate schedule is the second most important decision after the loss function. AdamW with a cosine decay and a linear warmup is the modern default for language-model training because it lets the model see a small effective step size during the brittle first thousand updates, ramps up to a configured peak, and decays smoothly back toward zero. This lesson builds that schedule, plots the curve over training steps, logs gradient norms next to the schedule, and proves the schedule honors warmup, peak, and decay boundaries.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

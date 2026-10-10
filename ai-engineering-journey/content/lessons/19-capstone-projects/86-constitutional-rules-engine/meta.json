@@ -1,0 +1,23 @@
+{
+  "id": "19-capstone-projects/86-constitutional-rules-engine",
+  "slug": "86-constitutional-rules-engine",
+  "phase": "19-capstone-projects",
+  "order": 86,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 86 — Constitutional Rules Engine",
+    "zh": ""
+  },
+  "hook": "A rule is a name, a predicate, and an explanation. Anything missing one of those three is a vibe, not a rule.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "YAML"
+  ],
+  "prerequisites": [
+    "Phase 18 safety lessons",
+    "Phase 19 Track A lessons 25-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

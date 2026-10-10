@@ -1,0 +1,22 @@
+{
+  "id": "07-transformers-deep-dive/02-self-attention-from-scratch",
+  "slug": "02-self-attention-from-scratch",
+  "phase": "07-transformers-deep-dive",
+  "order": 2,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Self-Attention from Scratch",
+    "zh": ""
+  },
+  "hook": "Attention is a lookup table where every word asks \"who matters to me?\" - and learns the answer.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 (Deep Learning Core)",
+    "Phase 5 Lesson 10 (Sequence-to-Sequence)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

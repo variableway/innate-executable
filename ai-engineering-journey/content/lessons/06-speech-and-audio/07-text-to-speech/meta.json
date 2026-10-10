@@ -1,0 +1,23 @@
+{
+  "id": "06-speech-and-audio/07-text-to-speech",
+  "slug": "07-text-to-speech",
+  "phase": "06-speech-and-audio",
+  "order": 7,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Text-to-Speech (TTS) — From Tacotron to F5 and Kokoro",
+    "zh": ""
+  },
+  "hook": "ASR inverts speech to text; TTS inverts text to speech. The 2026 stack is three parts: text → tokens, tokens → mel, mel → waveform. Each part has a default model that fits in a laptop.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 02 (Spectrograms & Mel)",
+    "Phase 5 · 09 (Seq2Seq)",
+    "Phase 7 · 05 (Full Transformer)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

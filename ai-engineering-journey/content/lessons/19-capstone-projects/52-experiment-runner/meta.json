@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/52-experiment-runner",
+  "slug": "52-experiment-runner",
+  "phase": "19-capstone-projects",
+  "order": 52,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Experiment Runner",
+    "zh": ""
+  },
+  "hook": "The loop is only as honest as its measurements. Build the runner that takes a spec, executes it in a sandboxed subprocess, and emits a json metrics blob the evaluator can trust.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track A lessons 20-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

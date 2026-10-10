@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/54-build-the-feedback-ratchet",
+  "slug": "54-build-the-feedback-ratchet",
+  "phase": "14-agent-engineering",
+  "order": 54,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Build a Feedback Ratchet with Ownership and Retirement",
+    "zh": ""
+  },
+  "hook": "Shipping closes one build loop and opens the learning loop. Evidence must change the system or it becomes telemetry nobody owns.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lessons 46 and 53"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

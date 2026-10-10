@@ -1,0 +1,24 @@
+{
+  "id": "05-nlp-foundations-to-advanced/14-information-retrieval-search",
+  "slug": "14-information-retrieval-search",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 14,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Information Retrieval and Search",
+    "zh": ""
+  },
+  "hook": "BM25 is precise but brittle. Dense casts a wide net but misses keywords. Hybrid is the 2026 default. Everything else is tuning.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 02 (BoW + TF-IDF)",
+    "Phase 5 · 04 (GloVe",
+    "FastText",
+    "Subword)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

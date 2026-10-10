@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/47-checkpoint-save-resume",
+  "slug": "47-checkpoint-save-resume",
+  "phase": "19-capstone-projects",
+  "order": 47,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Checkpoint Save and Resume",
+    "zh": ""
+  },
+  "hook": "Train interrupts kill runs; checkpoints let them continue. Save model, optimizer, scheduler, loss history, step counter, and RNG state, atomically, so a kill at any moment leaves a valid file on disk.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 42 to 45"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

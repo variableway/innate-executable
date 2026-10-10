@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/01-the-agent-loop",
+  "slug": "01-the-agent-loop",
+  "phase": "14-agent-engineering",
+  "order": 1,
+  "phaseOrder": 14,
+  "title": {
+    "en": "The Agent Loop: Observe, Think, Act",
+    "zh": ""
+  },
+  "hook": "Every agent in 2026 is a variant of the ReAct loop from 2022 — Claude Code, Cursor, Devin, Operator included. Reasoning tokens interleave with tool calls and observations until a stop condition fires. Learn this loop cold before touching any framework.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 11 (LLM Engineering)",
+    "Phase 13 (Tools and Protocols)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

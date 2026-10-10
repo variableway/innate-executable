@@ -1,0 +1,22 @@
+{
+  "id": "10-llms-from-scratch/10-evaluation",
+  "slug": "10-evaluation",
+  "phase": "10-llms-from-scratch",
+  "order": 10,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Evaluation: Benchmarks, Evals, LM Harness",
+    "zh": ""
+  },
+  "hook": "Goodhart's Law: when a measure becomes a target, it ceases to be a good measure. Every frontier lab games benchmarks. MMLU scores go up while models still can't reliably count the number of R's in \"strawberry.\" The only eval that matters is YOUR eval -- on YOUR task, with YOUR data.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lessons 01-05 (LLMs from Scratch)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

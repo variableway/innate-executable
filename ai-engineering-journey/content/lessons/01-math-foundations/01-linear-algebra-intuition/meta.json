@@ -1,0 +1,22 @@
+{
+  "id": "01-math-foundations/01-linear-algebra-intuition",
+  "slug": "01-linear-algebra-intuition",
+  "phase": "01-math-foundations",
+  "order": 1,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Linear Algebra Intuition",
+    "zh": "线性代数直觉"
+  },
+  "hook": "Every AI model is just matrix math wearing a fancy hat.",
+  "type": "Learn",
+  "languages": [
+    "Python",
+    "Julia"
+  ],
+  "prerequisites": [
+    "Phase 0"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": false
+}

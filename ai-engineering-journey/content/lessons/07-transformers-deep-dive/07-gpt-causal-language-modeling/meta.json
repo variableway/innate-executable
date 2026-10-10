@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/07-gpt-causal-language-modeling",
+  "slug": "07-gpt-causal-language-modeling",
+  "phase": "07-transformers-deep-dive",
+  "order": 7,
+  "phaseOrder": 7,
+  "title": {
+    "en": "GPT — Causal Language Modeling",
+    "zh": ""
+  },
+  "hook": "BERT sees both sides. GPT sees only the past. The triangle mask is the most consequential single line of code in modern AI.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 02 (Self-Attention)",
+    "Phase 7 · 05 (Full Transformer)",
+    "Phase 7 · 06 (BERT)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

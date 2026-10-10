@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/44-plan-from-evidence",
+  "slug": "44-plan-from-evidence",
+  "phase": "14-agent-engineering",
+  "order": 44,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Build an Evidence-Backed Execution Plan",
+    "zh": ""
+  },
+  "hook": "A plan is not a prettier to-do list. It is a dependency graph in which every change has a reason and every terminal node has proof.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lesson 43"
+  ],
+  "timeMinutes": 65,
+  "needsTranslation": true
+}

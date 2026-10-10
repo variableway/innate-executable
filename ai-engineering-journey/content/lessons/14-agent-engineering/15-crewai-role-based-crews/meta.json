@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/15-crewai-role-based-crews",
+  "slug": "15-crewai-role-based-crews",
+  "phase": "14-agent-engineering",
+  "order": 15,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Role-Based Agent Teams — Roles, Tasks, Processes",
+    "zh": ""
+  },
+  "hook": "Four primitives: Agent, Task, Crew, Process. Two top-level shapes: Crews (autonomous, role-based collaboration) and Flows (event-driven, deterministic). CrewAI is the 2026 reference implementation, and its docs are blunt: \"for any production-ready application, start with a Flow.\"",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 12 (Workflow Patterns)",
+    "Phase 14 · 14 (Actor Model)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

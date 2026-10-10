@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/01-why-transformers",
+  "slug": "01-why-transformers",
+  "phase": "07-transformers-deep-dive",
+  "order": 1,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Why Transformers — The Problems with RNNs",
+    "zh": ""
+  },
+  "hook": "RNNs process tokens one at a time. Transformers process all tokens at once. That single architectural bet changed every scaling curve in deep learning after 2017.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 (Deep Learning Core)",
+    "Phase 5 · 09 (Sequence-to-Sequence)",
+    "Phase 5 · 10 (Attention Mechanism)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

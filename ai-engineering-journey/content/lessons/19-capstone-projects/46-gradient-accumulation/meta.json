@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/46-gradient-accumulation",
+  "slug": "46-gradient-accumulation",
+  "phase": "19-capstone-projects",
+  "order": 46,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Gradient Accumulation",
+    "zh": ""
+  },
+  "hook": "Train at an effective batch you cannot afford, one micro-batch at a time. Scale the loss, hold the optimizer step, and let the gradients pile up.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 42 to 45"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

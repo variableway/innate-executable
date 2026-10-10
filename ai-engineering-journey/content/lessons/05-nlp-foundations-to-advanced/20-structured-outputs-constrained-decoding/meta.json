@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/20-structured-outputs-constrained-decoding",
+  "slug": "20-structured-outputs-constrained-decoding",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 20,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Structured Outputs & Constrained Decoding",
+    "zh": ""
+  },
+  "hook": "Ask an LLM for JSON. Get JSON most of the time. In production, \"most\" is the problem. Constrained decoding turns \"most\" into \"always\" by editing the logits before sampling.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 17 (Chatbots)",
+    "Phase 5 · 19 (Subword Tokenization)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

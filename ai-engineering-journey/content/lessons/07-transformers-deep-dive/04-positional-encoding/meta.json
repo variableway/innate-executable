@@ -1,0 +1,22 @@
+{
+  "id": "07-transformers-deep-dive/04-positional-encoding",
+  "slug": "04-positional-encoding",
+  "phase": "07-transformers-deep-dive",
+  "order": 4,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Positional Encoding — Sinusoidal, RoPE, ALiBi",
+    "zh": ""
+  },
+  "hook": "Attention is permutation-invariant. \"The cat sat on the mat\" and \"mat the on sat cat the\" produce the same output without positional signal. Three algorithms fix it — each with a different bet on what \"position\" means.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 02 (Self-Attention)",
+    "Phase 7 · 03 (Multi-Head Attention)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

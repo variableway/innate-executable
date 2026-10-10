@@ -1,0 +1,23 @@
+{
+  "id": "13-tools-and-protocols/21-llm-routing-layer",
+  "slug": "21-llm-routing-layer",
+  "phase": "13-tools-and-protocols",
+  "order": 21,
+  "phaseOrder": 13,
+  "title": {
+    "en": "LLM Routing Layer — LiteLLM, OpenRouter, Portkey",
+    "zh": ""
+  },
+  "hook": "Provider lock-in is expensive. Different tool-calling workloads suit different models. Routing gateways give one API surface, retries, failover, cost tracking, and guardrails. Three archetypes dominate 2026: LiteLLM (open-source self-hosted), OpenRouter (managed SaaS), Portkey (production-grade, open-sourced in March 2026). This lesson names the decision criteria and walks a stdlib routing gateway.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "routing + failover + cost tracker)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 02 (function calling)",
+    "Phase 13 · 17 (gateways)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

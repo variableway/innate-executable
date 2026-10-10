@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/17-chatbots-rule-to-neural",
+  "slug": "17-chatbots-rule-to-neural",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 17,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Chatbots — Rule-Based to Neural to LLM Agents",
+    "zh": ""
+  },
+  "hook": "ELIZA replied with pattern matches. DialogFlow mapped intents. GPT answered from weights. Claude runs tools and verifies. Each era solved the previous one's worst failure.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 13 (Question Answering)",
+    "Phase 5 · 14 (Information Retrieval)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

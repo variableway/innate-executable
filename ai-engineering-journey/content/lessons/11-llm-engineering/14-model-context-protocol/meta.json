@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/14-model-context-protocol",
+  "slug": "14-model-context-protocol",
+  "phase": "11-llm-engineering",
+  "order": 14,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Model Context Protocol (MCP)",
+    "zh": ""
+  },
+  "hook": "MCP gives an AI host one protocol for discovering and invoking tools, resources, and prompts. The 2026-07-28 revision makes that protocol stateless: capability and version context travels with every request, not in a connection-bound handshake.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 · 09 (Function Calling)",
+    "Phase 11 · 03 (Structured Outputs)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

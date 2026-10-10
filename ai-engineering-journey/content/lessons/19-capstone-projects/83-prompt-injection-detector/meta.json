@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/83-prompt-injection-detector",
+  "slug": "83-prompt-injection-detector",
+  "phase": "19-capstone-projects",
+  "order": 83,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 83 — Prompt Injection Detector",
+    "zh": ""
+  },
+  "hook": "A detector is a function from prompt to confidence and category. Anything else is a vibe.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 18 safety lessons",
+    "Phase 19 Track A lessons 25-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

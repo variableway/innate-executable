@@ -1,0 +1,110 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Map Assumptions and Resolve the Riskiest One First\n\n> A roadmap hides uncertainty inside features. An assumption map exposes what must be true before those features deserve to exist.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lesson 48\n**Time:** ~65 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Convert proposed work into explicit assumptions.\n- Score impact, uncertainty, and irreversibility separately.\n- Choose the next experiment by risk, not enthusiasm.\n- Replace tested assumptions with evidence and decisions.",
+    "keyPoints": [
+      "Convert proposed work into explicit assumptions.",
+      "Score impact, uncertainty, and irreversibility separately.",
+      "Choose the next experiment by risk, not enthusiasm.",
+      "Replace tested assumptions with evidence and decisions."
+    ],
+    "commands": []
+  },
+  {
+    "id": "every-build-contains-bets",
+    "title": "Every Build Contains Bets",
+    "bodyMarkdown": "An incident tool may depend on all of these being true:\n\n- alert context contains enough information to identify a service;\n- engineers trust a recommendation they did not derive themselves;\n- the desired response time matters operationally;\n- required data can be accessed without unsafe authority;\n- the workflow happens often enough to justify maintenance.\n\nThese are not implementation tasks. They are conditions for the build to be valuable, usable, feasible, and safe.",
+    "keyPoints": [
+      "alert context contains enough information to identify a service;",
+      "engineers trust a recommendation they did not derive themselves;",
+      "the desired response time matters operationally;",
+      "required data can be accessed without unsafe authority;",
+      "the workflow happens often enough to justify maintenance."
+    ],
+    "commands": []
+  },
+  {
+    "id": "assumption-classes",
+    "title": "Assumption Classes",
+    "bodyMarkdown": "| Class | Question |\n|---|---|\n| Value | Will the outcome matter enough? |\n| Usability | Can the user understand and act on it? |\n| Feasibility | Can the system produce it with available data and constraints? |\n| Viability | Can the organization sustain cost, ownership, and operation? |\n| Safety | Can it fail without unacceptable consequence? |\n\nWrite assumptions as falsifiable statements. “The feature is useful” cannot be tested. “Eight of ten on-call engineers identify the correct service faster with the read-only result” can.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "risk-is-not-one-number",
+    "title": "Risk Is Not One Number",
+    "bodyMarkdown": "The lab uses three dimensions from one to five:\n\n- **Impact:** damage if the assumption is false.\n- **Uncertainty:** weakness of current evidence.\n- **Irreversibility:** cost of learning after commitment.\n\nThe example score multiplies impact and uncertainty, then adds irreversibility. The formula is not universal. Its purpose is to force the team to state why one unknown should be resolved before another.\n\n```mermaid\nflowchart LR\n  A[Assumptions] --> S[Score risk]\n  S --> H[Highest open risk]\n  H --> X[Cheapest decisive experiment]\n  X --> E{Evidence}\n  E -->|Supports| B[Bounded build]\n  E -->|Rejects| R[Reframe or stop]\n```",
+    "keyPoints": [
+      "Impact:: damage if the assumption is false.",
+      "Uncertainty:: weakness of current evidence.",
+      "Irreversibility:: cost of learning after commitment."
+    ],
+    "commands": []
+  },
+  {
+    "id": "design-an-experiment-not-a-confirmation-ritual",
+    "title": "Design an Experiment, Not a Confirmation Ritual",
+    "bodyMarkdown": "A useful test has:\n\n- a claim that could be false;\n- a population or realistic sample;\n- an observable result;\n- a threshold decided before the result;\n- a next decision for pass, fail, and ambiguous evidence.\n\nAvoid tests that only demonstrate that the team can build the idea.",
+    "keyPoints": [
+      "a claim that could be false;",
+      "a population or realistic sample;",
+      "an observable result;",
+      "a threshold decided before the result;",
+      "a next decision for pass, fail, and ambiguous evidence."
+    ],
+    "commands": []
+  },
+  {
+    "id": "reversibility-changes-order",
+    "title": "Reversibility Changes Order",
+    "bodyMarkdown": "High-consequence, irreversible choices need earlier evidence. A read-only replay can precede a production integration. A temporary adapter can precede a data migration. A human-approved recommendation can precede automatic action.\n\nThe shape of the build should follow the shape of uncertainty.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab ranks assumptions, distinguishes tested from open claims, selects the highest open risk, and writes `outputs/assumption-map.json`.\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nChange the evidence on the highest-risk assumption and observe how the next experiment changes.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Write five assumptions for a feature you want to build.\n2. Add one safety assumption that your feature list omitted.\n3. Define a threshold that would cause you to stop the build.\n4. Replace one large experiment with a cheaper decisive test.\n5. Compare risk ranking with roadmap priority and explain the mismatch.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Barry Boehm, A Spiral Model of Software Development and Enhancement](https://dl.acm.org/doi/10.1145/12944.12948), for a risk-driven development cycle that resolves uncertainty before deeper commitment.\n- [Dardenne, van Lamsweerde, and Fickas, Goal-Directed Requirements Acquisition](https://doi.org/10.1016/0167-6423(93)90021-G), for refining goals while surfacing obstacles and constraints.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/assumption-map.json`. The next lesson uses it to choose the smallest slice that can produce decisive evidence.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

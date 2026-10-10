@@ -1,0 +1,165 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# 奇异值分解\n\n> SVD 是线性代数的瑞士军刀。每个矩阵都有一个。每个数据科学家都需要一个。\n\n**类型:** Build\n**语言:** Python, Julia\n**先修:** Phase 1, Lessons 01 (Linear Algebra Intuition), 02 (Vectors & Matrices Operations), 03 (Matrix Transformations)\n**时长:** ~120 分钟",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "学习目标",
+    "title": "学习目标",
+    "bodyMarkdown": "- 通过幂迭代（power iteration）实现 SVD，并解释 U、Sigma 和 V^T 的几何含义\n- 用截断 SVD 做图像压缩，并测量压缩比与重建误差的关系\n- 通过 SVD 计算 Moore-Penrose 伪逆，求解超定最小二乘系统\n- 把 SVD 与 PCA、推荐系统（隐因子）和 NLP 中的潜在语义分析联系起来",
+    "keyPoints": [
+      "通过幂迭代（power iteration）实现 SVD，并解释 U、Sigma 和 V^T 的几何含义",
+      "用截断 SVD 做图像压缩，并测量压缩比与重建误差的关系",
+      "通过 SVD 计算 Moore-Penrose 伪逆，求解超定最小二乘系统",
+      "把 SVD 与 PCA、推荐系统（隐因子）和 NLP 中的潜在语义分析联系起来"
+    ],
+    "commands": []
+  },
+  {
+    "id": "问题",
+    "title": "问题",
+    "bodyMarkdown": "你有一个 1000x2000 的矩阵。可能是用户-电影评分。可能是文档-词频表。可能是图像的像素值。你需要压缩它、给它去噪、找出其中的隐藏结构，或者用它求解一个最小二乘系统。特征分解只对方阵有效。即便如此，它还要求矩阵有一整套线性无关的特征向量。\n\nSVD 对任何矩阵都有效。任何形状。任何秩。没有附加条件。它把矩阵分解成三个因子，揭示这个矩阵对空间做了什么几何操作。它是整个线性代数中最通用、最有用的分解。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "概念",
+    "title": "概念",
+    "bodyMarkdown": "### SVD 在几何上做什么\n\n每个矩阵，不论形状，都在依次执行三种操作：旋转、缩放、旋转。SVD 把这个分解显式写出来。\n\n```\nA = U * Sigma * V^T\n\n      m x n     m x m    m x n    n x n\n     (any)    (rotate)  (scale)  (rotate)\n```\n\n给定任意矩阵 A，SVD 将其分解为：\n- V^T 在输入空间（n 维）中旋转向量\n- Sigma 沿各轴缩放（拉伸或压缩）\n- U 把结果旋转到输出空间（m 维）\n\n```mermaid\ngraph LR\n    A[\"Input space (n-dim)\\nData cloud\\n(arbitrary orientation)\"] -->|\"V^T\\n(rotate)\"| B[\"Scaled space\\nAligned with axes\\nthen scaled by Sigma\"]\n    B -->|\"U\\n(rotate)\"| C[\"Output space (m-dim)\\nRotated to output\\norientation\"]\n```\n\n可以这样想。你把一个矩阵交给 SVD。它告诉你：\"这个矩阵拿一个输入球面，先用 V^T 旋转它，再用 Sigma 把它拉成椭球，最后用 U 旋转这个椭球。\" 奇异值就是椭球各轴的长度。\n\n### 完整分解\n\n对形状为 m x n 的矩阵 A：\n\n```\nA = U * Sigma * V^T\n\nwhere:\n  U     is m x m, orthogonal (U^T U = I)\n  Sigma is m x n, diagonal (singular values on the diagonal)\n  V     is n x n, orthogonal (V^T V = I)\n\nThe singular values sigma_1 >= sigma_2 >= ... >= sigma_r > 0\nwhere r = rank(A)\n```\n\nU 的列称为左奇异向量。V 的列称为右奇异向量。Sigma 的对角元称为奇异值。它们总是非负的，按惯例从大到小排序。\n\n### 左奇异向量、奇异值、右奇异向量\n\nSVD 的每个组成部分都有独特的几何含义。\n\n**右奇异向量（V 的列）：** 它们构成输入空间（R^n）的一组标准正交基。它们是输入空间中那些被矩阵映射到输出空间正交方向的方向。可以看作定义域的自然坐标系。\n\n**奇异值（Sigma 的对角）：** 它们是缩放因子。第 i 个奇异值告诉你矩阵沿第 i 个右奇异向量方向拉伸了多少。奇异值为零意味着矩阵把那个方向完全压扁了。\n\n**左奇异向量（U 的列）：** 它们构成输出空间（R^m）的一组标准正交基。第 i 个左奇异向量是第 i 个右奇异向量（经缩放后）落到输出空间中的方向。\n\n它们之间的关系：\n\n```\nA * v_i = sigma_i * u_i\n\nThe matrix A takes the i-th right singular vector v_i,\nscales it by sigma_i, and maps it to the i-th left singular vector u_i.\n```\n\n这给了你一幅逐坐标图景，说明任何矩阵到底做了什么。\n\n### 外积形式\n\nSVD 可以写成若干秩 1 矩阵之和：\n\n```\nA = sigma_1 * u_1 * v_1^T + sigma_2 * u_2 * v_2^T + ... + sigma_r * u_r * v_r^T\n\nEach term sigma_i * u_i * v_i^T is a rank-1 matrix (an outer product).\nThe full matrix is the sum of r such matrices, where r is the rank.\n```\n\n这个形式是低秩近似的基础。每一项增加一层结构。第一项捕获最重要的单一模式。第二项捕获次重要的。以此类推。截断这个和，就得到任意给定秩下可能的最好近似。\n\n```\nRank-1 approx:    A_1 = sigma_1 * u_1 * v_1^T\n                  (captures the dominant pattern)\n\nRank-2 approx:    A_2 = sigma_1 * u_1 * v_1^T + sigma_2 * u_2 * v_2^T\n                  (captures the two most important patterns)\n\nRank-k approx:    A_k = sum of top k terms\n                  (optimal by the Eckart-Young theorem)\n```\n\n### 与特征分解的关系\n\nSVD 与特征分解有深刻联系。A 的奇异值和奇异向量直接来自 A^T A 和 A A^T 的特征值和特征向量。\n\n```\nA^T A = V * Sigma^T * U^T * U * Sigma * V^T\n      = V * Sigma^T * Sigma * V^T\n      = V * D * V^T\n\nwhere D = Sigma^T * Sigma is a diagonal matrix with sigma_i^2 on the diagonal.\n\nSo:\n- The right singular vectors (V) are eigenvectors of A^T A\n- The singular values squared (sigma_i^2) are eigenvalues of A^T A\n\nSimilarly:\nA A^T = U * Sigma * V^T * V * Sigma^T * U^T\n      = U * Sigma * Sigma^T * U^T\n\nSo:\n- The left singular vectors (U) are eigenvectors of A A^T\n- The eigenvalues of A A^T are also sigma_i^2\n```\n\n这个联系告诉你三件事：\n1. 奇异值总是实数且非负（它们是半正定矩阵特征值的平方根）。\n2. 你可以通过对 A^T A 做特征分解来计算 SVD，但这会把条件数平方并损失数值精度。专用 SVD 算法避免了这一点。\n3. 当 A 是方阵且对称半正定时，SVD 和特征分解是同一回事。\n\n### 截断 SVD：低秩近似\n\nEckart-Young-Mirsky 定理指出：A 的最优秩 k 近似（在 Frobenius 范数和谱范数下）通过只保留前 k 个奇异值及其对应向量得到：\n\n```\nA_k = U_k * Sigma_k * V_k^T\n\nwhere:\n  U_k     is m x k  (first k columns of U)\n  Sigma_k is k x k  (top-left k x k block of Sigma)\n  V_k     is n x k  (first k columns of V)\n\nApproximation error = sigma_{k+1}  (in spectral norm)\n                    = sqrt(sigma_{k+1}^2 + ... + sigma_r^2)  (in Frobenius norm)\n```\n\n这不只是\"一个不错的\"近似。可以证明它是秩 k 意义下可能的最好近似。没有其他秩 k 矩阵比它更接近 A。\n\n| Component | Relative magnitude | Kept in rank-3 approx? |\n|-----------|-------------------|------------------------|\n| sigma_1 | Largest | Yes |\n| sigma_2 | Large | Yes |\n| sigma_3 | Medium-large | Yes |\n| sigma_4 | Medium | No (error) |\n| sigma_5 | Medium-small | No (error) |\n| sigma_6 | Small | No (error) |\n| sigma_7 | Very small | No (error) |\n| sigma_8 | Tiny | No (error) |\n\n保留前 3 个：A_3 捕获三个最大的奇异值。误差 = 剩余的值（sigma_4 到 sigma_8）。\n\n如果奇异值衰减很快，一个小的 k 就能捕获矩阵的大部分。如果衰减很慢，矩阵就没有低秩结构。\n\n### 用 SVD 做图像压缩\n\n灰度图像是像素强度矩阵。一张 800x600 的图像有 480,000 个值。SVD 让你用少得多的值去近似它。\n\n```\nOriginal image: 800 x 600 = 480,000 values\n\nSVD with rank k:\n  U_k:      800 x k values\n  Sigma_k:  k values\n  V_k:      600 x k values\n  Total:    k * (800 + 600 + 1) = k * 1401 values\n\n  k=10:   14,010 values   (2.9% of original)\n  k=50:   70,050 values  (14.6% of original)\n  k=100: 140,100 values  (29.2% of original)\n\n  The compression ratio improves as k gets smaller,\n  but visual quality degrades.\n```\n\n关键洞见：自然图像的奇异值衰减很快。前几个奇异值捕获大致结构（形状、渐变）。后面的捕获细节和噪声。在秩 50 处截断，往往能产生看起来与原图几乎相同、却少用 85% 存储的图像。\n\n### SVD 用于推荐系统\n\nNetflix 大奖让它出了名。你有一个大多数条目缺失的用户-电影评分矩阵。\n\n```\n             Movie1  Movie2  Movie3  Movie4  Movie5\n  User1      [  5      ?       3       ?       1  ]\n  User2      [  ?      4       ?       2       ?  ]\n  User3      [  3      ?       5       ?       ?  ]\n  User4      [  ?      ?       ?       4       3  ]\n\n  ? = unknown rating\n```\n\n思路是：这个评分矩阵是低秩的。用户的口味并非完全独立。有少数几个隐因子（action vs. drama, old vs. new, cerebral vs. visceral）解释了大多数偏好。\n\n对（填充后的）评分矩阵做 SVD，把它分解为：\n- U: 隐因子空间中的用户画像\n- Sigma: 每个隐因子的重要性\n- V^T: 隐因子空间中的电影画像\n\n用户对某部电影的预测评分是其用户画像与电影画像的点积（按奇异值加权）。低秩近似填补了缺失项。\n\n实践中，你会使用 Simon Funk 的增量 SVD 或 ALS（交替最小二乘）这类变体，它们直接处理缺失数据。但核心思想相同：通过 SVD 做隐因子分解。\n\n### NLP 中的 SVD：潜在语义分析\n\n潜在语义分析（LSA），也叫潜在语义索引（LSI），把 SVD 应用到词-文档矩阵上。\n\n```\n             Doc1   Doc2   Doc3   Doc4\n  \"cat\"      [  3      0      1      0  ]\n  \"dog\"      [  2      0      0      1  ]\n  \"fish\"     [  0      4      1      0  ]\n  \"pet\"      [  1      1      1      1  ]\n  \"ocean\"    [  0      3      0      0  ]\n\nAfter SVD with rank k=2:\n\n  Each document becomes a point in 2D \"concept space.\"\n  Each term becomes a point in the same 2D space.\n  Documents about similar topics cluster together.\n  Terms with similar meanings cluster together.\n\n  \"cat\" and \"dog\" end up near each other (land pets).\n  \"fish\" and \"ocean\" end up near each other (water concepts).\n  Doc1 and Doc3 cluster if they share similar topics.\n```\n\nLSA 是最早从原始文本中捕捉语义相似度的成功方法之一。它之所以有效，是因为同义词倾向于出现在相似的文档中，于是 SVD 把它们归入相同的潜在维度。现代词嵌入（Word2Vec、GloVe）可以看作这一思想的后裔。\n\n### 用 SVD 做降噪\n\n带噪数据的信号集中在前几个奇异值上，而噪声分布在所有奇异值上。截断能去掉噪声底。\n\n**干净信号的奇异值：**\n\n| Component | Magnitude | Type |\n|-----------|-----------|------|\n| sigma_1 | Very large | Signal |\n| sigma_2 | Large | Signal |\n| sigma_3 | Medium | Signal |\n| sigma_4 | Near zero | Negligible |\n| sigma_5 | Near zero | Negligible |\n\n**带噪信号的奇异值（噪声加到所有值上）：**\n\n| Component | Magnitude | Type |\n|-----------|-----------|------|\n| sigma_1 | Very large | Signal |\n| sigma_2 | Large | Signal |\n| sigma_3 | Medium | Signal |\n| sigma_4 | Small | Noise |\n| sigma_5 | Small | Noise |\n| sigma_6 | Small | Noise |\n| sigma_7 | Small | Noise |\n\n```mermaid\ngraph TD\n    A[\"All singular values\"] --> B{\"Clear gap?\"}\n    B -->|\"Above gap\"| C[\"Signal: keep these (top k)\"]\n    B -->|\"Below gap\"| D[\"Noise: discard these\"]\n    C --> E[\"Reconstruct with A_k to get denoised version\"]\n```\n\n这用于信号处理、科学测量和数据清洗。任何时候只要你有一个被加性噪声污染的矩阵，截断 SVD 就是一种有原则的信号-噪声分离方法。\n\n### 通过 SVD 求伪逆\n\nMoore-Penrose 伪逆 A+ 把矩阵求逆推广到非方阵和奇异矩阵。SVD 让计算它变得轻而易举。\n\n```\nIf A = U * Sigma * V^T, then:\n\nA+ = V * Sigma+ * U^T\n\nwhere Sigma+ is formed by:\n  1. Transpose Sigma (swap rows and columns)\n  2. Replace each non-zero diagonal entry sigma_i with 1/sigma_i\n  3. Leave zeros as zeros\n\nFor A (m x n):      A+ is (n x m)\nFor Sigma (m x n):  Sigma+ is (n x m)\n```\n\n伪逆求解最小二乘问题。如果 Ax = b 没有精确解（超定系统），则 x = A+ b 就是最小二乘解（最小化 ||Ax - b||）。\n\n```\nOverdetermined system (more equations than unknowns):\n\n  [1  1]         [3]\n  [2  1] x   =   [5]       No exact solution exists.\n  [3  1]         [6]\n\n  x_ls = A+ b = V * Sigma+ * U^T * b\n\n  This gives the x that minimizes the sum of squared residuals.\n  Same result as the normal equations (A^T A)^(-1) A^T b,\n  but numerically more stable.\n```\n\n### 数值稳定性优势\n\n计算 A^T A 的特征分解会把奇异值平方（A^T A 的特征值是 sigma_i^2）。这会把条件数平方，放大数值误差。\n\n```\nExample:\n  A has singular values [1000, 1, 0.001]\n  Condition number of A: 1000 / 0.001 = 10^6\n\n  A^T A has eigenvalues [10^6, 1, 10^{-6}]\n  Condition number of A^T A: 10^6 / 10^{-6} = 10^{12}\n\n  Computing SVD directly: works with condition number 10^6\n  Computing via A^T A:     works with condition number 10^{12}\n                           (6 extra digits of precision lost)\n```\n\n现代 SVD 算法（Golub-Kahan 双对角化）直接在 A 上工作，从不形成 A^T A。这就是你始终应该优先使用 `np.linalg.svd(A)` 而不是 `np.linalg.eig(A.T @ A)` 的原因。\n\n### 与 PCA 的联系\n\nPCA 就是中心化数据上的 SVD。这不是类比。它字面上就是同一个计算。\n\n```\nGiven data matrix X (n_samples x n_features), centered (mean subtracted):\n\nCovariance matrix: C = (1/(n-1)) * X^T X\n\nPCA finds eigenvectors of C. But:\n\n  X = U * Sigma * V^T    (SVD of X)\n\n  X^T X = V * Sigma^2 * V^T\n\n  C = (1/(n-1)) * V * Sigma^2 * V^T\n\nSo the principal components are exactly the right singular vectors V.\nThe explained variance for each component is sigma_i^2 / (n-1).\n\nIn sklearn, PCA is implemented using SVD, not eigendecomposition.\nIt is faster and more numerically stable.\n```\n\n这意味着你在第 10 课学到的降维知识底层都是 SVD。PCA 是机器学习中最常见的 SVD 应用。\n\n```figure\nsvd-rank-reconstruction\n```",
+    "keyPoints": [
+      "V^T 在输入空间（n 维）中旋转向量",
+      "Sigma 沿各轴缩放（拉伸或压缩）",
+      "U 把结果旋转到输出空间（m 维）",
+      "奇异值总是实数且非负（它们是半正定矩阵特征值的平方根）。",
+      "你可以通过对 A^T A 做特征分解来计算 SVD，但这会把条件数平方并损失数值精度。专用 SVD 算法避免了这一点。",
+      "当 A 是方阵且对称半正定时，SVD 和特征分解是同一回事。"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "A = U * Sigma * V^T\n\n      m x n     m x m    m x n    n x n\n     (any)    (rotate)  (scale)  (rotate)"
+      },
+      {
+        "lang": "text",
+        "code": "A = U * Sigma * V^T\n\nwhere:\n  U     is m x m, orthogonal (U^T U = I)\n  Sigma is m x n, diagonal (singular values on the diagonal)\n  V     is n x n, orthogonal (V^T V = I)\n\nThe singular values sigma_1 >= sigma_2 >= ... >= sigma_r > 0\nwhere r = rank(A)"
+      },
+      {
+        "lang": "text",
+        "code": "A * v_i = sigma_i * u_i\n\nThe matrix A takes the i-th right singular vector v_i,\nscales it by sigma_i, and maps it to the i-th left singular vector u_i."
+      },
+      {
+        "lang": "text",
+        "code": "A = sigma_1 * u_1 * v_1^T + sigma_2 * u_2 * v_2^T + ... + sigma_r * u_r * v_r^T\n\nEach term sigma_i * u_i * v_i^T is a rank-1 matrix (an outer product).\nThe full matrix is the sum of r such matrices, where r is the rank."
+      },
+      {
+        "lang": "text",
+        "code": "Rank-1 approx:    A_1 = sigma_1 * u_1 * v_1^T\n                  (captures the dominant pattern)\n\nRank-2 approx:    A_2 = sigma_1 * u_1 * v_1^T + sigma_2 * u_2 * v_2^T\n                  (captures the two most important patterns)\n\nRank-k approx:    A_k = sum of top k terms\n                  (optimal by the Eckart-Young theorem)"
+      },
+      {
+        "lang": "text",
+        "code": "A^T A = V * Sigma^T * U^T * U * Sigma * V^T\n      = V * Sigma^T * Sigma * V^T\n      = V * D * V^T\n\nwhere D = Sigma^T * Sigma is a diagonal matrix with sigma_i^2 on the diagonal.\n\nSo:\n- The right singular vectors (V) are eigenvectors of A^T A\n- The singular values squared (sigma_i^2) are eigenvalues of A^T A\n\nSimilarly:\nA A^T = U * Sigma * V^T * V * Sigma^T * U^T\n      = U * Sigma * Sigma^T * U^T\n\nSo:\n- The left singular vectors (U) are eigenvectors of A A^T\n- The eigenvalues of A A^T are also sigma_i^2"
+      },
+      {
+        "lang": "text",
+        "code": "A_k = U_k * Sigma_k * V_k^T\n\nwhere:\n  U_k     is m x k  (first k columns of U)\n  Sigma_k is k x k  (top-left k x k block of Sigma)\n  V_k     is n x k  (first k columns of V)\n\nApproximation error = sigma_{k+1}  (in spectral norm)\n                    = sqrt(sigma_{k+1}^2 + ... + sigma_r^2)  (in Frobenius norm)"
+      },
+      {
+        "lang": "text",
+        "code": "Original image: 800 x 600 = 480,000 values\n\nSVD with rank k:\n  U_k:      800 x k values\n  Sigma_k:  k values\n  V_k:      600 x k values\n  Total:    k * (800 + 600 + 1) = k * 1401 values\n\n  k=10:   14,010 values   (2.9% of original)\n  k=50:   70,050 values  (14.6% of original)\n  k=100: 140,100 values  (29.2% of original)\n\n  The compression ratio improves as k gets smaller,\n  but visual quality degrades."
+      },
+      {
+        "lang": "text",
+        "code": "             Movie1  Movie2  Movie3  Movie4  Movie5\n  User1      [  5      ?       3       ?       1  ]\n  User2      [  ?      4       ?       2       ?  ]\n  User3      [  3      ?       5       ?       ?  ]\n  User4      [  ?      ?       ?       4       3  ]\n\n  ? = unknown rating"
+      },
+      {
+        "lang": "text",
+        "code": "             Doc1   Doc2   Doc3   Doc4\n  \"cat\"      [  3      0      1      0  ]\n  \"dog\"      [  2      0      0      1  ]\n  \"fish\"     [  0      4      1      0  ]\n  \"pet\"      [  1      1      1      1  ]\n  \"ocean\"    [  0      3      0      0  ]\n\nAfter SVD with rank k=2:\n\n  Each document becomes a point in 2D \"concept space.\"\n  Each term becomes a point in the same 2D space.\n  Documents about similar topics cluster together.\n  Terms with similar meanings cluster together.\n\n  \"cat\" and \"dog\" end up near each other (land pets).\n  \"fish\" and \"ocean\" end up near each other (water concepts).\n  Doc1 and Doc3 cluster if they share similar topics."
+      },
+      {
+        "lang": "text",
+        "code": "If A = U * Sigma * V^T, then:\n\nA+ = V * Sigma+ * U^T\n\nwhere Sigma+ is formed by:\n  1. Transpose Sigma (swap rows and columns)\n  2. Replace each non-zero diagonal entry sigma_i with 1/sigma_i\n  3. Leave zeros as zeros\n\nFor A (m x n):      A+ is (n x m)\nFor Sigma (m x n):  Sigma+ is (n x m)"
+      },
+      {
+        "lang": "text",
+        "code": "Overdetermined system (more equations than unknowns):\n\n  [1  1]         [3]\n  [2  1] x   =   [5]       No exact solution exists.\n  [3  1]         [6]\n\n  x_ls = A+ b = V * Sigma+ * U^T * b\n\n  This gives the x that minimizes the sum of squared residuals.\n  Same result as the normal equations (A^T A)^(-1) A^T b,\n  but numerically more stable."
+      },
+      {
+        "lang": "text",
+        "code": "Example:\n  A has singular values [1000, 1, 0.001]\n  Condition number of A: 1000 / 0.001 = 10^6\n\n  A^T A has eigenvalues [10^6, 1, 10^{-6}]\n  Condition number of A^T A: 10^6 / 10^{-6} = 10^{12}\n\n  Computing SVD directly: works with condition number 10^6\n  Computing via A^T A:     works with condition number 10^{12}\n                           (6 extra digits of precision lost)"
+      },
+      {
+        "lang": "text",
+        "code": "Given data matrix X (n_samples x n_features), centered (mean subtracted):\n\nCovariance matrix: C = (1/(n-1)) * X^T X\n\nPCA finds eigenvectors of C. But:\n\n  X = U * Sigma * V^T    (SVD of X)\n\n  X^T X = V * Sigma^2 * V^T\n\n  C = (1/(n-1)) * V * Sigma^2 * V^T\n\nSo the principal components are exactly the right singular vectors V.\nThe explained variance for each component is sigma_i^2 / (n-1).\n\nIn sklearn, PCA is implemented using SVD, not eigendecomposition.\nIt is faster and more numerically stable."
+      }
+    ]
+  },
+  {
+    "id": "动手做",
+    "title": "动手做",
+    "bodyMarkdown": "### 步骤 1：用幂迭代从零实现 SVD\n\n思路：为了找到最大的奇异值及其向量，在 A^T A（或 A A^T）上做幂迭代。然后对矩阵放缩（deflate），对下一个奇异值重复。\n\n```python\nimport numpy as np\n\ndef power_iteration(M, num_iters=100):\n    n = M.shape[1]\n    v = np.random.randn(n)\n    v = v / np.linalg.norm(v)\n\n    for _ in range(num_iters):\n        Mv = M @ v\n        v = Mv / np.linalg.norm(Mv)\n\n    eigenvalue = v @ M @ v\n    return eigenvalue, v\n\ndef svd_from_scratch(A, k=None):\n    m, n = A.shape\n    if k is None:\n        k = min(m, n)\n\n    sigmas = []\n    us = []\n    vs = []\n\n    A_residual = A.copy().astype(float)\n\n    for _ in range(k):\n        AtA = A_residual.T @ A_residual\n        eigenvalue, v = power_iteration(AtA, num_iters=200)\n\n        if eigenvalue < 1e-10:\n            break\n\n        sigma = np.sqrt(eigenvalue)\n        u = A_residual @ v / sigma\n\n        sigmas.append(sigma)\n        us.append(u)\n        vs.append(v)\n\n        A_residual = A_residual - sigma * np.outer(u, v)\n\n    U = np.column_stack(us) if us else np.empty((m, 0))\n    S = np.array(sigmas)\n    V = np.column_stack(vs) if vs else np.empty((n, 0))\n\n    return U, S, V\n```\n\n### 步骤 2：测试并与 NumPy 对比\n\n```python\nnp.random.seed(42)\nA = np.random.randn(5, 4)\n\nU_ours, S_ours, V_ours = svd_from_scratch(A)\nU_np, S_np, Vt_np = np.linalg.svd(A, full_matrices=False)\n\nprint(\"Our singular values:\", np.round(S_ours, 4))\nprint(\"NumPy singular values:\", np.round(S_np, 4))\n\nA_reconstructed = U_ours @ np.diag(S_ours) @ V_ours.T\nprint(f\"Reconstruction error: {np.linalg.norm(A - A_reconstructed):.8f}\")\n```\n\n### 步骤 3：图像压缩演示\n\n```python\ndef compress_image_svd(image_matrix, k):\n    U, S, Vt = np.linalg.svd(image_matrix, full_matrices=False)\n    compressed = U[:, :k] @ np.diag(S[:k]) @ Vt[:k, :]\n    return compressed\n\nimage = np.random.seed(42)\nrows, cols = 200, 300\nimage = np.random.randn(rows, cols)\n\nfor k in [1, 5, 10, 20, 50]:\n    compressed = compress_image_svd(image, k)\n    error = np.linalg.norm(image - compressed) / np.linalg.norm(image)\n    original_size = rows * cols\n    compressed_size = k * (rows + cols + 1)\n    ratio = compressed_size / original_size\n    print(f\"k={k:>3d}  error={error:.4f}  storage={ratio:.1%}\")\n```\n\n### 步骤 4：降噪\n\n```python\nnp.random.seed(42)\nclean = np.outer(np.sin(np.linspace(0, 4*np.pi, 100)),\n                 np.cos(np.linspace(0, 2*np.pi, 80)))\nnoise = 0.3 * np.random.randn(100, 80)\nnoisy = clean + noise\n\nU, S, Vt = np.linalg.svd(noisy, full_matrices=False)\ndenoised = U[:, :5] @ np.diag(S[:5]) @ Vt[:5, :]\n\nprint(f\"Noisy error:    {np.linalg.norm(noisy - clean):.4f}\")\nprint(f\"Denoised error: {np.linalg.norm(denoised - clean):.4f}\")\nprint(f\"Improvement:    {(1 - np.linalg.norm(denoised - clean) / np.linalg.norm(noisy - clean)):.1%}\")\n```\n\n### 步骤 5：伪逆\n\n```python\nA = np.array([[1, 1], [2, 1], [3, 1]], dtype=float)\nb = np.array([3, 5, 6], dtype=float)\n\nU, S, Vt = np.linalg.svd(A, full_matrices=False)\nS_inv = np.diag(1.0 / S)\nA_pinv = Vt.T @ S_inv @ U.T\n\nx_svd = A_pinv @ b\nx_lstsq = np.linalg.lstsq(A, b, rcond=None)[0]\nx_pinv = np.linalg.pinv(A) @ b\n\nprint(f\"SVD pseudoinverse solution:  {x_svd}\")\nprint(f\"np.linalg.lstsq solution:   {x_lstsq}\")\nprint(f\"np.linalg.pinv solution:    {x_pinv}\")\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "用起来",
+    "title": "用起来",
+    "bodyMarkdown": "完整可运行的演示在 `code/svd.py`。运行它可以看到 SVD 应用于图像压缩、推荐系统、潜在语义分析和降噪。\n\n```bash\npython svd.py\n```\n\nJulia 版本在 `code/svd.jl`，用 Julia 原生的 `svd()` 函数和 `LinearAlgebra` 包演示同样的概念。\n\n```bash\njulia svd.jl\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python svd.py"
+      },
+      {
+        "lang": "bash",
+        "code": "julia svd.jl"
+      }
+    ]
+  },
+  {
+    "id": "交付",
+    "title": "交付",
+    "bodyMarkdown": "本课产出：\n- `outputs/skill-svd.md` - 一份技能文档，教你在真实项目中何时以及如何应用 SVD",
+    "keyPoints": [
+      "`outputs/skill-svd.md` - 一份技能文档，教你在真实项目中何时以及如何应用 SVD"
+    ],
+    "commands": []
+  },
+  {
+    "id": "练习",
+    "title": "练习",
+    "bodyMarkdown": "1. 不用幂迭代，从零实现完整 SVD。改为计算 A^T A 的特征分解以得到 V 和奇异值，然后计算 U = A V Sigma^{-1}。比较数值精度与你的幂迭代版本以及 NumPy 的结果。\n\n2. 加载一张真实的灰度图像（或把一张图转成灰度）。在秩 1、5、10、25、50、100 下压缩它。对每个秩，计算压缩比和相对误差。找出图像在视觉上变得可接受的秩。\n\n3. 构建一个小型推荐系统。创建一个 10x8 的用户-电影评分矩阵，包含若干已知条目。用行均值填充缺失条目。计算 SVD 并重建秩 3 近似。用重建矩阵预测缺失评分。验证预测是合理的。\n\n4. 创建一个 100x50 的文档-词矩阵，包含 3 个合成主题。每个主题有 5 个相关词项。加入噪声。应用 SVD 并验证前 3 个奇异值远大于其余。把文档投影到 3D 潜在空间，检查同一主题的文档是否聚在一起。\n\n5. 生成一个干净的低秩矩阵（秩 3，尺寸 50x40），并加入不同水平的高斯噪声（sigma = 0.1, 0.5, 1.0, 2.0）。对每个噪声水平，通过把 k 从 1 扫到 40 并测量相对于干净矩阵的重建误差，找到最优截断秩。画出最优 k 如何随噪声水平变化。",
+    "keyPoints": [
+      "不用幂迭代，从零实现完整 SVD。改为计算 A^T A 的特征分解以得到 V 和奇异值，然后计算 U = A V Sigma^{-1}。比较数值精度与你的幂迭代版本以及 NumPy 的结果。",
+      "加载一张真实的灰度图像（或把一张图转成灰度）。在秩 1、5、10、25、50、100 下压缩它。对每个秩，计算压缩比和相对误差。找出图像在视觉上变得可接受的秩。",
+      "构建一个小型推荐系统。创建一个 10x8 的用户-电影评分矩阵，包含若干已知条目。用行均值填充缺失条目。计算 SVD 并重建秩 3 近似。用重建矩阵预测缺失评分。验证预测是合理的。",
+      "创建一个 100x50 的文档-词矩阵，包含 3 个合成主题。每个主题有 5 个相关词项。加入噪声。应用 SVD 并验证前 3 个奇异值远大于其余。把文档投影到 3D 潜在空间，检查同一主题的文档是否聚在一起。",
+      "生成一个干净的低秩矩阵（秩 3，尺寸 50x40），并加入不同水平的高斯噪声（sigma = 0.1, 0.5, 1.0, 2.0）。对每个噪声水平，通过把 k 从 1 扫到 40 并测量相对于干净矩阵的重建误差，找到最优截断秩。画出最优 k 如何随噪声水平变化。"
+    ],
+    "commands": []
+  },
+  {
+    "id": "关键术语",
+    "title": "关键术语",
+    "bodyMarkdown": "| 术语 | 人们常说 | 它真正的意思 |\n|------|----------------|----------------------|\n| SVD | \"分解任意矩阵\" | 把 A 分解为 U Sigma V^T，其中 U 和 V 正交，Sigma 是对角阵且对角元非负。适用于任何形状的矩阵。 |\n| 奇异值（Singular value） | \"这个成分有多重要\" | Sigma 的第 i 个对角元。度量矩阵沿第 i 个主方向拉伸了多少。总是非负，按降序排列。 |\n| 左奇异向量（Left singular vector） | \"输出方向\" | U 的一列。第 i 个右奇异向量（经 sigma_i 缩放后）映射到输出空间中的方向。 |\n| 右奇异向量（Right singular vector） | \"输入方向\" | V 的一列。输入空间中被矩阵映射到第 i 个左奇异向量的方向（经 sigma_i 缩放后）。 |\n| 截断 SVD（Truncated SVD） | \"低秩近似\" | 只保留前 k 个奇异值及其向量。产生可证明的最优秩 k 近似（Eckart-Young 定理）。 |\n| 秩（Rank） | \"真实维度\" | 非零奇异值的个数。告诉你矩阵实际使用了多少个独立方向。 |\n| 伪逆（Pseudoinverse） | \"广义逆\" | V Sigma+ U^T。对非零奇异值取倒数，零保持为零。为非方阵或奇异矩阵求解最小二乘问题。 |\n| 条件数（Condition number） | \"对误差有多敏感\" | sigma_max / sigma_min。条件数大意味着小的输入变化导致大的输出变化。SVD 直接揭示这一点。 |\n| 隐因子（Latent factor） | \"隐藏变量\" | SVD 发现的低秩空间中的一个维度。在推荐中，隐因子可能对应类型偏好。在 NLP 中，它可能对应一个主题。 |\n| Frobenius 范数（Frobenius norm） | \"矩阵总大小\" | 所有元素平方和的平方根。等于所有奇异值平方和的平方根。用于度量近似误差。 |\n| Eckart-Young 定理 | \"SVD 给出最好的压缩\" | 对任意目标秩 k，截断 SVD 在所有秩 k 矩阵中最小化近似误差。 |\n| 幂迭代（Power iteration） | \"找最大特征向量\" | 反复用矩阵乘一个随机向量并归一化。收敛到最大特征值对应的特征向量。许多 SVD 算法的基本构件。 |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "延伸阅读",
+    "title": "延伸阅读",
+    "bodyMarkdown": "- [Gilbert Strang: Linear Algebra and Its Applications, Chapter 7](https://math.mit.edu/~gs/linearalgebra/) - 带应用的 SVD 彻底处理\n- [3Blue1Brown: But what is the SVD?](https://www.youtube.com/watch?v=vSczTbgc8Rc) - SVD 的几何直觉\n- [We Recommend a Singular Value Decomposition](https://www.ams.org/publicoutreach/feature-column/fcarc-svd) - 美国数学学会的通俗概览\n- [Netflix Prize and Matrix Factorization](https://sifter.org/~simon/journal/20061211.html) - Simon Funk 关于推荐系统 SVD 的原始博客\n- [Latent Semantic Analysis](https://en.wikipedia.org/wiki/Latent_semantic_analysis) - SVD 最早的 NLP 应用\n- [Numerical Linear Algebra by Trefethen and Bau](https://people.maths.ox.ac.uk/trefethen/text.html) - 理解 SVD 算法及其数值性质的黄金标准",
+    "keyPoints": [
+      "[Gilbert Strang: Linear Algebra and Its Applications, Chapter 7](https://math.mit.edu/~gs/linearalgebra/) - 带应用的 SVD 彻底处理",
+      "[3Blue1Brown: But what is the SVD?](https://www.youtube.com/watch?v=vSczTbgc8Rc) - SVD 的几何直觉",
+      "[We Recommend a Singular Value Decomposition](https://www.ams.org/publicoutreach/feature-column/fcarc-svd) - 美国数学学会的通俗概览",
+      "[Netflix Prize and Matrix Factorization](https://sifter.org/~simon/journal/20061211.html) - Simon Funk 关于推荐系统 SVD 的原始博客",
+      "[Latent Semantic Analysis](https://en.wikipedia.org/wiki/Latent_semantic_analysis) - SVD 最早的 NLP 应用",
+      "[Numerical Linear Algebra by Trefethen and Bau](https://people.maths.ox.ac.uk/trefethen/text.html) - 理解 SVD 算法及其数值性质的黄金标准"
+    ],
+    "commands": []
+  }
+]

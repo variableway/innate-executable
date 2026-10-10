@@ -1,0 +1,22 @@
+{
+  "id": "09-reinforcement-learning/08-ppo",
+  "slug": "08-ppo",
+  "phase": "09-reinforcement-learning",
+  "order": 8,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Proximal Policy Optimization (PPO)",
+    "zh": ""
+  },
+  "hook": "A2C throws away each rollout after one update. PPO wraps the policy gradient in a clipped importance ratio so you can do 10+ epochs on the same data without the policy exploding. Schulman et al. (2017). Still the default policy-gradient algorithm in 2026.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 06 (REINFORCE)",
+    "Phase 9 · 07 (Actor-Critic)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

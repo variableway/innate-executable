@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/11-planning-htn-and-evolutionary",
+  "slug": "11-planning-htn-and-evolutionary",
+  "phase": "14-agent-engineering",
+  "order": 11,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Planning with HTN and Evolutionary Search",
+    "zh": ""
+  },
+  "hook": "Symbolic planning handles the cases where the plan is provably correct. Evolutionary code search handles the cases where the fitness function is machine-checkable. ChatHTN (2025) and AlphaEvolve (2025) show what each unlocks when paired with an LLM.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 02 (ReWOO and Plan-and-Execute)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

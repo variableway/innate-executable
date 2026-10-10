@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/07-semantic-segmentation-unet",
+  "slug": "07-semantic-segmentation-unet",
+  "phase": "04-computer-vision",
+  "order": 7,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Semantic Segmentation — U-Net",
+    "zh": ""
+  },
+  "hook": "Segmentation is classification at every pixel. U-Net makes it work by pairing a downsampling encoder with an upsampling decoder and wiring skip connections between them.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 03 (CNNs)",
+    "Phase 4 Lesson 04 (Image Classification)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

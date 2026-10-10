@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/67-query-rewriting-hyde",
+  "slug": "67-query-rewriting-hyde",
+  "phase": "19-capstone-projects",
+  "order": 67,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Query Rewriting: HyDE, Multi-Query, and Decomposition",
+    "zh": ""
+  },
+  "hook": "The query the user types is not the query your retriever wants. Rewriting bridges the gap before retrieval, so the index sees something closer to what the answer looks like.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 lessons 04 (embeddings)",
+    "06 (RAG); Phase 19 Track B foundations (lessons 20-29); Phase 19 lessons 64 and 65"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

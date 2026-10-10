@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/13-question-answering",
+  "slug": "13-question-answering",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 13,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Question Answering Systems",
+    "zh": ""
+  },
+  "hook": "Three systems shaped modern QA. Extractive found spans. Retrieval-augmented grounded them in documents. Generative produced answers. Every modern AI assistant is a mix of the three.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 11 (Machine Translation)",
+    "Phase 5 · 10 (Attention Mechanism)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

@@ -1,0 +1,99 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Hierarchical Architecture and Its Failure Mode\n\n> Hierarchical is supervisor nested. Manager agents over sub-managers over workers. CrewAI `Process.hierarchical` is the textbook version: a `manager_llm` dynamically delegates tasks and validates outputs. The LangGraph equivalent is `create_supervisor(create_supervisor(...))`. It is the natural pattern when the task is a real org chart. It is also the pattern most likely to collapse into managerial looping — manager agents assign work poorly, misinterpret sub-outputs, or fail to reach consensus. Sequential often beats it.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 16 · 05 (Supervisor Pattern)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "problem",
+    "title": "Problem",
+    "bodyMarkdown": "Once the supervisor pattern clicks, the natural next step is \"what if the workers are themselves supervisors?\" Teams have sub-teams; companies have departments of departments. Hierarchical architectures mirror that.\n\nThe issue: LLM managers are not the same as human managers. A human manager has stable priors about what their reports know. An LLM manager re-reasons the org every turn from whatever is in its context. Tiny drift in that context, and the whole tree misallocates work.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "concept",
+    "title": "Concept",
+    "bodyMarkdown": "### The shape\n\n```\n                 Manager\n                 ┌─────┐\n                 └──┬──┘\n           ┌────────┴────────┐\n           ▼                 ▼\n       Sub-Mgr A         Sub-Mgr B\n       ┌─────┐           ┌─────┐\n       └──┬──┘           └──┬──┘\n         ┌┴──┬──┐          ┌┴──┐\n         ▼   ▼  ▼          ▼   ▼\n       W1  W2  W3         W4  W5\n```\n\nEvery internal node plans, delegates, and synthesizes. Only leaves do work.\n\n### Where it shines\n\n- **Clear org mapping.** If the real task is departmental (\"legal review the doc, finance review the doc, engineering review the doc, then summarize for exec\"), the hierarchy is explicit.\n- **Local summarization.** Each sub-manager synthesizes its team's output before the top manager sees it. Top manager sees three sub-manager summaries, not fifteen worker outputs.\n\n### Where it breaks\n\nThree failure modes the 2026 post-mortems keep finding:\n\n1. **Task assignment error.** The manager reads the goal, hallucinates a decomposition, and delegates to the wrong sub-manager. Because the sub-manager obediently works on what it was given, the error only surfaces at the top synthesis — one level removed from where a human could have caught it.\n2. **Output misinterpretation.** Sub-manager returns \"unable to verify claim X.\" Top manager summarizes as \"claim X not confirmed.\" Meaning drifts at every level.\n3. **Consensus loops.** Two sub-managers disagree; top manager asks them to reconcile; they re-delegate down; workers re-run; sub-managers return slightly different answers; loop. CrewAI's `Process.hierarchical` guards against this with step limits, but the limit itself is now a hyperparameter.\n\n### The deciding question\n\nSequential (linear pipeline) vs hierarchical: does your task actually have independent sub-teams, or is it one linear flow pretending to be a tree? If the latter, use sequential. If the former, use hierarchical but budget explicit reconciliation rules.\n\n### Role-framework implementation\n\nCrewAI's `Process.hierarchical` wires a manager LLM over specialist crews. The manager:\n\n- receives the top-level task,\n- assigns subtasks to crews,\n- evaluates crew outputs,\n- decides whether to accept, re-delegate, or iterate.\n\nDocumentation: https://docs.crewai.com/en/introduction (look for \"Hierarchical Process\" under Core Concepts).\n\n### Graph-framework implementation\n\nLangGraph uses nested `create_supervisor` calls. The inner supervisor has its own graph; the outer supervisor treats the inner graph as an opaque node. This is cleaner than CrewAI for debugging (you can step through each graph separately) but harder to express dynamic reshaping of the tree.\n\nReference: https://reference.langchain.com/python/langgraph-supervisor.\n\n```figure\nswarm-hierarchy-token\n```",
+    "keyPoints": [
+      "Clear org mapping.: If the real task is departmental (\"legal review the doc, finance review the doc, engineering review the doc, then summarize for exec\"), the hierarchy is explicit.",
+      "Local summarization.: Each sub-manager synthesizes its team's output before the top manager sees it. Top manager sees three sub-manager summaries, not fifteen worker outputs.",
+      "Output misinterpretation.",
+      "receives the top-level task,",
+      "assigns subtasks to crews,",
+      "evaluates crew outputs,"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "                 Manager\n                 ┌─────┐\n                 └──┬──┘\n           ┌────────┴────────┐\n           ▼                 ▼\n       Sub-Mgr A         Sub-Mgr B\n       ┌─────┐           ┌─────┐\n       └──┬──┘           └──┬──┘\n         ┌┴──┬──┐          ┌┴──┐\n         ▼   ▼  ▼          ▼   ▼\n       W1  W2  W3         W4  W5"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` runs a 3-level hierarchy:\n\n- top manager: splits a task into \"engineering\" and \"legal\" branches,\n- engineering sub-manager: splits into \"frontend\" and \"backend\" workers,\n- legal sub-manager: one worker.\n\nDemo contrasts happy path (everyone agrees) against a **perturbed path** where the top manager's decomposition mislabels \"legal\" as \"finance\" and watches the error cascade — the sub-manager obediently does finance work, the top synthesizer reports finance findings, the original legal question goes unanswered.\n\nRun:\n\n```\npython3 code/main.py\n```\n\nOutput shows both paths with a clear side-by-side of \"what was asked\" vs \"what was delivered.\"",
+    "keyPoints": [
+      "top manager: splits a task into \"engineering\" and \"legal\" branches,",
+      "engineering sub-manager: splits into \"frontend\" and \"backend\" workers,",
+      "legal sub-manager: one worker."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`outputs/skill-hierarchy-fitness.md` evaluates whether a given task should use hierarchical, sequential, or flat supervisor. Inputs: task description, org structure, reconciliation budget. Output: pattern recommendation with the specific failure modes to guard against.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "If you ship hierarchical:\n\n- **Cap tree depth at 2.** Three levels already hides most errors from observability.\n- **Explicit reconciliation budget.** Set max rounds before the top manager must commit. Usually 2.\n- **Provenance on every synthesis.** Each node's summary must cite which leaf outputs produced it.\n- **Alert on decomposition drift.** Log the manager's decomposition per step; diff against the user query. If the decomposition no longer covers the query, fire an alert.",
+    "keyPoints": [
+      "Cap tree depth at 2.: Three levels already hides most errors from observability.",
+      "Explicit reconciliation budget.: Set max rounds before the top manager must commit. Usually 2.",
+      "Provenance on every synthesis.: Each node's summary must cite which leaf outputs produced it.",
+      "Alert on decomposition drift.: Log the manager's decomposition per step; diff against the user query. If the decomposition no longer covers the query, fire an alert."
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Run `code/main.py` and compare happy vs perturbed. How many levels of manager hand-off does it take before the top output fully diverges from the user's question?\n2. Add a third level (top → sub → sub-sub → worker). Measure how often the perturbed path corrects itself vs fully diverges as depth grows.\n3. Implement a \"canary\" worker at each sub-manager that is always asked the original user question unchanged. Use the canary answer to detect decomposition drift. How should the manager react when the canary disagrees with the synthesized answer?\n4. Read CrewAI's `Process.hierarchical` docs. Identify one concrete guardrail CrewAI applies (step limit, manager_llm constraint) and describe what failure mode it targets.\n5. Compare nested LangGraph supervisors to CrewAI hierarchical. Which makes reconciliation loops cheaper to detect?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| Hierarchical | \"Org chart pattern\" | Supervisors over supervisors; only leaves do work. |\n| Manager LLM | \"The boss\" | The LLM that decomposes, assigns, and validates at an internal node. |\n| Decomposition drift | \"The boss lost the plot\" | Top manager's split no longer covers the original question. |\n| Reconciliation loop | \"Endless meetings\" | Sub-managers disagree; top re-delegates; workers re-run; loop until budget exhausted. |\n| Depth-2 ceiling | \"Don't go deeper than 2 levels\" | Empirical guardrail: 3+ levels collapses observability. |\n| Canary question | \"Ground truth at every level\" | A worker that is always asked the original query unchanged, to detect drift. |\n| Provenance chain | \"Who said what\" | Trace from each synthesis back to the leaf outputs that produced it. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [CrewAI introduction — Process.hierarchical](https://docs.crewai.com/en/introduction) — textbook hierarchical with a manager LLM\n- [LangGraph supervisor reference](https://reference.langchain.com/python/langgraph-supervisor) — nested supervisor via `create_supervisor`\n- [Anthropic engineering — Research system](https://www.anthropic.com/engineering/multi-agent-research-system) — why Anthropic deliberately chose flat supervisor over hierarchical\n- [Cemri et al. — Why Do Multi-Agent LLM Systems Fail?](https://arxiv.org/abs/2503.13657) — MAST taxonomy; section on coordination failures documents decomposition drift",
+    "keyPoints": [
+      "[CrewAI introduction — Process.hierarchical](https://docs.crewai.com/en/introduction) — textbook hierarchical with a manager LLM",
+      "[LangGraph supervisor reference](https://reference.langchain.com/python/langgraph-supervisor) — nested supervisor via `create_supervisor`"
+    ],
+    "commands": []
+  }
+]

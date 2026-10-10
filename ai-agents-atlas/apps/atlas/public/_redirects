@@ -1,0 +1,7 @@
+# Friendly redirects for legacy paths.
+/atlas / 301
+/home / 301
+/sitemap /sitemap-index.xml 301
+
+# Single-page fallback for any 404s — Astro outputs /404.html.
+/go/* /go/:splat 200

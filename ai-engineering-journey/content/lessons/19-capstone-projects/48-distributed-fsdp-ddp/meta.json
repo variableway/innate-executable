@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/48-distributed-fsdp-ddp",
+  "slug": "48-distributed-fsdp-ddp",
+  "phase": "19-capstone-projects",
+  "order": 48,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Distributed Data Parallel and FSDP from Scratch",
+    "zh": ""
+  },
+  "hook": "Multi-rank training is two collectives and one rule. Broadcast the parameters at startup, average the gradients after backward, never let the ranks disagree about what step they are on.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 42 to 45"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

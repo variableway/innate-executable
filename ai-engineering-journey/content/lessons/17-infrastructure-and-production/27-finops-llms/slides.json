@@ -1,0 +1,97 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# FinOps for LLMs — Unit Economics and Multi-Tenant Attribution\n\n> Traditional FinOps breaks on LLM spend. Costs are token-transactions, not resource-uptime. Tags don't map — an API call is a transaction, not an asset. Engineering decisions (prompt design, context window, output length) are financial decisions. The 2026 playbook has three attribution dimensions to instrument on day one: per-user (`user_id`) for seat pricing and expansion, per-task (`task_id` + `route`) for product surface cost and prioritization, per-tenant (`tenant_id`) for unit economics and renewal. Four token layers — prompt, tool, memory, response — one bucket hides spend. Enforcement ladder for multi-tenant products: rate limits per tenant (2-3x expected peak, clear 429 + retry-after); daily spend cap (1.5-3x contracted ceiling; triggers rate tightening + alert); kill switches on spend z-score > 4 (auto-pause + page on-call). Attribution patterns: tag-and-aggregate, telemetry-joiner (trace-ID → billing; highest accuracy), sampling-and-extrapolation, model-based allocation, event-sourced, real-time streaming. Unit metric: cost per resolved query, cost per generated artifact — not $/M tokens. Retroactive tagging always misses; instrument at request creation.\n\n**Type:** Learn\n**Languages:** Python (stdlib, toy cost-attribution simulator with kill switch)\n**Prerequisites:** Phase 17 · 13 (Observability), Phase 17 · 14 (Caching)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Explain why traditional FinOps (tags + tiers) breaks on LLM spend and name the three new attribution dimensions.\n- Enumerate the four token layers (prompt, tool, memory, response) and why single-bucket billing hides cost.\n- Design an enforcement ladder (rate → spend cap → kill switch) for a multi-tenant product.\n- Pick a unit metric (cost per resolved query / artifact) instead of $/M tokens.",
+    "keyPoints": [
+      "Explain why traditional FinOps (tags + tiers) breaks on LLM spend and name the three new attribution dimensions.",
+      "Enumerate the four token layers (prompt, tool, memory, response) and why single-bucket billing hides cost.",
+      "Design an enforcement ladder (rate → spend cap → kill switch) for a multi-tenant product.",
+      "Pick a unit metric (cost per resolved query / artifact) instead of $/M tokens."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Your bill says $40,000. You don't know:\n- Which tenant spent it.\n- Which product feature drove it.\n- Whether any individual user was abusive.\n- Whether prompt bloat, tool calls, or memory amplification was the culprit.\n\nTag-and-aggregate on provider-side works for cloud resources (EC2, S3) where tags propagate to line items. LLM API calls do not auto-tag — you have to stamp user/task/tenant at the call site and carry through. Retroactive attribution always misses edge cases.",
+    "keyPoints": [
+      "Which tenant spent it.",
+      "Which product feature drove it.",
+      "Whether any individual user was abusive.",
+      "Whether prompt bloat, tool calls, or memory amplification was the culprit."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Three attribution dimensions\n\n**Per-user** (`user_id`): who is costing what. Drives seat pricing, expansion conversations, identifies power users.\n\n**Per-task** (`task_id` + `route`): which product surface costs what. Drives feature prioritization, kill-expensive-features decisions.\n\n**Per-tenant** (`tenant_id`): which customer is profitable. Drives unit economics, renewal pricing, tier thresholds.\n\nInstrument all three at call site on day one. Retroactive is always worse.\n\n### Four token layers\n\n| Layer | Example | Typical % of total |\n|-------|---------|---------------------|\n| Prompt | system + user input | 40-60% |\n| Tool | tool-call results fed back | 20-40% (agent workloads) |\n| Memory | prior conversation / retrieved docs | 10-30% |\n| Response | model output | 10-30% |\n\nBucketing all four together makes optimization blind. Break them out in your attribution schema.\n\n### Enforcement ladder\n\n1. **Rate limit** per tenant. 2-3x expected peak. Return 429 with `Retry-After`. Tenant sees friction; no surprise bill.\n\n2. **Daily spend cap** per tenant. 1.5-3x contracted ceiling. Trigger: tighten rate limit + alert customer-success.\n\n3. **Kill switch** on spend z-score > 4 relative to tenant baseline. Auto-pause tenant; page on-call; escalate to ops + CS.\n\n### Attribution patterns\n\n- **Tag-and-aggregate**: stamp metadata headers; aggregate later. Simple; rough.\n- **Telemetry joiner**: join traces to billing via trace IDs. Highest accuracy. What mature teams do.\n- **Sampling + extrapolation**: sample 5-10%, multiply. Cost-effective for rough spend; misses tails.\n- **Model-based allocation**: regression to infer cost driver. For legacy data without tags.\n- **Event-sourced**: cost as events in a stream (Kafka / Kinesis). Real-time.\n- **Real-time streaming**: dashboard updates sub-second.\n\n### Cost per X is the unit metric\n\n$/M tokens is vendor speak. Product metrics:\n\n- Cost per resolved support ticket.\n- Cost per generated article.\n- Cost per successful agent task.\n- Cost per user-session-minute.\n\nTie cost to a product outcome. Otherwise optimization is unanchored.\n\n### Cost attribution trace shape\n\n```\ntrace_id: abc123\n  user_id: u_42\n  tenant_id: t_7\n  task_id: task_classify_doc\n  route: model_haiku\n  layers:\n    prompt_tokens: 1800\n    tool_tokens: 600\n    memory_tokens: 400\n    response_tokens: 150\n  cost_usd: 0.0135\n  cached_input: true\n  batch: false\n```\n\nEmit on every call. Store in data lake. Aggregate per dimension. Phase 17 · 13 observability stack is where this lives.\n\n### The compounded-savings stack\n\nStack: cache + batch + route + gateway. With all four:\n- Cache L2 (Phase 17 · 14): ~10x cheaper input.\n- Batch (Phase 17 · 15): 50% off.\n- Route to cheap model (Phase 17 · 16): 60% cost reduction.\n- Gateway efficiency (Phase 17 · 19): redundancy + retries.\n\nBest-case stacked: ~5-10% of naive baseline. Most teams have 2-3 levers engaged; few stack all four.\n\n### Numbers you should remember\n\n- Attribution dimensions: per-user, per-task, per-tenant.\n- Four token layers: prompt, tool, memory, response.\n- Kill switch: spend z-score > 4.\n- Unit metric: cost per resolved query, not $/M tokens.\n- Stacked optimizations: ~5-10% of baseline possible.\n\n```figure\ni4-spend-ladder\n```",
+    "keyPoints": [
+      "Per-user",
+      "Per-task",
+      "Per-tenant",
+      "Rate limit",
+      "Daily spend cap",
+      "Kill switch"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "trace_id: abc123\n  user_id: u_42\n  tenant_id: t_7\n  task_id: task_classify_doc\n  route: model_haiku\n  layers:\n    prompt_tokens: 1800\n    tool_tokens: 600\n    memory_tokens: 400\n    response_tokens: 150\n  cost_usd: 0.0135\n  cached_input: true\n  batch: false"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`code/main.py` simulates a multi-tenant LLM service with the three-tier enforcement ladder. Injects an abusive tenant and demonstrates the kill switch firing.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces `outputs/skill-finops-plan.md`. Given product and scale, designs the attribution schema and enforcement ladder.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Run `code/main.py`. At what z-score does the kill switch fire? How do you pick the threshold?\n2. Design a per-tenant, per-task cost dashboard. What are the 5 views you build first?\n3. Your largest tenant is unit-economics-negative. Propose three interventions ordered by customer impact.\n4. Compute cost per resolved ticket for a support product: 3M tokens/ticket, ~800 tickets/day, GPT-5 cached rate.\n5. Argue whether retroactive tagging can ever work. When is it acceptable?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| Per-user attribution | \"user-level cost\" | `user_id` stamped on every call |\n| Per-task attribution | \"feature cost\" | `task_id` + `route` identify product surface |\n| Per-tenant attribution | \"customer cost\" | `tenant_id`; drives unit economics |\n| Four token layers | \"cost layers\" | prompt + tool + memory + response |\n| Rate limit | \"429 guard\" | Per-tenant ceiling enforced at gateway |\n| Daily spend cap | \"daily ceiling\" | Tenant-scoped budget with alert |\n| Kill switch | \"auto-pause\" | Spend z-score > 4 triggers auto-suspension |\n| Cost per resolved | \"product unit metric\" | Cost tied to product outcome, not tokens |\n| Telemetry joiner | \"trace-to-billing\" | Highest-accuracy attribution pattern |\n| Stacked optimization | \"cache+batch+route+gateway\" | Compounding savings to ~5-10% baseline |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [FinOps Foundation — FinOps for AI Overview](https://www.finops.org/wg/finops-for-ai-overview/)\n- [FinOps School — Cost per Unit 2026 Guide](https://finopsschool.com/blog/cost-per-unit/)\n- [Digital Applied — LLM Agent Cost Attribution 2026](https://www.digitalapplied.com/blog/llm-agent-cost-attribution-guide-production-2026)\n- [PointFive — Managed LLMs in Azure OpenAI](https://www.pointfive.co/blog/finops-for-ai-economics-of-managed-llms-in-azure-open-ai)",
+    "keyPoints": [
+      "[FinOps Foundation — FinOps for AI Overview](https://www.finops.org/wg/finops-for-ai-overview/)",
+      "[FinOps School — Cost per Unit 2026 Guide](https://finopsschool.com/blog/cost-per-unit/)",
+      "[Digital Applied — LLM Agent Cost Attribution 2026](https://www.digitalapplied.com/blog/llm-agent-cost-attribution-guide-production-2026)",
+      "[PointFive — Managed LLMs in Azure OpenAI](https://www.pointfive.co/blog/finops-for-ai-economics-of-managed-llms-in-azure-open-ai)"
+    ],
+    "commands": []
+  }
+]

@@ -1,0 +1,188 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { Card, CardHeader, CardTitle, CardDescription } from '@atlas/ui/components/ui/card';
+import { Badge } from '@atlas/ui/components/ui/badge';
+import sidebar from '@/content/docs/_meta.json';
+import type { SidebarConfig, SidebarNode } from '@/lib/docs-types';
+import { getLocalizedEntries } from '@/i18n/content';
+import { localePath } from '@/i18n/utils';
+import { useTranslations, type Locale, type UiKey } from '@/i18n/ui';
+
+/**
+ * Documentation index — presented as a roadmap. The docs form a
+ * complete contributor course: follow the stages top to bottom, each
+ * node links to a page. Order and grouping are declared in the
+ * `stages` array below; page metadata comes from `docs/_meta.json`
+ * plus each file's frontmatter. Shared by both locale shells.
+ */
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+interface DocEntry {
+  slug: string;
+  title: string;
+  description?: string;
+  href: string;
+  group?: string;
+}
+
+function flatten(nodes: SidebarNode[], prefix = ''): DocEntry[] {
+  const out: DocEntry[] = [];
+  for (const node of nodes) {
+    if (typeof node === 'string') {
+      out.push({ slug: node, title: node, href: `/docs/${prefix}${node}` });
+    } else if ('pages' in node && Array.isArray(node.pages)) {
+      const nextPrefix = `${prefix}${node.path ?? ''}/`;
+      for (const child of flatten(node.pages, nextPrefix)) {
+        out.push({ ...child, group: node.title });
+      }
+    }
+  }
+  return out;
+}
+
+const all = flatten((sidebar as SidebarConfig).pages);
+
+const titles: Record<string, string> = {
+  'getting-started': 'Getting started',
+  architecture: 'Architecture',
+  'six-layer-model': 'The six-layer model',
+  authoring: 'Authoring content',
+  'frontmatter-schema': 'Frontmatter schema reference',
+  'interactive-widgets': 'Interactive widgets',
+  publishing: 'Publishing & deployment',
+  feedback: 'Feedback & governance',
+  troubleshooting: 'Troubleshooting',
+  '0001-astro-over-next': 'ADR-0001 · Astro over Next',
+  '0002-use-cases-camelcase': 'ADR-0002 · Use camelCase for useCases',
+  '0003-sitemap-3-2-1': 'ADR-0003 · Pin @astrojs/sitemap 3.2.1',
+  '0004-pagefind-runtime-detection': 'ADR-0004 · Runtime Pagefind detection',
+  '0005-zustand-persist': 'ADR-0005 · Zustand + persist for state',
+};
+
+// Augment slugs from the actual content collection (locale-aware, with
+// fallback) so we can show the description from each file's frontmatter.
+const docs = await getLocalizedEntries('docs', locale);
+const meta = new Map<string, { title?: string; description?: string }>(
+  docs.map((d) => [d.slug, d.entry.data]),
+);
+
+const enriched = all.map((entry) => {
+  const tail = entry.slug.split('/').pop() ?? entry.slug;
+  const data = meta.get(entry.slug) ?? meta.get(tail);
+  return {
+    ...entry,
+    title: (titles[tail] ?? data?.title ?? tail) as string,
+    description: data?.description,
+  };
+});
+
+const byHref = new Map(enriched.map((e) => [e.href, e]));
+
+// The course path. Each stage is one leg of the journey; `refs` marks
+// reference material rather than sequential steps.
+const stageDefs: Array<{ key: UiKey; hrefs: string[]; refs?: boolean }> = [
+  { key: 'docs.stage.1.title', hrefs: ['/docs/getting-started'] },
+  { key: 'docs.stage.2.title', hrefs: ['/docs/architecture', '/docs/six-layer-model'] },
+  {
+    key: 'docs.stage.3.title',
+    hrefs: ['/docs/authoring', '/docs/frontmatter-schema', '/docs/interactive-widgets'],
+  },
+  {
+    key: 'docs.stage.4.title',
+    hrefs: ['/docs/publishing', '/docs/feedback', '/docs/troubleshooting'],
+  },
+  {
+    key: 'docs.stage.5.title',
+    hrefs: [
+      '/docs/decisions/0001-astro-over-next',
+      '/docs/decisions/0002-use-cases-camelcase',
+      '/docs/decisions/0003-sitemap-3-2-1',
+      '/docs/decisions/0004-pagefind-runtime-detection',
+      '/docs/decisions/0005-zustand-persist',
+    ],
+    refs: true,
+  },
+];
+
+const goalKey = (key: UiKey) => key.replace('.title', '.goal') as UiKey;
+
+let step = 0;
+const roadmap = stageDefs.map((stage) => ({
+  title: t(stage.key),
+  goal: t(goalKey(stage.key)),
+  refs: stage.refs,
+  pages: stage.hrefs
+    .map((href) => byHref.get(href))
+    .filter((page): page is NonNullable<typeof page> => Boolean(page))
+    .map((page) => ({ ...page, step: stage.refs ? null : ++step })),
+}));
+---
+
+<BaseLayout title={t('docs.index.title')} description={t('docs.index.lede')}>
+  <header class="space-y-3 border-b border-border pb-8">
+    <p class="text-sm uppercase tracking-wider text-muted-foreground">{t('docs.kicker')}</p>
+    <h1 class="text-4xl font-bold tracking-tight">{t('docs.index.title')}</h1>
+    <p class="max-w-2xl text-lg text-muted-foreground">
+      {t('docs.index.lede')}
+    </p>
+    <div class="flex flex-wrap gap-2 pt-2">
+      <Badge variant="outline">{all.length} {t('docs.badge.pages')}</Badge>
+      <Badge variant="secondary">{stageDefs.length} {t('docs.badge.stages')}</Badge>
+      <Badge variant="secondary">{t('docs.badge.markdown')}</Badge>
+    </div>
+  </header>
+
+  <section class="mt-12 space-y-12">
+    {roadmap.map((stage, stageIndex) => (
+      <div>
+        <div class="mb-5 flex items-center gap-3">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border bg-card text-sm font-semibold">
+            {stageIndex + 1}
+          </span>
+          <div>
+            <h2 class="text-xl font-semibold tracking-tight">{stage.title}</h2>
+            <p class="text-sm text-muted-foreground">{stage.goal}</p>
+          </div>
+          {stage.refs && <Badge variant="outline" className="ml-1">{t('docs.reference')}</Badge>}
+        </div>
+
+        <ol class="relative ml-[1.125rem] space-y-3 border-l border-border pl-8">
+          {stage.pages.map((page) => (
+            <li class="relative">
+              <span
+                aria-hidden="true"
+                class="absolute top-5 grid h-5 w-5 place-items-center rounded-full border border-border bg-background"
+                style="left: -2.625rem;"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-primary" />
+              </span>
+              <a href={localePath(locale, page.href)} class="block">
+                <Card className="transition-colors hover:border-primary/40">
+                  <CardHeader>
+                    <div class="flex items-baseline gap-3">
+                      {page.step !== null && (
+                        <span class="shrink-0 font-mono text-xs text-muted-foreground">
+                          {String(page.step).padStart(2, '0')}
+                        </span>
+                      )}
+                      <div class="space-y-1.5">
+                        <CardTitle className="text-base">{page.title}</CardTitle>
+                        {page.description && <CardDescription>{page.description}</CardDescription>}
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    ))}
+  </section>
+</BaseLayout>

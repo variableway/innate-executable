@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/59-vit-transformer",
+  "slug": "59-vit-transformer",
+  "phase": "19-capstone-projects",
+  "order": 59,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Vision Transformer Encoder",
+    "zh": ""
+  },
+  "hook": "Patches alone do not see. A 12-layer pre-LN transformer with 12 attention heads turns the sequence of patch tokens into a sequence of contextual tokens, with the CLS token pooling whole-image features in its final hidden state. This lesson is the engine room of every modern vision-language model.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37 (Track B foundations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

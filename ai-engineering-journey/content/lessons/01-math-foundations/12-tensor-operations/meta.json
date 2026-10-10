@@ -1,0 +1,22 @@
+{
+  "id": "01-math-foundations/12-tensor-operations",
+  "slug": "12-tensor-operations",
+  "phase": "01-math-foundations",
+  "order": 12,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Tensor Operations",
+    "zh": "张量运算"
+  },
+  "hook": "Tensors are the common language between data and deep learning. Every image, every sentence, every gradient flows through them.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01 (Linear Algebra Intuition)",
+    "02 (Vectors",
+    "Matrices & Operations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": false
+}

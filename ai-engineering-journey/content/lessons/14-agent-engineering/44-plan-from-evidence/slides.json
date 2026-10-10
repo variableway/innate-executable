@@ -1,0 +1,119 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Build an Evidence-Backed Execution Plan\n\n> A plan is not a prettier to-do list. It is a dependency graph in which every change has a reason and every terminal node has proof.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lesson 43\n**Time:** ~65 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Convert a task frame into work items with evidence and proof.\n- Model ordering as dependencies instead of prose sequence.\n- Detect missing facts, unknown dependencies, and cycles before editing.\n- Separate steps that can run together from steps that must wait.",
+    "keyPoints": [
+      "Convert a task frame into work items with evidence and proof.",
+      "Model ordering as dependencies instead of prose sequence.",
+      "Detect missing facts, unknown dependencies, and cycles before editing.",
+      "Separate steps that can run together from steps that must wait."
+    ],
+    "commands": []
+  },
+  {
+    "id": "why-agent-plans-fail",
+    "title": "Why Agent Plans Fail",
+    "bodyMarkdown": "Weak plans repeat the request in future tense:\n\n1. Update the API.\n2. Add tests.\n3. Update documentation.\n\nNothing in that list says what was found, why those files are correct, which contract changes first, or what can happen concurrently. An agent can follow every step and still create rework.\n\nA strong plan makes five commitments for each work item:\n\n| Commitment | Purpose |\n|---|---|\n| Identifier | Stable reference for dependencies and handoff |\n| Change | The smallest behavior or contract change |\n| Evidence | Repository facts that justify the change |\n| Dependencies | Work that must be true first |\n| Proof | The exact check that closes the item |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "plan-the-contract-before-its-implementations",
+    "title": "Plan the Contract Before Its Implementations",
+    "bodyMarkdown": "When multiple surfaces depend on the same behavior, define the behavior first. Tests, implementation, documentation, and integration can then share one contract instead of inventing four versions.\n\n```mermaid\nflowchart LR\n  C[Contract] --> I[Implementation]\n  C --> D[Documentation]\n  I --> G[Integration gate]\n  D --> G\n```\n\nThe graph exposes safe concurrency. Implementation and documentation can proceed together after the contract is fixed. Integration waits for both.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "evidence-changes-the-plan",
+    "title": "Evidence Changes the Plan",
+    "bodyMarkdown": "Repository evidence is not decoration. It should be capable of changing the work:\n\n- An existing helper removes a planned new abstraction.\n- A compatibility test forces a migration step.\n- A deployment constraint moves a schema change into another task.\n- A public response type changes the order of implementation and documentation.\n\nIf the evidence cannot change the plan, it is probably not evidence for that decision.",
+    "keyPoints": [
+      "An existing helper removes a planned new abstraction.",
+      "A compatibility test forces a migration step.",
+      "A deployment constraint moves a schema change into another task.",
+      "A public response type changes the order of implementation and documentation."
+    ],
+    "commands": []
+  },
+  {
+    "id": "design-for-interruption",
+    "title": "Design for Interruption",
+    "bodyMarkdown": "Coding-agent sessions end unexpectedly. A resumable plan has work items small enough that another session can determine:\n\n- which item is complete;\n- which proof ran;\n- which artifacts changed;\n- which dependencies are now unblocked;\n- what the next safe item is.\n\nDo not encode state only in checked boxes inside a chat. Store the plan next to the work.",
+    "keyPoints": [
+      "which item is complete;",
+      "which proof ran;",
+      "which artifacts changed;",
+      "which dependencies are now unblocked;",
+      "what the next safe item is."
+    ],
+    "commands": []
+  },
+  {
+    "id": "plan-validation",
+    "title": "Plan Validation",
+    "bodyMarkdown": "Reject the plan before execution when:\n\n- an identifier is duplicated;\n- a work item has no evidence;\n- a work item has no proof;\n- a dependency names an unknown item;\n- the graph contains a cycle;\n- the first irreversible action occurs before the relevant uncertainty is resolved.\n\nThe first five checks are mechanical. The last requires judgment and should be called out explicitly.",
+    "keyPoints": [
+      "an identifier is duplicated;",
+      "a work item has no evidence;",
+      "a work item has no proof;",
+      "a dependency names an unknown item;",
+      "the graph contains a cycle;",
+      "the first irreversible action occurs before the relevant uncertainty is resolved."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` models work items, validates their receipts, computes execution waves with a topological sort, and writes `outputs/evidence-plan.json`.\n\nRun:\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nThe example produces three waves. Contract definition runs first. Implementation and documentation run together. The integration gate runs last.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "use-it-with-a-coding-agent",
+    "title": "Use It with a Coding Agent",
+    "bodyMarkdown": "Ask the agent to produce the plan before it changes files. Review the plan for three things:\n\n1. Every path and behavior claim has a repository receipt.\n2. Every item has one clear completion proof.\n3. The graph delays expensive or irreversible work until the uncertainty it depends on is resolved.\n\nApprove the plan, not a vague promise to be careful.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add a migration item that requires explicit human approval.\n2. Create a cycle and explain the hidden product disagreement behind it.\n3. Split one item that has two proof commands.\n4. Add a work item that can run in the second wave without touching either existing branch.\n5. Render the plan as Markdown while keeping JSON as the source of truth.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Nuseibeh and Easterbrook, Requirements Engineering: A Roadmap](https://www.cs.toronto.edu/~sme/papers/2000/ICSE2000.pdf), for the iterative relationship between goals, specifications, agreement, and evolution.\n- [Barry Boehm, A Spiral Model of Software Development and Enhancement](https://dl.acm.org/doi/10.1145/12944.12948), for ordering development around risk resolution rather than a fixed linear sequence.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/evidence-plan.json`. It becomes the delegation contract in the next lesson.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

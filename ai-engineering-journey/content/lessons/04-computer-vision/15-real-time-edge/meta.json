@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/15-real-time-edge",
+  "slug": "15-real-time-edge",
+  "phase": "04-computer-vision",
+  "order": 15,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Real-Time Vision — Edge Deployment",
+    "zh": ""
+  },
+  "hook": "Edge inference is the discipline of getting a 90-accuracy model to run at 30 fps on a device with 2 GB of RAM. Every percentage point of accuracy is traded against milliseconds of latency.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 04 (Image Classification)",
+    "Phase 10 Lesson 11 (Quantization)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

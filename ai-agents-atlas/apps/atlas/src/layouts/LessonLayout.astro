@@ -1,0 +1,129 @@
+---
+import { readTime } from '@/lib/reading';
+import { Badge } from '@atlas/ui/components/ui/badge';
+import { Card } from '@atlas/ui/components/ui/card';
+import BaseLayout from './BaseLayout.astro';
+import { formatDate, cn } from '@/lib/utils';
+import { useTranslations, type Locale } from '@/i18n/ui';
+
+interface LessonMeta {
+  title: string;
+  description: string;
+  author: string;
+  publishedAt: Date;
+  updatedAt?: Date;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  framework: string;
+  industry?: string;
+  tags: string[];
+  duration?: number;
+  prerequisites: string[];
+  objectives: string[];
+}
+
+interface Props {
+  meta: LessonMeta;
+  slug: string;
+  bodyText: string;
+  toc?: { depth: number; slug: string; text: string }[];
+}
+
+const { meta, slug, bodyText, toc = [] } = Astro.props;
+const locale = (Astro.currentLocale ?? 'zh') as Locale;
+const t = useTranslations(locale);
+const readingMin = meta.duration ?? Math.max(1, Math.round(readTime(bodyText).minutes));
+
+const levelTone = {
+  beginner: 'secondary',
+  intermediate: 'outline',
+  advanced: 'default',
+} as const;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'LearningResource',
+  name: meta.title,
+  description: meta.description,
+  author: { '@type': 'Person', name: meta.author },
+  datePublished: meta.publishedAt.toISOString(),
+  dateModified: meta.updatedAt?.toISOString(),
+  educationalLevel: meta.level,
+  timeRequired: `PT${readingMin}M`,
+  inLanguage: 'en',
+  url: new URL(`/lessons/${slug}`, Astro.site).toString(),
+};
+---
+
+<BaseLayout title={meta.title} description={meta.description}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+
+  <article class="mx-auto max-w-4xl">
+    <header class="space-y-4 border-b border-border pb-8">
+      <div class="flex flex-wrap items-center gap-2">
+        <Badge variant={levelTone[meta.level]}>{meta.level}</Badge>
+        <Badge variant="outline">{meta.framework}</Badge>
+        {meta.tags.slice(0, 3).map((t) => (
+          <Badge variant="secondary">{t}</Badge>
+        ))}
+      </div>
+
+      <h1 class="text-3xl font-bold tracking-tight md:text-4xl">
+        {meta.title}
+      </h1>
+      <p class="text-lg text-muted-foreground">{meta.description}</p>
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+        <span>{t('lesson.by')} {meta.author}</span>
+        <span>·</span>
+        <time datetime={meta.publishedAt.toISOString()}>
+          {formatDate(meta.publishedAt, undefined, locale === 'zh' ? 'zh-CN' : 'en-US')}
+        </time>
+        <span>·</span>
+        <span>{readingMin} {t('lesson.minRead')}</span>
+      </div>
+    </header>
+
+    <div class="grid gap-10 py-10 md:grid-cols-[1fr_220px]">
+      <div class="prose prose-lg prose-zinc max-w-none dark:prose-invert prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline">
+        <slot />
+      </div>
+
+      <aside class="hidden text-sm md:block">
+        <div class="sticky top-20 space-y-6">
+          {meta.objectives.length > 0 && (
+            <Card className="p-4">
+              <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('lesson.objectives')}
+              </h3>
+              <ul class="space-y-1.5 text-foreground">
+                {meta.objectives.map((obj) => (
+                  <li class="flex items-start gap-2">
+                    <span aria-hidden="true" class="mt-0.5 text-primary">✓</span>
+                    <span>{obj}</span>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
+          {toc.length > 0 && (
+            <Card className="p-4">
+              <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {t('lesson.onThisPage')}
+              </h3>
+              <ul class="space-y-1.5">
+                {toc.map((item) => (
+                  <li class={cn('text-foreground', item.depth > 2 && 'pl-3 text-muted-foreground')}>
+                    <a href={`#${item.slug}`} class="hover:text-primary">
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+        </div>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>

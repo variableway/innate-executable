@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/18-open-vocab-clip",
+  "slug": "18-open-vocab-clip",
+  "phase": "04-computer-vision",
+  "order": 18,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Open-Vocabulary Vision — CLIP",
+    "zh": ""
+  },
+  "hook": "Train an image encoder and a text encoder together so that matching (image, caption) pairs land at the same point in a shared space. That is the whole trick.",
+  "type": "Build + Use",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 14 (ViT)",
+    "Phase 4 Lesson 17 (Self-Supervised)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

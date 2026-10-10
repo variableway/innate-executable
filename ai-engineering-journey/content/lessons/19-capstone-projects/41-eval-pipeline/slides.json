@@ -1,0 +1,125 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Capstone Lesson 41: Full Evaluation Pipeline\n\n> Training is the part you can monitor with loss curves. Evaluation is the part you have to design. This lesson builds a unified eval pipeline that takes any trained language model, runs four heterogeneous evals on it, aggregates the results into a per-task report, and ships a local mock LLM-as-judge so the loop runs without a network. The four evals cover the dimensions every shipping model needs: language modelling (perplexity), short-form correctness (exact-match), open-form similarity (token F1), and qualitative scoring (judge).\n\n**Type:** Build\n**Languages:** Python (torch, numpy)\n**Prerequisites:** Phase 19 lessons 30-37 (NLP LLM track: tokenizer, embedding table, attention block, transformer body, pre-training loop, checkpointing, generation, perplexity)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Compute held-out perplexity with masked-token accounting on a tiny transformer.\n- Run an exact-match eval on short-form factual prompts.\n- Compute token-level F1 between predicted and reference strings with normalisation.\n- Build a local mock LLM-as-judge that scores model outputs on a 1-5 scale.\n- Aggregate the four evals into a single weighted report with per-task breakdown.",
+    "keyPoints": [
+      "Compute held-out perplexity with masked-token accounting on a tiny transformer.",
+      "Run an exact-match eval on short-form factual prompts.",
+      "Compute token-level F1 between predicted and reference strings with normalisation.",
+      "Build a local mock LLM-as-judge that scores model outputs on a 1-5 scale.",
+      "Aggregate the four evals into a single weighted report with per-task breakdown."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "A single metric never describes a language model. Perplexity says how well the model fits the language distribution but says nothing about whether it answers questions. Exact-match says whether the model produces the gold string but punishes correct paraphrases. Token F1 forgives paraphrase but is fooled by lexical overlap with wrong content. LLM-as-judge captures qualitative dimensions but is expensive and stochastic.\n\nThe pipeline you actually want has all four. Each eval covers a dimension the others miss. Each runs on a different subset of held-out data shaped for that metric. The final report shows the per-task numbers side by side and an aggregate, so a reviewer can see at a glance which trade-offs the model is making.\n\nThis lesson builds that pipeline, end to end, in one file.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "```mermaid\nflowchart LR\n  Model[trained model] --> PPL[perplexity eval<br/>held-out LM]\n  Model --> EM[exact-match eval<br/>factual short-form]\n  Model --> F1[token F1 eval<br/>open-ended]\n  Model --> J[mock judge<br/>1-5 scoring]\n  PPL --> R[Report]\n  EM --> R\n  F1 --> R\n  J --> R\n  R --> A[(aggregate score)]\n```\n\nEach eval is a function from `(model, dataset) -> EvalResult`. The result carries the metric value, per-example details for inspection, and a name for the aggregate. The pipeline composes them with a config that says which evals to run and how to weight them.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "perplexity-properly-counted",
+    "title": "Perplexity, properly counted",
+    "bodyMarkdown": "Perplexity is `exp(mean negative log-likelihood per token)`. The implementation has two traps:\n\n- The mean must be over actual token positions, not over batch * sequence. Padding tokens have to be excluded from the denominator or perplexity will look better than it is.\n- The model predicts the next token, so logits at position `i` predict the token at position `i+1`. Off-by-one mistakes here are silent: the loss still trains, but the metric becomes meaningless.\n\nThe eval computes per-batch sums of `-log p(token)` over non-pad positions and a per-batch token count, then divides at the end. This is numerically safer than averaging per-batch perplexities (which under-weights short sequences) and matches the textbook definition.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exact-match-with-normalisation",
+    "title": "Exact-match, with normalisation",
+    "bodyMarkdown": "The harness normalises both the prediction and the reference before comparing:\n\n- Lowercase.\n- Strip surrounding whitespace.\n- Collapse internal whitespace runs to a single space.\n- Drop trailing terminal punctuation (`.`, `!`, `?`) if both sides differ only by punctuation.\n\nNormalisation makes exact-match useful in practice. A model that says `\"Paris\"` is right; one that says `\"Paris.\"` is also right; one that says `\"  paris  \"` is also right. The metric still requires the answer to be the same string after normalisation.",
+    "keyPoints": [
+      "Lowercase.",
+      "Strip surrounding whitespace.",
+      "Collapse internal whitespace runs to a single space.",
+      "Drop trailing terminal punctuation (`.`, `!`, `?`) if both sides differ only by punctuation."
+    ],
+    "commands": []
+  },
+  {
+    "id": "token-f1-the-right-way",
+    "title": "Token F1, the right way",
+    "bodyMarkdown": "Token F1 is the harmonic mean of precision and recall computed over the bag-of-tokens. Steps:\n\n1. Normalise prediction and reference (same rules as exact-match).\n2. Split each into a list of tokens (whitespace tokenisation).\n3. Count the multiset intersection.\n4. Precision = `intersection_count / len(pred_tokens)`. Recall = `intersection_count / len(ref_tokens)`. F1 = harmonic mean.\n\nIf both prediction and reference are empty, F1 is 1 (vacuous match). If only one is empty, F1 is 0. This pattern matches the SQuAD evaluation reference and produces stable numbers across paraphrases.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "local-mock-llm-as-judge",
+    "title": "Local Mock LLM-as-Judge",
+    "bodyMarkdown": "A real judge is a frontier model behind an API. For this lesson the judge has to run offline. The mock judge is a deterministic scorer that takes an instruction, the model's prediction, and the reference, and returns a score in `{1, 2, 3, 4, 5}` plus a one-line rationale. The scoring rules are explicit:\n\n- 5 if normalised prediction equals normalised reference.\n- 4 if token F1 between prediction and reference is at least 0.8.\n- 3 if token F1 is in `[0.5, 0.8)`.\n- 2 if token F1 is in `[0.2, 0.5)`.\n- 1 otherwise.\n\nThis is not a real judge, but it has the right interface. Swap in a real model later by changing one function. The pipeline does not care.\n\n```mermaid\nflowchart LR\n  Inst[instruction] --> Judge[mock judge]\n  Pred[prediction] --> Judge\n  Ref[reference] --> Judge\n  Judge --> Score[1-5 score]\n  Judge --> Why[rationale]\n```",
+    "keyPoints": [
+      "5 if normalised prediction equals normalised reference.",
+      "4 if token F1 between prediction and reference is at least 0.8.",
+      "3 if token F1 is in `[0.5, 0.8)`.",
+      "2 if token F1 is in `[0.2, 0.5)`.",
+      "1 otherwise."
+    ],
+    "commands": []
+  },
+  {
+    "id": "aggregation",
+    "title": "Aggregation",
+    "bodyMarkdown": "The aggregate is a weighted mean of normalised eval scores. Each eval reports its own number in `[0, 1]`:\n\n- Perplexity: normalise as `1 / (1 + log(perplexity))`. A perplexity of 1 maps to 1, infinity maps to 0.\n- Exact-match: already in `[0, 1]`.\n- Token F1: already in `[0, 1]`.\n- Judge: divide by 5.\n\nWeights are configurable. The default mix is 0.2 perplexity, 0.3 exact-match, 0.3 token F1, 0.2 judge. The choice of weights is a product decision; the lesson exposes the knob so you can experiment.\n\n```figure\ncg-eval-quadrant\n```",
+    "keyPoints": [
+      "Perplexity: normalise as `1 / (1 + log(perplexity))`. A perplexity of 1 maps to 1, infinity maps to 0.",
+      "Exact-match: already in `[0, 1]`.",
+      "Token F1: already in `[0, 1]`.",
+      "Judge: divide by 5."
+    ],
+    "commands": []
+  },
+  {
+    "id": "architecture",
+    "title": "Architecture",
+    "bodyMarkdown": "```mermaid\nflowchart TD\n  Data[(held-out fixtures<br/>LM / EM / F1 / Judge)] --> Suite[EvalSuite]\n  Model[trained model] --> Suite\n  Suite --> PE[perplexity_eval]\n  Suite --> EE[exact_match_eval]\n  Suite --> FE[token_f1_eval]\n  Suite --> JE[judge_eval]\n  PE --> Agg[Aggregator]\n  EE --> Agg\n  FE --> Agg\n  JE --> Agg\n  Agg --> R[FinalReport<br/>per-task + aggregate]\n  R --> JSON[(report.json)]\n  R --> Pretty[stdout table]\n```\n\nThe `EvalSuite` is a thin orchestrator. Each individual eval is a free function that takes `(model, tokenizer, dataset, config)` and returns an `EvalResult`. The `Aggregator` collects results and produces the final report. The demo prints the table and writes a JSON copy that downstream CI can ingest.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-will-build",
+    "title": "What you will build",
+    "bodyMarkdown": "The implementation is one `main.py` plus tests.\n\n1. `TinyGPT`: the same decoder-only architecture used in lessons 38-40, included so the lesson stands alone.\n2. `InstructionTokenizer`: byte tokeniser with INST / RESP / PAD specials.\n3. Four fixtures: an LM corpus, an EM set, an F1 set, and a judge set. Twenty examples each, deterministic.\n4. `perplexity_eval`: returns `EvalResult` with the perplexity value and per-token loss histogram.\n5. `exact_match_eval`: returns mean EM and per-example records.\n6. `token_f1_eval`: returns mean token F1 and per-example records.\n7. `mock_judge` and `judge_eval`: per-example score and rationale, mean score across the set.\n8. `Aggregator.normalise`: per-eval normalisation rule.\n9. `Aggregator.aggregate`: weighted mean and the assembled report.\n10. `run_demo`: trains a tiny model briefly, runs all four evals, prints the report table and writes the JSON, exits zero on success.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "reading-the-report",
+    "title": "Reading the report",
+    "bodyMarkdown": "The report has three layers. The top is the aggregate score. Below it are the four per-eval numbers. Below those are the per-example breakdowns for diagnostics. A failing CI run typically wants the aggregate, but a reviewer chasing a regression wants the per-example breakdown to see which inputs the model got wrong.\n\nThe JSON dump uses stable keys so a CI dashboard can plot trend lines across versions. The pretty-printed table is for humans staring at the terminal after a training run.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "stretch-goals",
+    "title": "Stretch goals",
+    "bodyMarkdown": "- Add a calibration eval: do the model's softmax probabilities match its accuracy? Bucket predictions by confidence and report the empirical accuracy per bucket.\n- Add a robustness eval: tag each example with a perturbation (typo, paraphrase, distractor) and report metric drop per perturbation.\n- Replace the mock judge with a real model behind an HTTP call. The function signature does not change.\n- Add per-task weight learning: instead of fixed weights, fit weights to a target preference order over models.\n\nThe implementation gives you the four evals, the aggregator, and the report. Real evaluation pipelines layer many more dimensions on top; the pattern stays the same: one function per eval, one aggregator, one report.",
+    "keyPoints": [
+      "Add a calibration eval: do the model's softmax probabilities match its accuracy? Bucket predictions by confidence and report the empirical accuracy per bucket.",
+      "Add a robustness eval: tag each example with a perturbation (typo, paraphrase, distractor) and report metric drop per perturbation.",
+      "Replace the mock judge with a real model behind an HTTP call. The function signature does not change.",
+      "Add per-task weight learning: instead of fixed weights, fit weights to a target preference order over models."
+    ],
+    "commands": []
+  }
+]

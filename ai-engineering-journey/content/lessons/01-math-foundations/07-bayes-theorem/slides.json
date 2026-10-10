@@ -1,0 +1,158 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# 贝叶斯定理\n\n> 概率关乎你期待什么。贝叶斯定理关乎你学到什么。\n\n**类型:** Build\n**语言:** Python\n**先修:** Phase 1, Lesson 06 (Probability Fundamentals)\n**时长:** ~75 分钟",
+    "keyPoints": [
+      "类型:",
+      "语言:",
+      "先修:",
+      "时长:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "学习目标",
+    "title": "学习目标",
+    "bodyMarkdown": "- 应用贝叶斯定理，从先验、似然和证据计算后验概率\n- 从零构建一个朴素贝叶斯文本分类器，带拉普拉斯平滑和对数空间计算\n- 比较 MLE 与 MAP 估计，并解释 MAP 如何对应 L2 正则化\n- 用 Beta-二项共轭先验实现序贯贝叶斯更新，用于 A/B 测试",
+    "keyPoints": [
+      "应用贝叶斯定理，从先验、似然和证据计算后验概率",
+      "从零构建一个朴素贝叶斯文本分类器，带拉普拉斯平滑和对数空间计算",
+      "比较 MLE 与 MAP 估计，并解释 MAP 如何对应 L2 正则化",
+      "用 Beta-二项共轭先验实现序贯贝叶斯更新，用于 A/B 测试"
+    ],
+    "commands": []
+  },
+  {
+    "id": "问题",
+    "title": "问题",
+    "bodyMarkdown": "某项医学检测准确率 99%。你检测结果为阳性。你真正患病的概率是多少？\n\n多数人会说 99%。真实答案取决于这种病有多罕见。如果一万人里只有一个患者，阳性结果只给你约 1% 的患病概率。另外 99% 的阳性来自健康人的假阳性。\n\n这不是脑筋急转弯。这就是贝叶斯定理。每个垃圾邮件过滤器、每个医学诊断、每个量化不确定性的机器学习模型，用的都是这套推理。你从一个信念出发，看到证据，然后更新。\n\n如果你不理解这一点就去构建 ML 系统，你会误读模型输出、设定糟糕的阈值，并交付过度自信的预测。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "概念",
+    "title": "概念",
+    "bodyMarkdown": "### 从联合概率到贝叶斯\n\n你在第 06 课已经知道条件概率是：\n\n```\nP(A|B) = P(A and B) / P(B)\n```\n\n对称地：\n\n```\nP(B|A) = P(A and B) / P(A)\n```\n\n两个表达式共享同一个分子：P(A and B)。令它们相等并整理：\n\n```\nP(A and B) = P(A|B) * P(B) = P(B|A) * P(A)\n\nTherefore:\n\nP(A|B) = P(B|A) * P(A) / P(B)\n```\n\n这就是贝叶斯定理。四个量，一个方程。\n\n### 四个组成部分\n\n| 部分 | 名称 | 含义 |\n|------|------|------|\n| P(A\\|B) | 后验（Posterior） | 看到证据 B 后，你对 A 的更新信念 |\n| P(B\\|A) | 似然（Likelihood） | 若 A 为真，证据 B 有多可能 |\n| P(A) | 先验（Prior） | 在看到任何证据前，你对 A 的信念 |\n| P(B) | 证据（Evidence） | 在所有可能性下看到 B 的总概率 |\n\n证据项 P(B) 起归一化作用。你可以用全概率公式把它展开：\n\n```\nP(B) = P(B|A) * P(A) + P(B|not A) * P(not A)\n```\n\n### 医学检测例子\n\n某种病影响万分之一的人。检测准确率 99%（抓住 99% 的病人，1% 的时间给出假阳性）。\n\n```\nP(sick)          = 0.0001     (prior: disease is rare)\nP(positive|sick) = 0.99       (likelihood: test catches it)\nP(positive|healthy) = 0.01    (false positive rate)\n\nP(positive) = P(positive|sick) * P(sick) + P(positive|healthy) * P(healthy)\n            = 0.99 * 0.0001 + 0.01 * 0.9999\n            = 0.000099 + 0.009999\n            = 0.010098\n\nP(sick|positive) = P(positive|sick) * P(sick) / P(positive)\n                 = 0.99 * 0.0001 / 0.010098\n                 = 0.0098\n                 = 0.98%\n```\n\n不到 1%。先验占主导。当一种情况很罕见时，即使准确的检测也会产生大量假阳性。这就是医生要开确认检查的原因。\n\n### 垃圾邮件过滤器例子\n\n你收到一封含 \"lottery\" 一词的邮件。它是垃圾邮件吗？\n\n```\nP(spam)                = 0.3      (30% of email is spam)\nP(\"lottery\"|spam)      = 0.05     (5% of spam emails contain \"lottery\")\nP(\"lottery\"|not spam)  = 0.001    (0.1% of legitimate emails contain \"lottery\")\n\nP(\"lottery\") = 0.05 * 0.3 + 0.001 * 0.7\n             = 0.015 + 0.0007\n             = 0.0157\n\nP(spam|\"lottery\") = 0.05 * 0.3 / 0.0157\n                  = 0.955\n                  = 95.5%\n```\n\n一个词就把概率从 30% 推到 95.5%。真正的垃圾邮件过滤器会对数百个词同时应用贝叶斯。\n\n### 朴素贝叶斯：独立性假设\n\n朴素贝叶斯把它扩展到多个特征，假设在给定类别下所有特征条件独立：\n\n```\nP(class | feature_1, feature_2, ..., feature_n)\n  = P(class) * P(feature_1|class) * P(feature_2|class) * ... * P(feature_n|class)\n    / P(feature_1, feature_2, ..., feature_n)\n```\n\n\"朴素\"就在于独立性假设。在文本里，词的出现并不独立（\"New\" 和 \"York\" 是相关的）。但这个假设在实践中效果出奇地好，因为分类器只需要给类别排序，不需要产出校准过的概率。\n\n由于分母对所有类别都相同，你可以跳过它，只比较分子：\n\n```\nscore(class) = P(class) * product of P(feature_i | class)\n```\n\n取分数最高的类别。\n\n### 最大似然估计（MLE）\n\n如何从训练数据得到 P(feature|class)？数数。\n\n```\nP(\"free\"|spam) = (number of spam emails containing \"free\") / (total spam emails)\n```\n\n这就是 MLE：选择让观测数据最可能的参数值。你在最大化似然函数，对离散计数它就化为相对频率。\n\n问题：如果一个词在训练期的垃圾邮件里从未出现，MLE 给它概率零。一个未见过的词会杀死整个连乘。用拉普拉斯平滑（Laplace smoothing）修复：\n\n```\nP(word|class) = (count(word, class) + 1) / (total_words_in_class + vocabulary_size)\n```\n\n给每个计数加 1，保证没有概率为零。\n\n### 最大后验估计（MAP）\n\nMLE 问：什么参数让 P(data|parameters) 最大？\n\nMAP 问：什么参数让 P(parameters|data) 最大？\n\n由贝叶斯定理：\n\n```\nP(parameters|data) proportional to P(data|parameters) * P(parameters)\n```\n\nMAP 给参数本身加上先验。如果你相信参数应该小，就把这一点编码为惩罚大值的先验。这与 ML 中的 L2 正则化完全相同。岭回归（ridge regression）里的 \"ridge\" 惩罚字面上就是权重上的高斯先验。\n\n| 估计 | 优化目标 | ML 等价物 |\n|------|----------|-----------|\n| MLE | P(data\\|params) | 无正则化训练 |\n| MAP | P(data\\|params) * P(params) | L2 / L1 正则化 |\n\n### 贝叶斯 vs 频率派：实际差别\n\n频率派把参数当作固定的未知量。他们问：\"如果我重复这个实验很多次，会发生什么？\"\n\n贝叶斯派把参数当作分布。他们问：\"鉴于我观察到的，我对参数有什么信念？\"\n\n对构建 ML 系统的实际差别：\n\n| 方面 | 频率派 | 贝叶斯派 |\n|------|--------|----------|\n| 输出 | 点估计 | 值上的分布 |\n| 不确定性 | 置信区间（关于程序） | 可信区间（关于参数） |\n| 小数据 | 可能过拟合 | 先验起正则化作用 |\n| 计算 | 通常更快 | 常需采样（MCMC） |\n\n大多数生产 ML 是频率派的（SGD、点估计）。当你需要校准的不确定性（医疗决策、安全关键系统）或数据稀缺（小样本学习、冷启动）时，贝叶斯方法大放异彩。\n\n### 贝叶斯思维对 ML 为何重要\n\n这种联系比类比更深：\n\n**先验就是正则化。** 权重上的高斯先验就是 L2 正则化。拉普拉斯先验就是 L1。每次你加上正则化项，你就是在对期望的参数值做贝叶斯陈述。\n\n**后验就是不确定性。** 单个预测概率无法告诉你模型对这个估计有多自信。贝叶斯方法给你一个分布：\"我认为 P(spam) 在 0.8 到 0.95 之间。\"\n\n**贝叶斯更新就是在线学习。** 今天的后验成为明天的先验。当模型看到新数据时，它增量更新信念，而不是从头再训练。\n\n**模型比较是贝叶斯的。** 贝叶斯信息准则（BIC）、边缘似然和贝叶斯因子都用贝叶斯推理在模型间选择而不过拟合。\n\n```figure\nbayes-update\n```",
+    "keyPoints": [
+      "先验就是正则化。",
+      "后验就是不确定性。",
+      "贝叶斯更新就是在线学习。",
+      "模型比较是贝叶斯的。"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "P(A|B) = P(A and B) / P(B)"
+      },
+      {
+        "lang": "text",
+        "code": "P(B|A) = P(A and B) / P(A)"
+      },
+      {
+        "lang": "text",
+        "code": "P(A and B) = P(A|B) * P(B) = P(B|A) * P(A)\n\nTherefore:\n\nP(A|B) = P(B|A) * P(A) / P(B)"
+      },
+      {
+        "lang": "text",
+        "code": "P(B) = P(B|A) * P(A) + P(B|not A) * P(not A)"
+      },
+      {
+        "lang": "text",
+        "code": "P(sick)          = 0.0001     (prior: disease is rare)\nP(positive|sick) = 0.99       (likelihood: test catches it)\nP(positive|healthy) = 0.01    (false positive rate)\n\nP(positive) = P(positive|sick) * P(sick) + P(positive|healthy) * P(healthy)\n            = 0.99 * 0.0001 + 0.01 * 0.9999\n            = 0.000099 + 0.009999\n            = 0.010098\n\nP(sick|positive) = P(positive|sick) * P(sick) / P(positive)\n                 = 0.99 * 0.0001 / 0.010098\n                 = 0.0098\n                 = 0.98%"
+      },
+      {
+        "lang": "text",
+        "code": "P(spam)                = 0.3      (30% of email is spam)\nP(\"lottery\"|spam)      = 0.05     (5% of spam emails contain \"lottery\")\nP(\"lottery\"|not spam)  = 0.001    (0.1% of legitimate emails contain \"lottery\")\n\nP(\"lottery\") = 0.05 * 0.3 + 0.001 * 0.7\n             = 0.015 + 0.0007\n             = 0.0157\n\nP(spam|\"lottery\") = 0.05 * 0.3 / 0.0157\n                  = 0.955\n                  = 95.5%"
+      },
+      {
+        "lang": "text",
+        "code": "P(class | feature_1, feature_2, ..., feature_n)\n  = P(class) * P(feature_1|class) * P(feature_2|class) * ... * P(feature_n|class)\n    / P(feature_1, feature_2, ..., feature_n)"
+      },
+      {
+        "lang": "text",
+        "code": "score(class) = P(class) * product of P(feature_i | class)"
+      },
+      {
+        "lang": "text",
+        "code": "P(\"free\"|spam) = (number of spam emails containing \"free\") / (total spam emails)"
+      },
+      {
+        "lang": "text",
+        "code": "P(word|class) = (count(word, class) + 1) / (total_words_in_class + vocabulary_size)"
+      },
+      {
+        "lang": "text",
+        "code": "P(parameters|data) proportional to P(data|parameters) * P(parameters)"
+      }
+    ]
+  },
+  {
+    "id": "动手做",
+    "title": "动手做",
+    "bodyMarkdown": "### 步骤 1：贝叶斯定理函数\n\n```python\ndef bayes(prior, likelihood, false_positive_rate):\n    evidence = likelihood * prior + false_positive_rate * (1 - prior)\n    posterior = likelihood * prior / evidence\n    return posterior\n\nresult = bayes(prior=0.0001, likelihood=0.99, false_positive_rate=0.01)\nprint(f\"P(sick|positive) = {result:.4f}\")\n```\n\n### 步骤 2：朴素贝叶斯分类器\n\n```python\nimport math\nfrom collections import defaultdict\n\nclass NaiveBayes:\n    def __init__(self, smoothing=1.0):\n        self.smoothing = smoothing\n        self.class_counts = defaultdict(int)\n        self.word_counts = defaultdict(lambda: defaultdict(int))\n        self.class_word_totals = defaultdict(int)\n        self.vocab = set()\n\n    def train(self, documents, labels):\n        for doc, label in zip(documents, labels):\n            self.class_counts[label] += 1\n            words = doc.lower().split()\n            for word in words:\n                self.word_counts[label][word] += 1\n                self.class_word_totals[label] += 1\n                self.vocab.add(word)\n\n    def predict(self, document):\n        words = document.lower().split()\n        total_docs = sum(self.class_counts.values())\n        vocab_size = len(self.vocab)\n        best_class = None\n        best_score = float(\"-inf\")\n        for cls in self.class_counts:\n            score = math.log(self.class_counts[cls] / total_docs)\n            for word in words:\n                count = self.word_counts[cls].get(word, 0)\n                total = self.class_word_totals[cls]\n                score += math.log((count + self.smoothing) / (total + self.smoothing * vocab_size))\n            if score > best_score:\n                best_score = score\n                best_class = cls\n        return best_class\n```\n\n对数概率防止下溢。连乘许多小概率会产生浮点数无法表示的极小值。把对数概率相加在数值上稳定，数学上等价。\n\n### 步骤 3：在垃圾邮件数据上训练\n\n```python\ntrain_docs = [\n    \"win free money now\",\n    \"free lottery ticket winner\",\n    \"claim your prize today free\",\n    \"urgent offer free cash\",\n    \"congratulations you won free\",\n    \"meeting tomorrow at noon\",\n    \"project update attached\",\n    \"can we schedule a call\",\n    \"quarterly report review\",\n    \"lunch on thursday sounds good\",\n    \"team standup notes attached\",\n    \"please review the pull request\",\n]\n\ntrain_labels = [\n    \"spam\", \"spam\", \"spam\", \"spam\", \"spam\",\n    \"ham\", \"ham\", \"ham\", \"ham\", \"ham\", \"ham\", \"ham\",\n]\n\nclassifier = NaiveBayes()\nclassifier.train(train_docs, train_labels)\n\ntest_messages = [\n    \"free money waiting for you\",\n    \"meeting rescheduled to friday\",\n    \"you won a free prize\",\n    \"please review the attached report\",\n]\n\nfor msg in test_messages:\n    print(f\"  '{msg}' -> {classifier.predict(msg)}\")\n```\n\n### 步骤 4：检查学到的概率\n\n```python\ndef show_top_words(classifier, cls, n=5):\n    vocab_size = len(classifier.vocab)\n    total = classifier.class_word_totals[cls]\n    probs = {}\n    for word in classifier.vocab:\n        count = classifier.word_counts[cls].get(word, 0)\n        probs[word] = (count + classifier.smoothing) / (total + classifier.smoothing * vocab_size)\n    sorted_words = sorted(probs.items(), key=lambda x: x[1], reverse=True)\n    for word, prob in sorted_words[:n]:\n        print(f\"    {word}: {prob:.4f}\")\n\nprint(\"\\nTop spam words:\")\nshow_top_words(classifier, \"spam\")\nprint(\"\\nTop ham words:\")\nshow_top_words(classifier, \"ham\")\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "用起来",
+    "title": "用起来",
+    "bodyMarkdown": "Scikit-learn 自带生产级朴素贝叶斯实现：\n\n```python\nfrom sklearn.feature_extraction.text import CountVectorizer\nfrom sklearn.naive_bayes import MultinomialNB\nfrom sklearn.metrics import classification_report\n\nvectorizer = CountVectorizer()\nX_train = vectorizer.fit_transform(train_docs)\nclf = MultinomialNB()\nclf.fit(X_train, train_labels)\n\nX_test = vectorizer.transform(test_messages)\npredictions = clf.predict(X_test)\nfor msg, pred in zip(test_messages, predictions):\n    print(f\"  '{msg}' -> {pred}\")\n```\n\n算法相同。CountVectorizer 处理分词和词表构建。MultinomialNB 内部处理平滑和对数概率。你从零写的版本用 40 行做同样的事。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "交付",
+    "title": "交付",
+    "bodyMarkdown": "这里构建的 NaiveBayes 类演示了完整流水线：分词、带拉普拉斯平滑的概率估计、对数空间预测。`code/bayes.py` 中的代码除 Python 标准库外无依赖，可端到端运行。\n\n### 共轭先验\n\n当先验和后验属于同一分布族时，先验称为\"共轭\"。这让贝叶斯更新在代数上很干净——你得到闭式后验，无需数值积分。\n\n| 似然 | 共轭先验 | 后验 | 例子 |\n|------|----------|------|------|\n| 伯努利 | Beta(a, b) | Beta(a + successes, b + failures) | 硬币偏差估计 |\n| 正态（方差已知） | Normal(mu_0, sigma_0) | Normal(加权均值, 更小的方差) | 传感器校准 |\n| 泊松 | Gamma(a, b) | Gamma(a + sum of counts, b + n) | 到达速率建模 |\n| 多项 | Dirichlet(alpha) | Dirichlet(alpha + counts) | 主题模型、语言模型 |\n\n为何重要：没有共轭先验，你需要蒙特卡洛采样或变分推断来近似后验。有了共轭先验，你只需更新两个数。\n\nBeta 分布是实践中最常见的共轭先验。Beta(a, b) 表示你对某个概率参数的信念。均值是 a/(a+b)。a+b 越大，分布越集中（越自信）。\n\nBeta 先验的特例：\n- Beta(1, 1) = 均匀。你对参数没有看法。\n- Beta(10, 10) = 峰在 0.5。你强烈认为参数接近 0.5。\n- Beta(1, 10) = 偏向 0。你认为参数很小。\n\n更新规则极其简单：\n\n```\nPrior:     Beta(a, b)\nData:      s successes, f failures\nPosterior: Beta(a + s, b + f)\n```\n\n没有积分，没有采样，只是加法。\n\n### 序贯贝叶斯更新\n\n贝叶斯推断天然是序贯的。今天的后验成为明天的先验。真实系统就是这样增量学习，而不必重处理全部历史数据。\n\n具体例子：估计一枚硬币是否均匀。\n\n**第 1 天：还没有数据。**\n从 Beta(1, 1) 开始——均匀先验。你没有看法。\n- 先验均值：0.5\n- 先验在 [0, 1] 上是平的\n\n**第 2 天：观察到 7 次正面、3 次反面。**\n后验 = Beta(1 + 7, 1 + 3) = Beta(8, 4)\n- 后验均值：8/12 = 0.667\n- 证据表明硬币偏向正面\n\n**第 3 天：又观察到 5 次正面、5 次反面。**\n用昨天的后验作为今天的先验。\n后验 = Beta(8 + 5, 4 + 5) = Beta(13, 9)\n- 后验均值：13/22 = 0.591\n- 均衡的新数据把估计拉回到 0.5 附近\n\n```mermaid\ngraph LR\n    A[\"Prior<br/>Beta(1,1)<br/>mean = 0.50\"] -->|\"7H, 3T\"| B[\"Posterior 1<br/>Beta(8,4)<br/>mean = 0.67\"]\n    B -->|\"becomes prior\"| C[\"Prior 2<br/>Beta(8,4)\"]\n    C -->|\"5H, 5T\"| D[\"Posterior 2<br/>Beta(13,9)<br/>mean = 0.59\"]\n```\n\n观察的顺序无关紧要。Beta(1,1) 一次性用全部 12 次正面和 8 次反面更新，也得到 Beta(13, 9)——同样的结果。序贯更新与批量更新在数学上等价。但序贯更新让你可以在每一步做决策，而不必存储原始数据。\n\n这是生产 ML 系统中在线学习的基础。老虎机的 Thompson 采样、增量推荐系统和流式异常检测器都用这个模式。\n\n### 与 A/B 测试的联系\n\nA/B 测试是伪装的贝叶斯推断。\n\n设置：你在测试两种按钮颜色。变体 A（蓝色）和变体 B（绿色）。你想知道哪个点击更多。\n\n贝叶斯 A/B 测试：\n\n1. **先验。** 两个变体都从 Beta(1, 1) 开始。没有先验偏好。\n2. **数据。** 变体 A：1000 次展示中 50 次点击。变体 B：1000 次展示中 65 次点击。\n3. **后验。**\n   - A: Beta(1 + 50, 1 + 950) = Beta(51, 951)。均值 = 0.051\n   - B: Beta(1 + 65, 1 + 935) = Beta(66, 936)。均值 = 0.066\n4. **决策。** 计算 P(B > A)——B 的真实转化率高于 A 的概率。\n\n解析地计算 P(B > A) 很难。但蒙特卡洛让它变得平凡：\n\n```\n1. Draw 100,000 samples from Beta(51, 951)  -> samples_A\n2. Draw 100,000 samples from Beta(66, 936)  -> samples_B\n3. P(B > A) = fraction of samples where B > A\n```\n\n如果 P(B > A) > 0.95，你就上线变体 B。如果在 0.05 到 0.95 之间，就继续收集数据。如果 P(B > A) < 0.05，就上线变体 A。\n\n相比频率派 A/B 测试的优势：\n- 你得到直接的概率陈述：\"B 更好的概率是 97%\"\n- 没有 p 值困惑。没有\"无法拒绝零假设\"的含糊说法。\n- 你可以随时查看结果而不会抬高假阳性率（没有\"偷看问题\"）\n- 你可以纳入先验知识（例如，以往测试表明转化率通常在 3-8%）\n\n| 方面 | 频率派 A/B | 贝叶斯 A/B |\n|------|------------|------------|\n| 输出 | p 值 | P(B > A) |\n| 解读 | \"若 A=B，这数据有多意外？\" | \"B 比 A 好的可能性有多大？\" |\n| 提前停止 | 抬高假阳性 | 任意时点都安全（前提是先验选得好、模型设定正确） |\n| 先验知识 | 不使用 | 编码为 Beta 先验 |\n| 决策规则 | p < 0.05 | P(B > A) > 阈值 |",
+    "keyPoints": [
+      "Beta(1, 1) = 均匀。你对参数没有看法。",
+      "Beta(10, 10) = 峰在 0.5。你强烈认为参数接近 0.5。",
+      "Beta(1, 10) = 偏向 0。你认为参数很小。",
+      "第 1 天：还没有数据。",
+      "先验均值：0.5",
+      "先验在 [0, 1] 上是平的"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Prior:     Beta(a, b)\nData:      s successes, f failures\nPosterior: Beta(a + s, b + f)"
+      },
+      {
+        "lang": "text",
+        "code": "1. Draw 100,000 samples from Beta(51, 951)  -> samples_A\n2. Draw 100,000 samples from Beta(66, 936)  -> samples_B\n3. P(B > A) = fraction of samples where B > A"
+      }
+    ]
+  },
+  {
+    "id": "练习",
+    "title": "练习",
+    "bodyMarkdown": "1. **多次检测。** 一位病人在两次独立检测中均为阳性（两次都 99% 准确，患病率万分之一）。两次检测后 P(sick) 是多少？把第一次检测的后验作为第二次的先验。\n\n2. **平滑的影响。** 用平滑值 0.01、0.1、1.0 和 10.0 运行垃圾邮件分类器。最高频词的概率如何变化？当 smoothing=0 且某个词只出现在 ham 中时会发生什么？\n\n3. **加入特征。** 扩展 NaiveBayes 类，在词计数之外把消息长度（短/长）也作为特征。从训练数据估计 P(short|spam) 和 P(short|ham)，并折入预测分数。\n\n4. **手工做 MAP。** 给定观测数据（10 次抛硬币中 7 次正面），用 Beta(2,2) 先验计算偏差的 MAP 估计。与 MLE 估计（7/10）比较。",
+    "keyPoints": [
+      "多次检测。",
+      "平滑的影响。",
+      "加入特征。",
+      "手工做 MAP。"
+    ],
+    "commands": []
+  },
+  {
+    "id": "关键术语",
+    "title": "关键术语",
+    "bodyMarkdown": "| 术语 | 人们常说 | 它真正的意思 |\n|------|----------|--------------|\n| 先验（Prior） | \"我最初的猜测\" | 观察证据之前的 P(假设)。在 ML 中：正则化项。 |\n| 似然（Likelihood） | \"数据有多吻合\" | P(证据\\|假设)。在特定假设下观测数据有多可能。 |\n| 后验（Posterior） | \"我更新后的信念\" | P(假设\\|证据)。先验乘以似然，再归一化。 |\n| 证据（Evidence） | \"归一化常数\" | 在所有假设上的 P(data)。保证后验总和为 1。 |\n| 朴素贝叶斯（Naive Bayes） | \"那个简单的文本分类器\" | 假设在给定类别下特征独立的分类器。尽管假设不成立，效果却很好。 |\n| 拉普拉斯平滑（Laplace smoothing） | \"加一平滑\" | 给每个特征加一个小计数，防止未见数据造成零概率。 |\n| MLE | \"直接用频率\" | 选择让 P(data\\|parameters) 最大的参数。没有先验。小数据可能过拟合。 |\n| MAP | \"带先验的 MLE\" | 选择让 P(data\\|parameters) * P(parameters) 最大的参数。等价于带正则化的 MLE。 |\n| 对数概率（Log-probability） | \"在对数空间里算\" | 用 log(P) 代替 P，避免连乘许多小数时的浮点下溢。 |\n| 假阳性（False positive） | \"误报\" | 检测说阳性，但真实状态是阴性。驱动基率谬误。 |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "延伸阅读",
+    "title": "延伸阅读",
+    "bodyMarkdown": "- [3Blue1Brown: Bayes' theorem](https://www.youtube.com/watch?v=HZGCoVF3YvM) - 用医学检测例子做可视化讲解\n- [Stanford CS229: Generative Learning Algorithms](https://cs229.stanford.edu/notes2022fall/cs229-notes2.pdf) - 朴素贝叶斯及其与判别模型的联系\n- [Think Bayes](https://greenteapress.com/wp/think-bayes/) - 免费书，用 Python 代码讲贝叶斯统计\n- [scikit-learn Naive Bayes](https://scikit-learn.org/stable/modules/naive_bayes.html) - 生产实现及各变体的适用场景",
+    "keyPoints": [
+      "[3Blue1Brown: Bayes' theorem](https://www.youtube.com/watch?v=HZGCoVF3YvM) - 用医学检测例子做可视化讲解",
+      "[Stanford CS229: Generative Learning Algorithms](https://cs229.stanford.edu/notes2022fall/cs229-notes2.pdf) - 朴素贝叶斯及其与判别模型的联系",
+      "[Think Bayes](https://greenteapress.com/wp/think-bayes/) - 免费书，用 Python 代码讲贝叶斯统计",
+      "[scikit-learn Naive Bayes](https://scikit-learn.org/stable/modules/naive_bayes.html) - 生产实现及各变体的适用场景"
+    ],
+    "commands": []
+  }
+]

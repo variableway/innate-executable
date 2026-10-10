@@ -1,0 +1,21 @@
+{
+  "id": "03-deep-learning-core/05-loss-functions",
+  "slug": "05-loss-functions",
+  "phase": "03-deep-learning-core",
+  "order": 5,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Loss Functions",
+    "zh": ""
+  },
+  "hook": "Your network makes a prediction. The ground truth says otherwise. How wrong is it? That number is the loss. Pick the wrong loss function and your model optimizes for the wrong thing entirely.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.04 (Activation Functions)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

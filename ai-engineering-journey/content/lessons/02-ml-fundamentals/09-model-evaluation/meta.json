@@ -1,0 +1,23 @@
+{
+  "id": "02-ml-fundamentals/09-model-evaluation",
+  "slug": "09-model-evaluation",
+  "phase": "02-ml-fundamentals",
+  "order": 9,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Model Evaluation",
+    "zh": ""
+  },
+  "hook": "A model is only as good as the way you measure it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 (Probability & Distributions",
+    "Statistics for ML)",
+    "Phase 2 Lessons 1-8"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

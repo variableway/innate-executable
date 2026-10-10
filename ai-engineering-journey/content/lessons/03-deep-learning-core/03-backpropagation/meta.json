@@ -1,0 +1,21 @@
+{
+  "id": "03-deep-learning-core/03-backpropagation",
+  "slug": "03-backpropagation",
+  "phase": "03-deep-learning-core",
+  "order": 3,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Backpropagation from Scratch",
+    "zh": ""
+  },
+  "hook": "Backpropagation is the algorithm that makes learning possible. Without it, neural networks are just expensive random number generators.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.02 (Multi-Layer Networks)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

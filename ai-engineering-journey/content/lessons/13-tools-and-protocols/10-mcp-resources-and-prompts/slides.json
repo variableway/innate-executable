@@ -1,0 +1,154 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# MCP Resources and Prompts: Addressable Context for Stateless Servers\n\n> Tools perform operations. Resources expose addressable content. Prompts package user-selected message templates. A good MCP server keeps those contracts separate and predictable.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13, Lesson 07 (Building an MCP Server), Phase 13, Lesson 09 (MCP Transports)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Choose among tools, resources, and prompts from the consumer's intent.\n- Advertise the resource and prompt surface through mandatory `server/discover`.\n- Build deterministic `resources/list` and `prompts/list` results.\n- Apply `ttlMs` and `cacheScope` without leaking user-specific data.\n- Return JSON-RPC error `-32602` for an invalid or unknown resource URI.\n- Open a `subscriptions/listen` POST-response stream and correlate every event by subscription ID.\n- Treat resource content and prompt templates as untrusted server output.",
+    "keyPoints": [
+      "Choose among tools, resources, and prompts from the consumer's intent.",
+      "Advertise the resource and prompt surface through mandatory `server/discover`.",
+      "Build deterministic `resources/list` and `prompts/list` results.",
+      "Apply `ttlMs` and `cacheScope` without leaking user-specific data.",
+      "Return JSON-RPC error `-32602` for an invalid or unknown resource URI.",
+      "Open a `subscriptions/listen` POST-response stream and correlate every event by subscription ID."
+    ],
+    "commands": []
+  },
+  {
+    "id": "start-with-the-consumer",
+    "title": "Start With the Consumer",
+    "bodyMarkdown": "The easiest way to misuse MCP is to begin with implementation code. A database query becomes a tool because functions are familiar. A reusable workflow becomes a resource because it is stored in a file. A prompt becomes hidden policy because the host can inject it.\n\nBegin with who chooses and what they expect.\n\n| Primitive | Primary intent | Selection owner | Typical result |\n|---|---|---|---|\n| Tool | Perform an operation | Model or application | Structured action result |\n| Resource | Read content at a URI | Host, application, or user | Text or binary content |\n| Prompt | Start a reusable message workflow | User through host UI | One or more prompt messages |\n\nA note at `notes://note-1` is a resource because it is addressable content. `delete_note` is a tool because it changes state. `review_note` is a prompt because a user chooses a prepared review workflow.\n\nDo not expose one operation as all three merely to look complete. Each extra surface needs discovery, authorization, caching, error handling, tests, and documentation.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-2026-07-28-stateless-envelope",
+    "title": "The 2026-07-28 Stateless Envelope",
+    "bodyMarkdown": "This lesson targets MCP protocol revision `2026-07-28`. There is no initialization handshake or protocol session in this profile. Every request carries its protocol version and client capabilities in reserved `_meta` keys.\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"resources/list\",\n  \"params\": {\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientInfo\": {\n        \"name\": \"course-client\",\n        \"version\": \"1.0.0\"\n      },\n      \"io.modelcontextprotocol/clientCapabilities\": {}\n    }\n  }\n}\n```\n\nA server must implement `server/discover`. Its result advertises supported\nversions, resource and prompt capabilities, implementation identity, and\ncache hints. A client may call another method directly, but discovery gives it\none stable snapshot before it builds a UI.\n\n```json\n{\n  \"resultType\": \"complete\",\n  \"supportedVersions\": [\"2026-07-28\"],\n  \"capabilities\": {\n    \"resources\": {\"listChanged\": true, \"subscribe\": true},\n    \"prompts\": {\"listChanged\": true}\n  },\n  \"ttlMs\": 3600000,\n  \"cacheScope\": \"public\"\n}\n```\n\nA normal result declares `\"resultType\": \"complete\"`. The response `_meta` identifies the serving implementation with `io.modelcontextprotocol/serverInfo`. This information is useful for diagnostics. It is not an authentication identity. A request carrying an unsupported revision returns `-32022` with both the requested revision and the server's supported revisions.\n\nThe stateless contract changes your design instincts. A list cannot depend on a prior call on one connection. Authorization may change the visible set because credentials are request input, but connection history must not.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "resources-are-stable-uri-contracts",
+    "title": "Resources Are Stable URI Contracts",
+    "bodyMarkdown": "A resource is content identified by a URI. Design the URI before the handler.\n\nGood URI properties:\n\n- Stable enough to bookmark or pass between requests.\n- Namespaced to the server's domain.\n- Independent from a process ID or connection.\n- Validated before storage access.\n- Authorized on every read.\n\n`notes://note-1` is better than `note-1` because its namespace is explicit. A file server may use `file://` URIs, but it must still check configured directory boundaries after resolving symlinks and relative segments.\n\n`resources/list` returns the resources currently visible to the caller. Sort by a stable key such as URI. Deterministic order prevents noisy cache misses, changing snapshots, and host UIs that jump between refreshes.\n\n```json\n{\n  \"resultType\": \"complete\",\n  \"resources\": [\n    {\n      \"uri\": \"notes://note-1\",\n      \"name\": \"Architecture decision\",\n      \"description\": \"Why the service uses a stateless boundary\",\n      \"mimeType\": \"text/markdown\"\n    }\n  ],\n  \"ttlMs\": 300000,\n  \"cacheScope\": \"public\",\n  \"_meta\": {\n    \"io.modelcontextprotocol/serverInfo\": {\n      \"name\": \"notes-server\",\n      \"version\": \"2.0.0\"\n    }\n  }\n}\n```\n\n`resources/read` returns one or more content items. An unknown URI is not a successful empty read. The current Resources specification assigns invalid or unknown resource URIs to JSON-RPC invalid parameters, code `-32602`.\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"error\": {\n    \"code\": -32602,\n    \"message\": \"Unknown or invalid resource URI\",\n    \"data\": {\n      \"uri\": \"notes://missing\"\n    }\n  }\n}\n```\n\nThat distinction lets a client separate absence from a valid empty document. It also prevents accidental fallback to a broader lookup.\n\n### Resource templates\n\nA resource template describes a family of parameterized URIs. Use one when listing every concrete item would be expensive or unbounded. For example, `notes://projects/{project}/decisions/{decision}` tells a client how to form a valid address without returning every decision.\n\nA template does not weaken validation. Parse variables, apply authorization, enforce length and character limits, and construct storage queries with typed parameters. Never concatenate an arbitrary URI tail into a filesystem path or database statement.\n\n### Content is not trusted instruction\n\nResource text may contain prompt injection, secrets, misleading commands, or malformed markup. The host should preserve provenance and treat resource content as data. The server should limit content size, return an accurate MIME type, redact fields the caller cannot access, and avoid returning unrelated records.",
+    "keyPoints": [
+      "Stable enough to bookmark or pass between requests.",
+      "Namespaced to the server's domain.",
+      "Independent from a process ID or connection.",
+      "Validated before storage access.",
+      "Authorized on every read."
+    ],
+    "commands": []
+  },
+  {
+    "id": "prompts-are-user-controlled-templates",
+    "title": "Prompts Are User-Controlled Templates",
+    "bodyMarkdown": "MCP prompts are designed for explicit user selection. A host may render them as slash commands, menu items, or workflow buttons. The protocol does not require one UI.\n\n`prompts/list` should be deterministic for the same request authorization. Each prompt needs a stable name, a useful description, and argument declarations that let the host collect input before `prompts/get`.\n\n```json\n{\n  \"resultType\": \"complete\",\n  \"prompts\": [\n    {\n      \"name\": \"review_note\",\n      \"title\": \"Review a note\",\n      \"description\": \"Review one note for a named concern\",\n      \"arguments\": [\n        {\n          \"name\": \"uri\",\n          \"description\": \"The note resource URI\",\n          \"required\": true\n        }\n      ]\n    }\n  ],\n  \"ttlMs\": 600000,\n  \"cacheScope\": \"public\"\n}\n```\n\n`prompts/get` resolves arguments into messages. It does not replace the host's system instructions. The host decides how returned messages enter model context and keeps its own trusted policy at higher priority.\n\nValidate prompt arguments at the server boundary. A prompt URI should pass the same authorization check as a direct resource read. Do not make a prompt a side channel around resource access.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "cache-hints-are-part-of-correctness",
+    "title": "Cache Hints Are Part of Correctness",
+    "bodyMarkdown": "`ttlMs` tells a client how long a result may be reused. `cacheScope` describes who may share that cached value.\n\n| Scope | Meaning | Typical use |\n|---|---|---|\n| `public` | May be reused across users when authorization permits | Public prompt catalog |\n| `private` | Bound to the requesting user or credential context | User-owned note content |\n\nChoose a TTL from the data's change rate and the damage of staleness. Five minutes may suit a public prompt catalog. A private note read may use one minute.\n\nMCP defines only `public` and `private` as `cacheScope` values. For a secret-bearing or rapidly changing result, return `cacheScope: \"private\"` with `ttlMs: 0`, then apply any stricter no-store rule in the host cache policy. `no-store` itself is not an MCP `cacheScope` value.\n\nCache hints never replace authorization. A cache key must include every request dimension that changes visibility, including tenant, user, scope, locale, and pagination cursor. If a shared cache cannot express those dimensions safely, use `private` with a zero TTL and a host-level no-store policy.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "subscriptions-use-a-client-opened-response-stream",
+    "title": "Subscriptions Use a Client-Opened Response Stream",
+    "bodyMarkdown": "The modern subscription pattern replaces the former `resources/subscribe` RPC and the old HTTP GET event endpoint.\n\nThe client sends `subscriptions/listen` as a normal JSON-RPC request. Over Streamable HTTP this is a POST whose response remains open as an SSE stream. The `notifications` object is an allowlist. A server must not deliver notification types that were not requested.\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 17,\n  \"method\": \"subscriptions/listen\",\n  \"params\": {\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {},\n      \"io.modelcontextprotocol/clientInfo\": {\n        \"name\": \"course-client\",\n        \"version\": \"1.0.0\"\n      }\n    },\n    \"notifications\": {\n      \"resourcesListChanged\": true,\n      \"promptsListChanged\": true,\n      \"resourceSubscriptions\": [\n        \"notes://note-1\"\n      ]\n    }\n  }\n}\n```\n\nThe request ID is the subscription ID. Before any requested event, the server sends `notifications/subscriptions/acknowledged`. Its filter contains only the subset the server accepted.\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"notifications/subscriptions/acknowledged\",\n  \"params\": {\n    \"_meta\": {\n      \"io.modelcontextprotocol/subscriptionId\": 17\n    },\n    \"notifications\": {\n      \"resourcesListChanged\": true,\n      \"resourceSubscriptions\": [\n        \"notes://note-1\"\n      ]\n    }\n  }\n}\n```\n\nEvery later event on that stream carries the same metadata.\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"notifications/resources/updated\",\n  \"params\": {\n    \"_meta\": {\n      \"io.modelcontextprotocol/subscriptionId\": 17\n    },\n    \"uri\": \"notes://note-1\"\n  }\n}\n```\n\nThe notification says the resource changed. The client reads it again through `resources/read`, subject to current authorization. It does not assume the event contains the new document.\n\nSeveral subscriptions can share one stdio channel. The subscription ID lets the client demultiplex them. Over HTTP, closing the response stream cancels the subscription. A server that ends the stream gracefully returns a final `resultType: \"complete\"` response correlated to the original request.\n\nDo not use a subscription stream as a protocol session. A later read is still a complete request that can reach any healthy server instance.\n\n```figure\nt3-primitive-sort\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "interactive-lab",
+    "title": "Interactive Lab",
+    "bodyMarkdown": "Use the figure to classify five capabilities from a project tracker: issue details, create issue, sprint review template, project policy, and close issue. Then decide which lists can be cached publicly, which reads must remain private, and which resources deserve update notifications.\n\nFor every classification, name the chooser. If the model performs an action, use a tool. If a host reads URI-addressed content, use a resource. If the user starts a prepared message workflow, use a prompt.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "practice-lab",
+    "title": "Practice Lab",
+    "bodyMarkdown": "Run the simulator from the repository root:\n\n```bash\ncd phases/13-tools-and-protocols/10-mcp-resources-and-prompts/code\npython3 main.py\npython3 -m unittest discover tests -v\n```\n\nInspect the transcript in this order:\n\n1. Confirm `server/discover` advertises the current revision and both capabilities.\n2. Confirm both list results are sorted and use `resultType: \"complete\"`.\n3. Confirm the list and read results carry intentional cache hints.\n4. Change the read URI to `notes://missing` and observe `-32602`.\n5. Confirm the subscription acknowledgment precedes the resource event.\n6. Confirm the event and graceful close both carry subscription ID `5`.\n\nThe Python model does not open a real HTTP connection. It represents the messages an SDK must place on the request-scoped response stream. Use an official SDK for framing and transport in production.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/10-mcp-resources-and-prompts/code\npython3 main.py\npython3 -m unittest discover tests -v"
+      }
+    ]
+  },
+  {
+    "id": "shipped-artifact",
+    "title": "Shipped Artifact",
+    "bodyMarkdown": "`outputs/skill-primitive-splitter.md` is a reusable design review for MCP primitive selection. It now checks deterministic discovery, cache scope, invalid URI behavior, and modern subscription filters.\n\nThe lesson also ships `assets/primitive-split.svg`, a static version of the primitive and subscription boundary for offline study.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "verify-it",
+    "title": "Verify It",
+    "bodyMarkdown": "```bash\ncd phases/13-tools-and-protocols/10-mcp-resources-and-prompts/code\npython3 main.py\npython3 -m unittest discover tests -v\n```\n\nExpected result: the main program prints a JSON transcript and the test command reports at least twelve passing tests.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/10-mcp-resources-and-prompts/code\npython3 main.py\npython3 -m unittest discover tests -v"
+      }
+    ]
+  },
+  {
+    "id": "capstone-connection",
+    "title": "Capstone Connection",
+    "bodyMarkdown": "Use this contract when your capstone server exposes addressable knowledge beside actions. Include one deterministic catalog snapshot, one authorized resource read, one prompt resolution, one invalid URI case, and one subscription transcript.\n\nYour evidence should show that no list depends on connection history and that a subscription event never grants access to the underlying resource.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add a `notes://projects/{project}/notes/{id}` resource template and validate both variables.\n2. Add pagination to `resources/list` while preserving deterministic order.\n3. Change one resource to `cacheScope: \"private\"` with `ttlMs: 0`, add a host-level no-store policy, and explain the threat that justifies both controls.\n4. Add a prompt-list change subscription and prove no event is sent when the filter omits `promptsListChanged`.\n5. Create two simultaneous subscriptions and prove each event carries the correct request ID.\n6. Add an authorization subject to the read handler and prove a cache entry cannot cross subjects.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "- **Resource:** URI-addressed content exposed by an MCP server.\n- **Prompt:** A user-controlled message template exposed by an MCP server.\n- **Deterministic list:** A discovery result with stable membership and ordering for the same request inputs.\n- **`ttlMs`:** Cache freshness duration in milliseconds.\n- **`cacheScope`:** The sharing boundary for a cached result.\n- **`subscriptions/listen`:** A long-lived request whose response stream delivers explicitly filtered notifications.\n- **Subscription ID:** The original listen request ID, repeated in notification metadata.\n- **Invalid parameters:** JSON-RPC error `-32602`, used for an invalid or unknown resource URI.\n- **Unsupported protocol version:** JSON-RPC error `-32022`, including `supported` and `requested` revisions.\n- **`server/discover`:** Mandatory server method that returns supported revisions, capabilities, identity, and optional cache hints.",
+    "keyPoints": [
+      "Resource:: URI-addressed content exposed by an MCP server.",
+      "Prompt:: A user-controlled message template exposed by an MCP server.",
+      "Deterministic list:: A discovery result with stable membership and ordering for the same request inputs.",
+      "`ttlMs`:: Cache freshness duration in milliseconds.",
+      "`cacheScope`:: The sharing boundary for a cached result.",
+      "`subscriptions/listen`:: A long-lived request whose response stream delivers explicitly filtered notifications."
+    ],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [MCP 2026-07-28 Resources](https://modelcontextprotocol.io/specification/2026-07-28/server/resources)\n- [MCP 2026-07-28 Prompts](https://modelcontextprotocol.io/specification/2026-07-28/server/prompts)\n- [MCP 2026-07-28 Subscriptions](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions)\n- [MCP 2026-07-28 Caching](https://modelcontextprotocol.io/specification/2026-07-28/basic/utilities/caching)",
+    "keyPoints": [
+      "[MCP 2026-07-28 Resources](https://modelcontextprotocol.io/specification/2026-07-28/server/resources)",
+      "[MCP 2026-07-28 Prompts](https://modelcontextprotocol.io/specification/2026-07-28/server/prompts)",
+      "[MCP 2026-07-28 Subscriptions](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions)",
+      "[MCP 2026-07-28 Caching](https://modelcontextprotocol.io/specification/2026-07-28/basic/utilities/caching)"
+    ],
+    "commands": []
+  }
+]

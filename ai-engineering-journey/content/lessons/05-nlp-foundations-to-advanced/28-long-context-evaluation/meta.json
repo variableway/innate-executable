@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/28-long-context-evaluation",
+  "slug": "28-long-context-evaluation",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 28,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Long-Context Evaluation — NIAH, RULER, LongBench, MRCR",
+    "zh": ""
+  },
+  "hook": "Gemini 3 Pro advertises 10M tokens of context. At 1M tokens, 8-needle MRCR drops to 26.3%. Advertised ≠ usable. Long-context evaluation tells you the actual capacity of the model you are shipping on.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 13 (Question Answering)",
+    "Phase 5 · 23 (Chunking Strategies)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

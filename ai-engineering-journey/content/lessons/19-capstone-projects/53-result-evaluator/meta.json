@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/53-result-evaluator",
+  "slug": "53-result-evaluator",
+  "phase": "19-capstone-projects",
+  "order": 53,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Result Evaluator",
+    "zh": ""
+  },
+  "hook": "The runner produced numbers. The evaluator decides whether those numbers are an improvement, a regression, or noise. Build the verdict path that turns metrics into a one line conclusion.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track A lessons 20-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

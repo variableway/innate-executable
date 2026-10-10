@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/22-jsonrpc-stdio-transport",
+  "slug": "22-jsonrpc-stdio-transport",
+  "phase": "19-capstone-projects",
+  "order": 22,
+  "phaseOrder": 19,
+  "title": {
+    "en": "JSON-RPC 2.0 Over Newline-Delimited Stdio",
+    "zh": ""
+  },
+  "hook": "The transport between a model client and a tool server is JSON-RPC over stdio. Hand-rolling it once teaches you what every framing layer is paying for.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 lessons 01-07",
+    "Phase 14 lesson 01"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

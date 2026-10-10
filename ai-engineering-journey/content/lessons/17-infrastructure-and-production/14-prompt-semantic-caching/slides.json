@@ -1,0 +1,98 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Prompt Caching and Semantic Caching Economics\n\n> **Pricing snapshot dated 2026-04.** Numeric claims below reflect vendor rate cards captured at this lesson's publication; verify against the linked docs before quoting them downstream.\n\n> Caching happens at two layers. L2 (provider-level) prompt/prefix caching reuses attention KV for repeated prefixes — Anthropic's prompt-caching docs advertise up to 90% cost reduction and 85% latency reduction on long prompts; for Claude 3.5 Sonnet cache reads are $0.30/M vs $3.00/M fresh with a 5-minute TTL and a 2x write premium for the 1-hour TTL option (docs.anthropic.com, 2026-04). OpenAI prompt caching applies automatically for prompts ≥1024 tokens and prices cached input at roughly a 90% discount vs fresh (platform.openai.com, 2026-04); the exact per-model cached rate depends on the live rate card. L1 (app-level) semantic caching skips the LLM entirely on embedding similarity hits. Vendor \"95% accuracy\" refers to match correctness, not hit rate — reported production hit rates range from 10% (open-ended chat) up to 70% (structured FAQ); neither provider publishes an official baseline, so treat these as community telemetry rather than guarantees. The production pitfalls: parallelization kills caching (N parallel requests issued before the first cache write can inflate spend several-fold), and dynamic content inside the prefix prevents cache hits entirely. ProjectDiscovery reported moving from 7% to 74% hit rate (2025-11) by moving dynamic text out of the cacheable prefix.\n\n**Type:** Learn\n**Languages:** Python (stdlib, toy two-layer cache simulator)\n**Prerequisites:** Phase 17 · 04 (Serving Engine Internals), Phase 17 · 06 (SGLang RadixAttention)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Pricing snapshot dated 2026-04.",
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Distinguish L2 prompt/prefix caching (KV reuse at provider) from L1 semantic caching (LLM bypass on similar prompts).\n- Explain Anthropic's `cache_control` explicit marking and the two TTL options (5-min vs 1-hour) with their price multipliers.\n- Compute expected monthly savings given hit rate, prompt/response mix, and token prices.\n- Name the parallelization anti-pattern that inflates bills by 5-10x and the dynamic-content anti-pattern that collapses hit rate.",
+    "keyPoints": [
+      "Distinguish L2 prompt/prefix caching (KV reuse at provider) from L1 semantic caching (LLM bypass on similar prompts).",
+      "Explain Anthropic's `cache_control` explicit marking and the two TTL options (5-min vs 1-hour) with their price multipliers.",
+      "Compute expected monthly savings given hit rate, prompt/response mix, and token prices.",
+      "Name the parallelization anti-pattern that inflates bills by 5-10x and the dynamic-content anti-pattern that collapses hit rate."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You add prompt caching to your RAG service. The bill stays flat. You measure the hit rate; it is 7%. Your prompts look static but they are not — the system prompt includes the current date formatted to the minute, a request ID, and a randomized example reorder for diversity. Every request writes a new cache entry, reads zero.\n\nSeparately, your agent runs ten parallel tool calls per user question. All ten arrive at the provider before the first cache write completes. Ten writes, zero reads. Your bill is 5-10x what \"with caching\" was supposed to cost.\n\nCaching is a protocol, not a flag. Two layers, two different failure modes.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### L2 — provider prompt/prefix caching\n\nProvider stores the attention KV for a cacheable prefix and reuses it on the next request that matches the prefix. You pay a write cost once, reads nearly free.\n\n**Anthropic (Claude 3.5 / 3.7 / 4 series)**: explicit `cache_control` marker in the request. You tag which blocks are cacheable. TTL: 5-minute (write costs 1.25x base) or 1-hour (write costs 2x base). Cache reads: $0.30/M on Claude 3.5 Sonnet vs $3.00/M fresh — 10x cheaper (docs.anthropic.com, as of 2026-04). Rates differ per model (Opus/Haiku published separately); always cross-check the live pricing page.\n\n**OpenAI**: automatic caching for prompts ≥1024 tokens (platform.openai.com, 2026-04). No explicit flag. Cached input is roughly 10x cheaper than fresh on current gpt-4o/gpt-5 rate cards. Neither docs nor release notes publish an official hit-rate baseline; community reports cluster around 30–60% with careful prompt design. Monitor `usage.cached_tokens` to measure your own.\n\n**Google (Gemini)**: context caching via explicit API; 1M-token context means caching pays even more.\n\n**Self-hosted (vLLM, SGLang)**: Phase 17 · 06 covers RadixAttention — same pattern at your own compute.\n\n### L1 — app-level semantic caching\n\nBefore calling the LLM at all, hash the prompt, embed it, and look for a similar cached request (cosine similarity above threshold, typically 0.95+). On hit, return the cached response. On miss, call LLM and cache the result.\n\nOpen-source: Redis Vector Similarity, GPTCache, Qdrant. Commercial: Portkey Cache, Helicone Cache.\n\nVendor accuracy claims refer to how often the returned cached response was semantically appropriate — not how often you hit. Production hit rates:\n\n- Open-ended chat: 10-15%.\n- Structured FAQ / support: 40-70%.\n- Code questions: 20-30% (small variants kill hits).\n- Voice agents repeating prompts: 50-80% (voice normalization fixed set).\n\n### The parallelization anti-pattern\n\nYour agent makes 10 tool calls in parallel. All 10 have the same 4K-token system prompt. Anthropic cache writes are per-request; the first cache-write completes around 300 ms after the provider sees the prompt. Requests 2-10 arrive in the same millisecond window and each sees cache miss. You pay 10 write premiums, 0 read discounts.\n\nFix: batch with sequential-first — make request 1 alone, then fire 2-10 once 1's cache has populated. Adds 300 ms to the first tool call; saves 5-10x the bill.\n\n### The dynamic content anti-pattern\n\nYour system prompt looks like:\n\n```\nYou are a helpful assistant. The current time is 14:32:17.\nUser ID: abc123. Today is Tuesday...\n```\n\nEvery request is unique. Every request writes. Zero hits.\n\nFix: move everything truly static to the cacheable prefix; append dynamic content after the cache boundary:\n\n```\n[cacheable]\nYou are a helpful assistant. [rules, examples, instructions]\n[/cacheable]\n[dynamic, not cached]\nCurrent time: 14:32:17. User: abc123.\n```\n\nProjectDiscovery moved from 7% to 74% cache hit rate this way and published the anatomy.\n\n### Stack batch + cache for overnight workloads\n\nBatch APIs (Phase 17 · 15) give 50% discount at 24-hour turnaround. Cached input on top gets you ~10x on top of that. Overnight classification, labeling, and report generation workloads can drop to ~10% of synchronous-uncached cost by stacking.\n\n### Numbers you should remember\n\nPricing points are captured 2026-04 from the linked vendor docs and drift every few months — re-check before relying on them.\n\n- Anthropic cached read: $0.30/M on Claude 3.5 Sonnet, roughly 10x cheaper than fresh input (docs.anthropic.com).\n- Anthropic cache write premium: 1.25x (5-min TTL) or 2x (1-hour TTL).\n- OpenAI auto-cache: applies to prompts ≥1024 tokens; cached input priced at roughly 10% of fresh input on current rate cards (platform.openai.com).\n- Semantic cache hit rate (community-reported): ~10% open chat; up to ~70% structured FAQ. Not a vendor-documented baseline.\n- ProjectDiscovery: 7% → 74% hit rate by moving dynamic out of prefix (project blog, 2025-11).\n- Parallelization anti-pattern: typical reports of 5–10x bill inflation when N parallel requests miss the first cache write.\n\n```figure\nsemantic-cache-hit\n```",
+    "keyPoints": [
+      "Google (Gemini)",
+      "Self-hosted (vLLM, SGLang)",
+      "Open-ended chat: 10-15%.",
+      "Structured FAQ / support: 40-70%.",
+      "Code questions: 20-30% (small variants kill hits).",
+      "Voice agents repeating prompts: 50-80% (voice normalization fixed set)."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "You are a helpful assistant. The current time is 14:32:17.\nUser ID: abc123. Today is Tuesday..."
+      },
+      {
+        "lang": "text",
+        "code": "[cacheable]\nYou are a helpful assistant. [rules, examples, instructions]\n[/cacheable]\n[dynamic, not cached]\nCurrent time: 14:32:17. User: abc123."
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`code/main.py` simulates L1 + L2 caching on mixed workloads. Reports hit rates, bill, and shows the parallelization penalty.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces `outputs/skill-cache-auditor.md`. Given prompt template and traffic, audits cacheability and recommends restructure.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Run `code/main.py`. Toggle the parallelization flag. How much does the bill change?\n2. Your system prompt has a date. Move it out. Show before/after hit rate math.\n3. Calculate break-even for 1-hour TTL (2x write) vs 5-minute TTL (1.25x write) given your request arrival rate.\n4. Semantic cache at 0.95 threshold hits 20%. At 0.85 it hits 50% but you see incorrect cached responses. Pick the right threshold and justify.\n5. You batch 10 parallel sub-queries per user question. Rewrite for cache-friendliness without adding end-to-end latency.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| L2 prompt cache | \"prefix cache\" | Provider stores KV for repeated prefix |\n| `cache_control` | \"Anthropic cache marker\" | Explicit attribute marking cacheable blocks |\n| Cache write premium | \"write tax\" | Extra cost for first miss-to-cache (1.25x or 2x) |\n| L1 semantic cache | \"embedding cache\" | App-level hash-and-embed before calling LLM |\n| GPTCache | \"LLM caching lib\" | Popular OSS L1 cache library |\n| Cache hit rate | \"hits / total\" | Fraction of requests served from cache |\n| Parallelization anti-pattern | \"the N-write trap\" | N parallel requests miss cache N times |\n| Dynamic content trap | \"the time-in-prompt trap\" | Dynamic bytes in prefix kill hit rate |\n| RadixAttention | \"intra-replica cache\" | SGLang's prefix-cache implementation |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Anthropic Prompt Caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) — official `cache_control` semantics and TTLs.\n- [OpenAI Prompt Caching](https://platform.openai.com/docs/guides/prompt-caching) — automatic caching behavior and eligibility.\n- [TianPan — Semantic Caching for LLMs Production](https://tianpan.co/blog/2026-04-10-semantic-caching-llm-production)\n- [ProjectDiscovery — Cut LLM Costs 59% With Prompt Caching](https://projectdiscovery.io/blog/how-we-cut-llm-cost-with-prompt-caching)\n- [DigitalOcean / Anthropic — Prompt Caching](https://www.digitalocean.com/blog/prompt-caching-with-digital-ocean)",
+    "keyPoints": [
+      "[Anthropic Prompt Caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) — official `cache_control` semantics and TTLs.",
+      "[OpenAI Prompt Caching](https://platform.openai.com/docs/guides/prompt-caching) — automatic caching behavior and eligibility.",
+      "[TianPan — Semantic Caching for LLMs Production](https://tianpan.co/blog/2026-04-10-semantic-caching-llm-production)",
+      "[ProjectDiscovery — Cut LLM Costs 59% With Prompt Caching](https://projectdiscovery.io/blog/how-we-cut-llm-cost-with-prompt-caching)",
+      "[DigitalOcean / Anthropic — Prompt Caching](https://www.digitalocean.com/blog/prompt-caching-with-digital-ocean)"
+    ],
+    "commands": []
+  }
+]

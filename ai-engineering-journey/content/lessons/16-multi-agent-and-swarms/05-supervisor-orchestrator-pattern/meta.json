@@ -1,0 +1,22 @@
+{
+  "id": "16-multi-agent-and-swarms/05-supervisor-orchestrator-pattern",
+  "slug": "05-supervisor-orchestrator-pattern",
+  "phase": "16-multi-agent-and-swarms",
+  "order": 5,
+  "phaseOrder": 16,
+  "title": {
+    "en": "Supervisor / Orchestrator-Worker Pattern",
+    "zh": ""
+  },
+  "hook": "One lead agent plans and delegates; specialized workers execute in parallel contexts and report back. This is the pattern behind Anthropic's Research system (Claude Opus 4 as lead, Sonnet 4 as subagents), measured at +90.2% over single-agent Opus 4 on internal research evals. Anthropic's engineering post reports that 80% of the variance on BrowseComp is explained by token usage alone — multi-agent wins largely because each subagent gets a fresh context window. This lesson builds the supervisor pattern from the primitives and covers the 2026 engineering lessons from production deployments.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib",
+    "`threading`)"
+  ],
+  "prerequisites": [
+    "Phase 16 · 04 (Primitive Model)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

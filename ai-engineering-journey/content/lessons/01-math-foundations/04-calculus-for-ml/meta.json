@@ -1,0 +1,20 @@
+{
+  "id": "01-math-foundations/04-calculus-for-ml",
+  "slug": "04-calculus-for-ml",
+  "phase": "01-math-foundations",
+  "order": 4,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Calculus for Machine Learning",
+    "zh": "机器学习微积分"
+  },
+  "hook": "Derivatives tell you which way is downhill. That is all a neural network needs to learn.",
+  "type": "Learn",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01-03"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": false
+}

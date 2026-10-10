@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/10-skill-libraries-voyager",
+  "slug": "10-skill-libraries-voyager",
+  "phase": "14-agent-engineering",
+  "order": 10,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Skill Libraries and Lifelong Learning (Voyager)",
+    "zh": ""
+  },
+  "hook": "Voyager (Wang et al., TMLR 2024) treats executable code as a skill. Skills are named, retrievable, composable, and refined by environment feedback. This is the reference architecture for Claude Agent SDK skills, skillkit, and the 2026 skill-library pattern.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 07 (MemGPT)",
+    "Phase 14 · 08 (Letta Blocks)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

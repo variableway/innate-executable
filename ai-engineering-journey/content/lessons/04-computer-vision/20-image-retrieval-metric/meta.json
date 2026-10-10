@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/20-image-retrieval-metric",
+  "slug": "20-image-retrieval-metric",
+  "phase": "04-computer-vision",
+  "order": 20,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Image Retrieval & Metric Learning",
+    "zh": ""
+  },
+  "hook": "A retrieval system ranks candidates by a distance in embedding space. Metric learning is the discipline of shaping that space so the distances mean what you want.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 14 (ViT)",
+    "Phase 4 Lesson 18 (CLIP)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

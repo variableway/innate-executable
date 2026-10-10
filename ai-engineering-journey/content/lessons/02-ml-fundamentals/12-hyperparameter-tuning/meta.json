@@ -1,0 +1,20 @@
+{
+  "id": "02-ml-fundamentals/12-hyperparameter-tuning",
+  "slug": "12-hyperparameter-tuning",
+  "phase": "02-ml-fundamentals",
+  "order": 12,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Hyperparameter Tuning",
+    "zh": ""
+  },
+  "hook": "Hyperparameters are the knobs you turn before training starts. Turning them well is the difference between a mediocre model and a great one.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lesson 11 (Ensemble Methods)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

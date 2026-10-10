@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/81-end-to-end-distributed-train",
+  "slug": "81-end-to-end-distributed-train",
+  "phase": "19-capstone-projects",
+  "order": 81,
+  "phaseOrder": 19,
+  "title": {
+    "en": "End-to-End Distributed Training",
+    "zh": ""
+  },
+  "hook": "Lessons 76 through 80 each built one piece. This is the assembly: a tiny GPT trained across 4 simulated ranks with DDP for gradient sync, ZeRO-1 for optimiser-state sharding, and a sharded checkpoint at the halfway mark. The demo runs 20 steps, self-terminates, prints a loss curve plus a memory profile, and writes a resumable checkpoint.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track C lessons 42-49"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

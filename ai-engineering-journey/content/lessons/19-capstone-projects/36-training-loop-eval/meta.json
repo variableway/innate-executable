@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/36-training-loop-eval",
+  "slug": "36-training-loop-eval",
+  "phase": "19-capstone-projects",
+  "order": 36,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Training Loop and Evaluation",
+    "zh": ""
+  },
+  "hook": "A loop that does not measure is a loop that lies. This lesson builds the training loop that drives the GPT model: AdamW with weight decay split, a warmup plus cosine learning rate schedule, a `calc_loss_batch` helper, an `evaluate_model` pass on held out data, a `generate_and_print_sample` qualitative probe every K steps, and a JSONL log of losses you can plot after. The same skeleton trains every decoder LLM you will ever build.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30 to 35"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

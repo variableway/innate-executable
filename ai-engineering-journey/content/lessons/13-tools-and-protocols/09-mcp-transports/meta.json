@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/09-mcp-transports",
+  "slug": "09-mcp-transports",
+  "phase": "13-tools-and-protocols",
+  "order": 9,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Transports: stdio and Stateless Streamable HTTP",
+    "zh": ""
+  },
+  "hook": "Transport carries MCP messages. It does not supply missing protocol state. In `2026-07-28`, local stdio and remote Streamable HTTP both carry self-describing requests.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13",
+    "Lessons 07 and 08"
+  ],
+  "timeMinutes": 65,
+  "needsTranslation": true
+}

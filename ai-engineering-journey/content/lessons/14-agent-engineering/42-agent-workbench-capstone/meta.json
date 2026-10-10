@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/42-agent-workbench-capstone",
+  "slug": "42-agent-workbench-capstone",
+  "phase": "14-agent-engineering",
+  "order": 42,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Capstone: Ship a Reusable Agent Workbench Pack",
+    "zh": ""
+  },
+  "hook": "The mini-track ends with a pack you drop into any repo. Eleven lessons of surfaces compressed into a directory you can `cp -r` and have an agent working reliably the next morning. The capstone is the artifact this curriculum trades on.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phases 14 · 31 to 14 · 41"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

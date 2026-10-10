@@ -1,0 +1,90 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# GPT — Causal Language Modeling\n\n> BERT sees both sides. GPT sees only the past. The triangle mask is the most consequential single line of code in modern AI.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 7 · 02 (Self-Attention), Phase 7 · 05 (Full Transformer), Phase 7 · 06 (BERT)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "A language model answers one question: given the first `t-1` tokens, what is the probability distribution over token `t`? Train on that signal — next-token prediction — and you get a model that can generate arbitrary text one token at a time.\n\nTo train it end-to-end on a whole sequence in parallel, you need each position's prediction to depend only on earlier positions. Otherwise the model trivially cheats by looking at the answer.\n\nThe causal mask does this. It is a single upper-triangular matrix of `-inf` values added to attention scores before softmax. After softmax, those positions become 0. Each position can attend only to itself and earlier positions. And because you apply it once to the whole sequence, you get N parallel next-token predictions in one forward pass.\n\nGPT-1 (2018), GPT-2 (2019), GPT-3 (2020), GPT-4 (2023), GPT-5 (2025), Claude, Llama, Qwen, Mistral, DeepSeek, Kimi — they are all decoder-only causal transformers with the same core loop. What separates them is data quality, scale and architectural refinements, and post-training (SFT, RLHF, DPO, and their successors).",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Causal mask creates a triangular attention matrix](../assets/causal-attention.svg)\n\n### The mask\n\nGiven a sequence of length `N`, build an `N × N` matrix:\n\n```\nM[i, j] = 0       if j <= i\nM[i, j] = -inf    if j > i\n```\n\nAdd `M` to the raw attention scores before softmax. `exp(-inf) = 0`, so masked positions contribute zero weight. Each row of the attention matrix is a probability distribution over previous positions only.\n\nImplementation cost: one `torch.tril()` call. Time to compute: nanoseconds. Impact on the field: everything.\n\n### Where the triangle comes from\n\nThe mask is usually presented as a patch bolted onto attention. Run the derivation in the other direction and it stops being mysterious: attention is the third refinement of a prefix average, and the triangle is the loop bounds of that average, written as a matrix.\n\n**Stage 1 — prefix average.** The dumbest causal summary of a sequence: position `i` becomes the mean of positions `0…i`. As a loop, that is `out[i] = X[:i+1].mean(0)`. The same computation is one matrix multiply. Take a lower-triangular matrix of ones, divide each row by its count, multiply:\n\n```python\nimport numpy as np\n\nA = np.tril(np.ones((n, n)))\nA = A / A.sum(axis=1, keepdims=True)\nout = A @ X\n```\n\nRow `i` of `A` is `[1/(i+1), …, 1/(i+1), 0, …, 0]`. The zeros above the diagonal are the causality. Nothing about the future was masked out; the future was never in the sum.\n\n**Stage 2 — learned weights.** A uniform average treats every past token as equally relevant. Replace the ones with a learned score matrix `S`. Now rows no longer sum to one by construction, so normalize each row with softmax instead of dividing by the count. Softmax never outputs an exact zero, which breaks causality — unless the future scores go in as `-inf`, because `exp(-inf) = 0`:\n\n```python\ndef softmax(x, axis):\n    e = np.exp(x - np.max(x, axis=axis, keepdims=True))\n    return e / e.sum(axis=axis, keepdims=True)\n\nS = S + np.triu(np.full((n, n), -np.inf), k=1)\nA = softmax(S, axis=1)\nout = A @ X\n```\n\nSame triangle, same row-stochastic matrix, same one matmul. The `-inf` mask is not new machinery. It is stage 1's zero entries, translated into softmax's input domain.\n\n**Stage 3 — content-dependent weights.** In stage 2, `S` is fixed after training: position 7 always weighs position 3 the same, whatever the tokens say. Let the scores depend on the tokens themselves: `S = Q @ K.T / sqrt(d_k)`. Nothing else changes. Mask, softmax, matmul — identical.\n\nThree stages, one invariant: a lower-triangular row-stochastic matrix times the sequence. Uniform average, learned static weights, content-dependent weights. The mask was never added to attention. It survived from the average.\n\n```figure\nmask-derivation\n```\n\n### Parallel training, serial inference\n\nTraining: forward-pass the whole `(N, d_model)` sequence once, compute N cross-entropy losses (one per position), sum, backprop. Parallel along the sequence. This is why GPT training scales — you process 1M tokens in a batch in one GPU pass.\n\nInference: you generate token by token. Feed `[t1, t2, t3]`, get `t4`. Feed `[t1, t2, t3, t4]`, get `t5`. Feed `[t1, t2, t3, t4, t5]`, get `t6`. The KV cache (Lesson 12) saves the hidden states of `t1…tn` so you don't recompute them each step. But serial depth at inference = output length. That is the autoregressive tax and why decoding is the latency bottleneck of every LLM.\n\n### The loss — shift-by-one\n\nGiven tokens `[t1, t2, t3, t4]`:\n\n- Input: `[t1, t2, t3]`\n- Targets: `[t2, t3, t4]`\n\nFor every position `i`, compute `-log P(target_i | inputs[:i+1])`. Sum. This is the cross-entropy for the whole sequence.\n\nEvery transformer LM you've heard of trains on this loss. Pre-training, fine-tuning, SFT — same loss, different data.\n\n### Decoding strategies\n\nAfter training, sampling choices matter more than people think.\n\n| Method | What it does | When to use |\n|--------|--------------|-------------|\n| Greedy | Argmax every step | Deterministic tasks, code completion |\n| Temperature | Divide logits by T, sample | Creative tasks, higher T = more diversity |\n| Top-k | Sample from top-k tokens only | Kills low-probability tails |\n| Top-p (nucleus) | Sample from smallest set with cumulative prob ≥ p | 2020+ default; adapts to distribution shape |\n| Min-p | Keep tokens with `p > min_p * max_p` | 2024+; better at rejecting long tails than top-p |\n| Speculative decoding | Draft model proposes N tokens, big model verifies | 2–3× latency reduction at same quality |\n\nIn 2026, min-p + temperature 0.7 is a reasonable default for open-weights models. Speculative decoding is table stakes for any production inference stack.\n\n### What made the \"GPT recipe\" work\n\n1. **Decoder-only.** No encoder overhead. One pass of attention + FFN per layer.\n2. **Scaling.** 124M → 1.5B → 175B → trillions. Chinchilla scaling laws (Lesson 13) tell you how to spend compute.\n3. **In-context learning.** Emerged around 6B–13B. The model can follow few-shot examples without fine-tuning.\n4. **RLHF.** Post-training on human preferences converted raw pretrained text into chat assistants.\n5. **Pre-norm + RoPE + SwiGLU.** Stable training at scale.\n\nThe core architecture hasn't changed much since GPT-2. Everything interesting has happened in data, scale, and post-training.\n\n```figure\ncausal-mask\n```",
+    "keyPoints": [
+      "Input: `[t1, t2, t3]`",
+      "Targets: `[t2, t3, t4]`",
+      "Decoder-only.",
+      "Scaling.",
+      "In-context learning.",
+      "RLHF."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "M[i, j] = 0       if j <= i\nM[i, j] = -inf    if j > i"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: the causal mask\n\nSee `code/main.py`. A one-liner:\n\n```python\ndef causal_mask(n):\n    return [[0.0 if j <= i else float(\"-inf\") for j in range(n)] for i in range(n)]\n```\n\nAdd it to attention scores before softmax. That's the entire mechanism.\n\n### Step 2: a 2-layer GPT-ish model\n\nStack two decoder blocks (masked self-attention + FFN, no cross-attention). Add a token embedding, a positional encoding, and an unembedding (tied to the token embedding matrix — a standard trick since GPT-2).\n\n### Step 3: next-token prediction, end-to-end\n\nOn a 20-token toy vocab, produce logits at every position. Compute cross-entropy loss against the shift-by-one target. No gradient — this is a forward-pass sanity check.\n\n### Step 4: sampling\n\nImplement greedy, temperature, top-k, top-p, min-p. Run each on a fixed prompt and compare outputs. A sampling function is 10 lines.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "PyTorch, 2026 idiom:\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\nmodel = AutoModelForCausalLM.from_pretrained(\"meta-llama/Llama-3.2-3B-Instruct\")\ntok = AutoTokenizer.from_pretrained(\"meta-llama/Llama-3.2-3B-Instruct\")\n\nprompt = \"Attention is all you need because\"\ninputs = tok(prompt, return_tensors=\"pt\")\nout = model.generate(\n    **inputs,\n    max_new_tokens=64,\n    temperature=0.7,\n    top_p=0.9,\n    do_sample=True,\n)\nprint(tok.decode(out[0]))\n```\n\nUnder the hood, `generate()` runs the forward pass, pulls the final-position logits, samples the next token, appends it, and repeats. Every production LLM inference stack (vLLM, TensorRT-LLM, llama.cpp, Ollama, MLX) implements the same loop with heavy optimization — batched prefill, continuous batching, KV cache paging, speculative decoding.\n\n**GPT vs BERT, one line each:** GPT predicts `P(x_t | x_{<t})`. BERT predicts `P(x_masked | x_unmasked)`. The loss determines whether the model can generate.",
+    "keyPoints": [
+      "GPT vs BERT, one line each:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "See `outputs/skill-sampling-tuner.md`. The skill picks sampling parameters for a new generation task and flags when deterministic decoding is required.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Run `code/main.py` and verify the causal attention matrix is lower-triangular after softmax. Spot-check: row 3 should have weights only in columns 0–3.\n2. **Medium.** Implement beam search for width 4. Compare perplexity of beam-4 vs greedy on 10 short prompts. Does beam always win? (Hint: usually for translation, not for open-ended chat.)\n3. **Hard.** Implement speculative decoding: use a tiny 2-layer model as the draft and a 6-layer model as the verifier. Measure wall-clock speedup on 100 completions of length 64. Confirm outputs match greedy of the verifier.",
+    "keyPoints": [
+      "Easy.",
+      "Medium."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| Causal mask | \"The triangle\" | Upper-triangular `-inf` matrix added to attention scores so position `i` only sees positions `≤ i`. |\n| Next-token prediction | \"The loss\" | Cross-entropy of the model's distribution against the true next token at every position. |\n| Autoregressive | \"Generate one at a time\" | Feed output back as input; parallelism only during training, not during generation. |\n| Logits | \"Pre-softmax scores\" | Raw output of the LM head before softmax; sampling happens on these. |\n| Temperature | \"Creativity knob\" | Divide logits by T; T→0 = greedy, T→∞ = uniform. |\n| Top-p | \"Nucleus sampling\" | Truncate distribution to smallest set summing to ≥p; sample from what remains. |\n| Min-p | \"Better than top-p\" | Keep tokens where `p ≥ min_p × max_p`; adapts cutoff to sharpness of distribution. |\n| Speculative decoding | \"Draft + verify\" | Cheap model proposes N tokens; big model verifies in parallel. |\n| Teacher forcing | \"Training trick\" | During training, feed the true previous token, not the model's prediction. Standard for every seq2seq LM. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Radford et al. (2018). Improving Language Understanding by Generative Pre-Training](https://cdn.openai.com/research-covers/language-unsupervised/language_understanding_paper.pdf) — GPT-1.\n- [Radford et al. (2019). Language Models are Unsupervised Multitask Learners](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) — GPT-2.\n- [Brown et al. (2020). Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) — GPT-3 and in-context learning.\n- [Leviathan, Kalman, Matias (2023). Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) — spec decoding paper.\n- [HuggingFace `modeling_llama.py`](https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py) — canonical causal-LM reference code.",
+    "keyPoints": [
+      "[Brown et al. (2020). Language Models are Few-Shot Learners](https://arxiv.org/abs/2005.14165) — GPT-3 and in-context learning.",
+      "[Leviathan, Kalman, Matias (2023). Fast Inference from Transformers via Speculative Decoding](https://arxiv.org/abs/2211.17192) — spec decoding paper."
+    ],
+    "commands": []
+  }
+]

@@ -1,0 +1,101 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { Card } from '@atlas/ui/components/ui/card';
+import { Badge } from '@atlas/ui/components/ui/badge';
+import { Separator } from '@atlas/ui/components/ui/separator';
+import { frameworkMeta } from '@/lib/frameworks';
+import { useTranslations, type Locale } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+  entry: CollectionEntry<'agents'>;
+}
+
+const { locale, entry } = Astro.props;
+const t = useTranslations(locale);
+const { Content } = await render(entry);
+const meta = entry.data;
+
+const runCommands = `cd ${meta.githubPath}\npip install -r ${meta.requirements}\ncp .env.example .env   # add your API keys\npython ${meta.entrypoint}`;
+---
+
+<BaseLayout title={meta.title} description={meta.description}>
+  <article class="mx-auto max-w-4xl space-y-8">
+    <header class="space-y-4">
+      <div class="flex flex-wrap gap-1.5">
+        <Badge variant="outline">{frameworkMeta[meta.framework].name}</Badge>
+        <Badge variant="secondary">{meta.difficulty}</Badge>
+        <Badge variant="secondary">{meta.industry}</Badge>
+        {meta.tags.slice(0, 4).map((tag) => (
+          <Badge variant="outline">{tag}</Badge>
+        ))}
+      </div>
+      <h1 class="text-4xl font-bold tracking-tight">{meta.title}</h1>
+      <p class="text-lg text-muted-foreground">{meta.description}</p>
+    </header>
+
+    <Separator />
+
+    <section class="grid gap-6 md:grid-cols-[1fr_220px]">
+      <div class="prose prose-lg prose-zinc max-w-none dark:prose-invert prose-headings:tracking-tight prose-a:text-primary">
+        <Content />
+      </div>
+
+      <aside class="space-y-4 md:sticky md:top-20 md:self-start">
+        <Card className="p-5">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('agents.run')}
+          </h3>
+          <pre class="overflow-x-auto rounded-md border border-border bg-muted/40 p-3 font-mono text-xs leading-relaxed">{runCommands}</pre>
+        </Card>
+
+        <Card className="p-5">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('agents.metadata')}
+          </h3>
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted-foreground">{t('agents.meta.framework')}</dt>
+              <dd>{frameworkMeta[meta.framework].name}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted-foreground">{t('agents.meta.difficulty')}</dt>
+              <dd class="capitalize">{meta.difficulty}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted-foreground">{t('agents.meta.llm')}</dt>
+              <dd>{meta.llm}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted-foreground">{t('agents.meta.industry')}</dt>
+              <dd>{meta.industry}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted-foreground">{t('agents.meta.language')}</dt>
+              <dd>{meta.language}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted-foreground">{t('agents.meta.entrypoint')}</dt>
+              <dd class="font-mono text-xs">{meta.entrypoint}</dd>
+            </div>
+          </dl>
+        </Card>
+
+        <Card className="p-5">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('agents.source')}
+          </h3>
+          <a
+            href={`https://github.com/ashishpatel26/500-AI-Agents-Projects/tree/main/${meta.githubPath}`}
+            target="_blank"
+            rel="noreferrer"
+            class="text-sm text-primary hover:underline"
+          >
+            {t('agents.viewOnGithub')}
+          </a>
+        </Card>
+      </aside>
+    </section>
+  </article>
+</BaseLayout>

@@ -1,0 +1,23 @@
+{
+  "id": "15-autonomous-systems/05-ai-scientist-v2",
+  "slug": "05-ai-scientist-v2",
+  "phase": "15-autonomous-systems",
+  "order": 5,
+  "phaseOrder": 15,
+  "title": {
+    "en": "AI Scientist v2 — Workshop-Level Autonomous Research",
+    "zh": ""
+  },
+  "hook": "Sakana's AI Scientist v2 (Yamada et al., arXiv:2504.08066) runs the full research loop: hypothesis, code, experiments, figures, writeup, submission. It is the first system to have a generated paper pass peer review at an ICLR 2025 workshop. Independent evaluation (Beel et al.) found 42% of experiments failed from coding errors and literature review frequently mislabeled established concepts as novel. Sakana's own docs warn that the codebase executes LLM-written code and recommend Docker isolation. Both halves of that picture are the point.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "research-loop state-machine toy)"
+  ],
+  "prerequisites": [
+    "Phase 15 · 03 (AlphaEvolve)",
+    "Phase 15 · 04 (DGM)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

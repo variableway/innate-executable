@@ -1,0 +1,23 @@
+{
+  "id": "14-agent-engineering/40-multi-session-handoff",
+  "slug": "40-multi-session-handoff",
+  "phase": "14-agent-engineering",
+  "order": 40,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Multi-Session Handoff",
+    "zh": ""
+  },
+  "hook": "The session is going to end. The work is not. The handoff packet is the artifact that turns \"the agent worked for an hour\" into \"the next session is productive in the first minute.\" Build it on purpose, not as an afterthought.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 34 (Repo Memory)",
+    "Phase 14 · 38 (Verification)",
+    "Phase 14 · 39 (Reviewer)"
+  ],
+  "timeMinutes": 50,
+  "needsTranslation": true
+}

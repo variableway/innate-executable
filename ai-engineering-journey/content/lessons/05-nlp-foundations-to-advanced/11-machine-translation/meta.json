@@ -1,0 +1,24 @@
+{
+  "id": "05-nlp-foundations-to-advanced/11-machine-translation",
+  "slug": "11-machine-translation",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 11,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Machine Translation",
+    "zh": ""
+  },
+  "hook": "Translation is the task that paid for NLP research for thirty years and keeps paying now.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 10 (Attention Mechanism)",
+    "Phase 5 · 04 (GloVe",
+    "FastText",
+    "Subword)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

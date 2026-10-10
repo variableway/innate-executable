@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/09-vision-transformers",
+  "slug": "09-vision-transformers",
+  "phase": "07-transformers-deep-dive",
+  "order": 9,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Vision Transformers (ViT)",
+    "zh": ""
+  },
+  "hook": "An image is a grid of patches. A sentence is a grid of tokens. The same transformer eats both.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 05 (Full Transformer)",
+    "Phase 4 · 03 (CNNs)",
+    "Phase 4 · 14 (Vision Transformers intro)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

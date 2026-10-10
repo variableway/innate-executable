@@ -1,0 +1,112 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Building an MCP Client: Discovery, Routing, and Dual-Era Fallback\n\n> A modern MCP client repeats its contract on every request. Its hardest compatibility decision is knowing when an old server is truly old and when a modern server is reporting a correctable error.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13, Lesson 07\n**Time:** ~85 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Build every MCP `2026-07-28` request with current metadata.\n- Probe stdio servers with `server/discover` and select a mutually supported version.\n- Authorize a bounded legacy probe only for explicitly allowlisted peers.\n- Accept a legacy era only after validating a positive `initialize` result for a supported revision.\n- Merge deterministic tool lists without silently overwriting collisions.\n- Route calls to the peer that owns each tool without inventing protocol sessions.",
+    "keyPoints": [
+      "Build every MCP `2026-07-28` request with current metadata.",
+      "Probe stdio servers with `server/discover` and select a mutually supported version.",
+      "Authorize a bounded legacy probe only for explicitly allowlisted peers.",
+      "Accept a legacy era only after validating a positive `initialize` result for a supported revision.",
+      "Merge deterministic tool lists without silently overwriting collisions.",
+      "Route calls to the peer that owns each tool without inventing protocol sessions."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "An agent host usually talks to more than one MCP server. It must discover each server, merge tool catalogs, resolve duplicate names, route calls, and recover from transport failure.\n\nThe `2026-07-28` revision makes the steady state simpler because each request is self-contained. Compatibility makes startup more subtle. A client may encounter:\n\n- a modern server that supports the preferred version;\n- a modern server that returns a recognized version or header error;\n- a legacy server that has never heard of `server/discover`;\n- a legacy server that stays silent until it receives `initialize`.\n\nTreating every probe error as legacy is dangerous. A malformed modern request, an overloaded server, a dead process, and an old server can all produce the same timeout or connection close. Those signals are ambiguous. The client must combine explicit operator intent with positive protocol evidence before it chooses the legacy era.",
+    "keyPoints": [
+      "a modern server that supports the preferred version;",
+      "a modern server that returns a recognized version or header error;",
+      "a legacy server that has never heard of `server/discover`;",
+      "a legacy server that stays silent until it receives `initialize`."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### A peer, not a protocol session\n\nKeep one transport peer record for each server process or endpoint:\n\n- transport handle or send function;\n- selected protocol era and version;\n- last discovered server capabilities;\n- last deterministic tool list;\n- pending request ids for correlation;\n- transport health.\n\nThis is client bookkeeping. It is not protocol session state. On modern MCP, the server still receives current version and capabilities on every request.\n\n### Build every modern request from scratch\n\n```python\ndef modern_request(request_id, method, params, version, capabilities):\n    return {\n        \"jsonrpc\": \"2.0\",\n        \"id\": request_id,\n        \"method\": method,\n        \"params\": {\n            **params,\n            \"_meta\": {\n                \"io.modelcontextprotocol/protocolVersion\": version,\n                \"io.modelcontextprotocol/clientCapabilities\": capabilities,\n                \"io.modelcontextprotocol/clientInfo\": CLIENT_INFO,\n            },\n        },\n    }\n```\n\nDo not attach metadata once to a connection object and assume it reached the wire. Stamp and inspect the final serialized request.\n\n### Modern discovery\n\n`server/discover` returns supported versions, server capabilities, instructions, cache hints, and recommended server identity. A client chooses the highest mutually supported modern version.\n\nDiscovery is optional for a modern-only client, but it is recommended on stdio. Some legacy servers accept an operation before initialization, so sending `tools/list` first can produce an ambiguous success. `server/discover` creates a clean era boundary.\n\n### The stdio compatibility probe\n\nA dual-era stdio client sends `server/discover` with its preferred modern metadata before any other request. There are three outcome classes:\n\n1. **DiscoverResult.** The server is modern. Select a mutually supported version and continue with per-request metadata.\n2. **Recognized modern error.** The server is modern. For `-32022`, choose from `data.supported` and retry with a new request id. For header or capability errors, correct the request. Do not send `initialize`.\n3. **Ambiguous signal.** An unrecognized JSON-RPC error, timeout, connection close, or empty response does not identify an era. Fail closed unless that exact peer is configured for legacy compatibility.\n\nRecognized modern protocol errors include:\n\n- `-32020` HeaderMismatch\n- `-32021` MissingRequiredClientCapability\n- `-32022` UnsupportedProtocolVersion\n\nRecognized modern errors remain modern even when the peer is on the legacy allowlist. Once a server proves that it understands the modern error vocabulary, sending `initialize` would be a downgrade.\n\nDo not treat `-32601` as positive legacy evidence. It only makes an explicitly allowlisted peer eligible for one legacy probe. The same rule applies to a timeout, connection close, or empty response.\n\n### Allowlisting is operator intent, not evidence\n\nLegacy compatibility must be an explicit property of one pinned peer configuration:\n\n```python\nclient.add_server(\"archive\", archive_transport, allow_legacy=True)\n```\n\nBind that choice to the configured command or endpoint. Do not use a wildcard that lets an arbitrary server opt itself into weaker semantics. A peer without `allow_legacy=True` fails after an ambiguous discovery outcome and never receives `initialize`.\n\nThe allowlist grants permission to probe. It does not select the era. The client sends one `initialize` under a transport-enforced deadline, then requires all of the following:\n\n- a JSON-RPC `2.0` response with the matching request id;\n- exactly one `result` and no `error`;\n- a `protocolVersion` in the client's configured legacy revision set;\n- an object-valued `capabilities` field;\n- a `serverInfo` object with non-empty string `name` and `version` fields.\n\nA timeout, connection close, error response, malformed result, mismatched id, or unsupported revision fails closed. Only a structurally valid positive result selects the legacy era. The code passes `legacy_probe_timeout_ms` to the transport adapter; a real stdio or HTTP adapter must enforce that deadline rather than merely record it.\n\nCache the selected era for the transport peer. Do not probe again before every call.\n\n### Legacy is a compatibility branch\n\nOnce the bounded probe returns valid positive legacy evidence, the client uses the selected legacy version exactly as defined by that revision:\n\n1. Verify the response envelope and correlation id.\n2. Verify the negotiated revision is in the configured legacy set.\n3. Record validated capabilities and server identity.\n4. Send `notifications/initialized` only after all checks pass.\n5. Use legacy request shapes for that transport lifetime.\n\nThis branch exists for interoperability with known peers. It is not the default design for new servers or new requests. If the transport restarts or its endpoint changes, discard the peer-era cache and negotiate again.\n\n### Discovering and caching tools\n\nFor each active peer, call `tools/list`. A modern result includes `resultType`, `ttlMs`, and `cacheScope`. Honor the freshness hint within the correct authorization context. Re-fetch after expiry or a subscribed list-change event.\n\nClients must treat a missing `resultType` from a legacy server as `\"complete\"`. Do not require modern cache fields on a response from an earlier negotiated era.\n\nThe server should return deterministic ordering. The client should also sort before merging so local registry order does not depend on process startup timing.\n\n### Collision-safe namespace merge\n\nTwo servers may both expose `search`. Choose a declared policy:\n\n1. **Prefix on collision.** Keep the first canonical name and expose later collisions as `<server>/<tool>`.\n2. **Reject on collision.** Do not load the duplicate and surface a clear configuration error.\n3. **Silent overwrite.** Never use this. It hides which server receives a model-selected action.\n\nStore both canonical and local names. The model sees the canonical name. The outgoing `tools/call` uses the local name the owning server declared.\n\n### Routing a call\n\nRouting is a pure lookup:\n\n```text\ncanonical tool name\n  -> peer name + local tool name\n  -> new JSON-RPC request id\n  -> modern request metadata or explicit legacy shape\n  -> matching response id\n```\n\nDo not send a call when its owning transport is unavailable. Reconnect or restart the transport, then re-run discovery and `tools/list`. Modern in-flight requests lost on a broken transport can be retried with a new JSON-RPC id when the operation's safety policy permits it.\n\n### Notifications and subscriptions\n\nModern list and resource changes arrive only on a client-opened `subscriptions/listen` stream. The client sends the notification filter, waits for `notifications/subscriptions/acknowledged`, and correlates events with the listen request id in notification metadata.\n\nOn disconnect, open a new listen request and refetch relevant lists or resources. Modern streams do not resume with `Last-Event-ID`.\n\n### No server-initiated requests\n\nModern servers do not call the client with independent JSON-RPC requests for sampling, elicitation, or roots. They return `input_required`, and the client retries the original request after fulfilling the embedded input requests.\n\nDo not block the peer's response reader while fulfilling input. Preserve correlation and create a new JSON-RPC id for the retry.\n\n```figure\ntp-client-merge\n```",
+    "keyPoints": [
+      "transport handle or send function;",
+      "selected protocol era and version;",
+      "last discovered server capabilities;",
+      "last deterministic tool list;",
+      "pending request ids for correlation;",
+      "transport health."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "canonical tool name\n  -> peer name + local tool name\n  -> new JSON-RPC request id\n  -> modern request metadata or explicit legacy shape\n  -> matching response id"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`code/main.py` uses in-process peer functions so the protocol decisions stay visible. It connects to two modern peers and one intentionally allowlisted legacy peer, then merges and routes their tools. The transport callable receives a timeout budget so the compatibility branch cannot hide an unbounded probe.\n\n```bash\ncd code\npython3 main.py\npython3 -m unittest discover tests -v\n```\n\nThe tests prove boundaries that normal demos miss:\n\n- modern requests repeat metadata;\n- `-32022` retries modern discovery without initialization;\n- recognized modern errors never downgrade, even for an allowlisted peer;\n- timeouts, connection closes, empty responses, and unrecognized errors do not trigger `initialize` without an allowlist;\n- an allowlisted peer becomes legacy only after a valid, supported `initialize` result;\n- malformed and unsupported legacy results leave the peer unavailable;\n- a successfully selected era is cached for the transport lifetime.",
+    "keyPoints": [
+      "modern requests repeat metadata;",
+      "`-32022` retries modern discovery without initialization;",
+      "recognized modern errors never downgrade, even for an allowlisted peer;",
+      "timeouts, connection closes, empty responses, and unrecognized errors do not trigger `initialize` without an allowlist;",
+      "an allowlisted peer becomes legacy only after a valid, supported `initialize` result;",
+      "malformed and unsupported legacy results leave the peer unavailable;"
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd code\npython3 main.py\npython3 -m unittest discover tests -v"
+      }
+    ]
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson ships `outputs/skill-mcp-client-harness.md`. It scaffolds modern request stamping, stdio era negotiation, deterministic namespace merge, routing, and a fail-closed legacy compatibility branch.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Make a fake server return `-32022` with no mutually supported version. Confirm the client fails instead of sending `initialize`.\n2. Allowlist a fake legacy server, make its bounded `initialize` probe time out, and prove the peer stays `unknown` and unavailable.\n3. Add `cacheScope: \"private\"` tool lists for two authorization contexts. Confirm the client never shares one context's cached result with the other.\n4. Change the collision policy to rejection and make startup fail with both peer names in the error.\n5. Add a finite `subscriptions/listen` simulator. On stream loss, re-listen with a new request id and refetch tools.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | Meaning |\n|------|---------|\n| Peer | Client-side record for one server transport and its discovered data |\n| Protocol era | Modern per-request metadata or legacy initialization semantics |\n| Discovery probe | Initial `server/discover` used to identify the stdio era |\n| Recognized modern error | Error that proves modern behavior and forbids legacy fallback |\n| Legacy allowlist | Operator configuration permitting one bounded compatibility probe for a pinned peer |\n| Positive legacy evidence | Valid, correlated `initialize` result for an explicitly supported legacy revision |\n| Merged namespace | Canonical tool names across all active peers |\n| Collision policy | Prefix or reject rule for duplicate tool names |\n| Era cache | Selected modern or legacy behavior stored for one transport peer |\n| Transport recovery | Restart or reconnect, rediscover, relist, and retry safely with a new id |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [MCP Specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/)\n- [MCP Server Discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)\n- [MCP stdio Transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)\n- [MCP Versioning](https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning)\n- [MCP Tools](https://modelcontextprotocol.io/specification/2026-07-28/server/tools)",
+    "keyPoints": [
+      "[MCP Specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/)",
+      "[MCP Server Discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)",
+      "[MCP stdio Transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)",
+      "[MCP Versioning](https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning)",
+      "[MCP Tools](https://modelcontextprotocol.io/specification/2026-07-28/server/tools)"
+    ],
+    "commands": []
+  }
+]

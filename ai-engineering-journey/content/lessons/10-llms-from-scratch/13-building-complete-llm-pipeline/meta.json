@@ -1,0 +1,21 @@
+{
+  "id": "10-llms-from-scratch/13-building-complete-llm-pipeline",
+  "slug": "13-building-complete-llm-pipeline",
+  "phase": "10-llms-from-scratch",
+  "order": 13,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Building a Complete LLM Pipeline",
+    "zh": ""
+  },
+  "hook": "Everything from Lessons 01 to 12 is one stage of one pipeline. This lesson is the scaffold that turns those stages into a single end-to-end run: tokenize, pre-train, scale, SFT, align, evaluate, quantize, serve. You will not train a 70B model on a laptop. You will produce the orchestration layer, the manifest, the eval gate, and the rollback plan that a 2026 frontier team uses to decide what gets shipped. This is the capstone.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "All Phase 10 lessons 01-12"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

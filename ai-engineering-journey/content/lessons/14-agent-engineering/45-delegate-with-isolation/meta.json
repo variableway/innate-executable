@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/45-delegate-with-isolation",
+  "slug": "45-delegate-with-isolation",
+  "phase": "14-agent-engineering",
+  "order": 45,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Delegate Agent Work with Isolation and Merge Contracts",
+    "zh": ""
+  },
+  "hook": "Parallel agents save wall time only when the work is independent. Otherwise they convert one clear task into a coordination problem with a faster failure rate.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lessons 39 and 44"
+  ],
+  "timeMinutes": 70,
+  "needsTranslation": true
+}

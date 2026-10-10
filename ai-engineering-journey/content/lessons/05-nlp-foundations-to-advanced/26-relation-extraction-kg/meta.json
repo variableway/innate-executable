@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/26-relation-extraction-kg",
+  "slug": "26-relation-extraction-kg",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 26,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Relation Extraction & Knowledge Graph Construction",
+    "zh": ""
+  },
+  "hook": "NER found the entities. Entity linking anchored them. Relation extraction finds the edges between them. A knowledge graph is the sum of nodes, edges, and their provenance.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 06 (NER)",
+    "Phase 5 · 25 (Entity Linking)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

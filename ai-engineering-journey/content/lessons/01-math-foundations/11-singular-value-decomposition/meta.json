@@ -1,0 +1,25 @@
+{
+  "id": "01-math-foundations/11-singular-value-decomposition",
+  "slug": "11-singular-value-decomposition",
+  "phase": "01-math-foundations",
+  "order": 11,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Singular Value Decomposition",
+    "zh": "奇异值分解"
+  },
+  "hook": "SVD is the Swiss Army knife of linear algebra. Every matrix has one. Every data scientist needs one.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "Julia"
+  ],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01 (Linear Algebra Intuition)",
+    "02 (Vectors & Matrices Operations)",
+    "03 (Matrix Transformations)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": false
+}

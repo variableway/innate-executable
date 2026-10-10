@@ -1,0 +1,20 @@
+{
+  "id": "01-math-foundations/05-chain-rule-and-autodiff",
+  "slug": "05-chain-rule-and-autodiff",
+  "phase": "01-math-foundations",
+  "order": 5,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Chain Rule & Automatic Differentiation",
+    "zh": "链式法则与自动微分"
+  },
+  "hook": "The chain rule is the engine behind every neural network that learns.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lesson 04 (Derivatives & Gradients)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": false
+}

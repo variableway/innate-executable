@@ -1,0 +1,112 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Frame the Task Before the Agent Writes Code\n\n> A coding agent can implement a clear task quickly. It can also implement an unclear task quickly. The speed is the same. The cost is not.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lessons 31 and 36\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Turn a request into a bounded task frame before editing.\n- Separate repository facts from assumptions and open questions.\n- Define allowed paths, forbidden paths, and acceptance evidence.\n- Decide when reconnaissance is sufficient to begin work.",
+    "keyPoints": [
+      "Turn a request into a bounded task frame before editing.",
+      "Separate repository facts from assumptions and open questions.",
+      "Define allowed paths, forbidden paths, and acceptance evidence.",
+      "Decide when reconnaissance is sufficient to begin work."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-expensive-failure",
+    "title": "The Expensive Failure",
+    "bodyMarkdown": "“Add duplicate email protection” sounds specific. It is not. Does uniqueness belong in the API, domain service, or database? Is comparison case-sensitive? Which error shape is already public? Is a migration allowed? Which test proves the behavior?\n\nA capable agent will fill those gaps with plausible choices. That is the dangerous case because the implementation can be clean, tested, and still incompatible with the system.\n\nThe first unit of coding-agent work is therefore not an edit. It is a task frame backed by repository evidence.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-task-frame",
+    "title": "The Task Frame",
+    "bodyMarkdown": "A useful frame has six fields:\n\n| Field | Question |\n|---|---|\n| Goal | What observable behavior must change? |\n| Repository facts | What did you verify in code, tests, config, or history? |\n| Allowed paths | Where may the change land? |\n| Forbidden paths | What must remain untouched? |\n| Acceptance evidence | Which commands or observations prove the goal? |\n| Unknowns | Which decisions still need evidence or human judgment? |\n\nFacts need receipts. “The API uses 409 for duplicates” is not a fact until you can point to the existing test or handler. A file path and line is enough. A command result is better when behavior matters.\n\n```mermaid\nflowchart LR\n  R[Request] --> I[Inspect repository]\n  I --> F[Facts with evidence]\n  F --> B[Bounded task frame]\n  B --> D{Unknown blocks design?}\n  D -->|Yes| Q[Ask or investigate]\n  D -->|No| P[Plan the change]\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "reconnaissance-is-a-search-for-constraints",
+    "title": "Reconnaissance Is a Search for Constraints",
+    "bodyMarkdown": "Do not read the entire repository. Search for the surfaces that constrain the change:\n\n1. The current behavior and its caller.\n2. The closest existing test.\n3. The public contract or serialized shape.\n4. The project instructions that govern the path.\n5. The build and verification commands.\n6. Similar completed changes that reveal local patterns.\n\nStop when every planned decision is either supported by evidence, explicitly delegated, or listed as an unknown. More reading after that point is often avoidance.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "unknowns-are-not-failures",
+    "title": "Unknowns Are Not Failures",
+    "bodyMarkdown": "An unknown is a controlled gap. An assumption is an uncontrolled answer to that gap.\n\nClassify each unknown:\n\n- **Discoverable:** the repository or running system can answer it.\n- **Decidable:** the task contract gives the agent authority to choose.\n- **Human:** the choice changes product behavior, cost, risk, or public compatibility.\n- **Deferred:** the choice is outside this slice and belongs in non-goals.\n\nThe agent should continue through discoverable and delegated unknowns. It should pause at human unknowns before the choice is buried in code.",
+    "keyPoints": [
+      "Discoverable:: the repository or running system can answer it.",
+      "Decidable:: the task contract gives the agent authority to choose.",
+      "Human:: the choice changes product behavior, cost, risk, or public compatibility.",
+      "Deferred:: the choice is outside this slice and belongs in non-goals."
+    ],
+    "commands": []
+  },
+  {
+    "id": "acceptance-before-implementation",
+    "title": "Acceptance Before Implementation",
+    "bodyMarkdown": "Write the proof before the patch. The proof can be:\n\n- a focused unit or integration test command;\n- a browser journey with a named viewport and expected state;\n- a wire request and exact response contract;\n- a performance measurement with a threshold;\n- a scope check that confirms no unrelated file changed.\n\n“Tests pass” is not a proof plan. Name the authoritative test and the claim it supports.",
+    "keyPoints": [
+      "a focused unit or integration test command;",
+      "a browser journey with a named viewport and expected state;",
+      "a wire request and exact response contract;",
+      "a performance measurement with a threshold;",
+      "a scope check that confirms no unrelated file changed."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab creates a `TaskFrame`, validates its boundaries and evidence, and writes `outputs/task-frame.md`.\n\nRun from this lesson directory:\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nBreak the example in four ways: remove the goal, remove a fact receipt, overlap an allowed and forbidden path, and remove the acceptance command. The validator should refuse each frame for a different reason.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "use-it-in-a-real-repository",
+    "title": "Use It in a Real Repository",
+    "bodyMarkdown": "Before asking an agent to edit:\n\n1. Write the goal as a behavior, not a file change.\n2. Record two or three facts with exact evidence.\n3. Name the smallest allowed path set.\n4. Name negative space explicitly.\n5. Write the command or observation that closes the task.\n6. List the decisions you have not earned yet.\n\nThe frame should fit on one screen. If it cannot, the task may contain multiple independently verifiable changes.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Frame a real bug from one of your repositories without proposing a solution.\n2. Find one claim in the frame that is actually an assumption. Replace it with evidence.\n3. Add a human unknown whose answer would change the public contract.\n4. Split one broad allowed path into the smallest safe set.\n5. Add a scope receipt to the acceptance evidence.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Nuseibeh and Easterbrook, Requirements Engineering: A Roadmap](https://www.cs.toronto.edu/~sme/papers/2000/ICSE2000.pdf), for anchoring implementation to real-world goals and evolving constraints.\n- [Yang et al., SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering](https://arxiv.org/abs/2405.15793), for evidence that the interface around a coding agent changes its effectiveness.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/task-frame.md`. It is the input to the next lesson, where the frame becomes an evidence-backed execution plan.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

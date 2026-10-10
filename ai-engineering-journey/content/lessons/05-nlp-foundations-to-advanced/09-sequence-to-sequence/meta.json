@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/09-sequence-to-sequence",
+  "slug": "09-sequence-to-sequence",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 9,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Sequence-to-Sequence Models",
+    "zh": ""
+  },
+  "hook": "Two RNNs pretending to be a translator. The bottleneck they hit is the reason attention exists.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 08 (CNNs + RNNs for Text)",
+    "Phase 3 · 11 (PyTorch Intro)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

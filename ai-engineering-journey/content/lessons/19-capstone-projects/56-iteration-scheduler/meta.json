@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/56-iteration-scheduler",
+  "slug": "56-iteration-scheduler",
+  "phase": "19-capstone-projects",
+  "order": 56,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Iteration Scheduler",
+    "zh": ""
+  },
+  "hook": "A research loop without a scheduler is a queue with delusions. The scheduler is where the loop decides what to stop exploring, and that decision is the whole game.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 50-53"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

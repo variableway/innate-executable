@@ -1,0 +1,122 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Plan-Execute Control Flow\n\n> A plan that cannot survive a failure is a script. A script that can replan is an agent. Build the replanner first.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13 lessons 01-07, Phase 14 lesson 01\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Represent a plan as an ordered list of typed steps so the executor can reason about progress and outcome.\n- Execute steps sequentially with a controlled failure handoff back to the planner.\n- Replan from the current cursor with the prior error in the context so the next plan is informed.\n- Emit a plan diff on each revision so a downstream tracer or UI can show why the plan changed.\n- Enforce two budgets: a hard step ceiling and a hard replan ceiling.\n\n```figure\ncg-plan-replan\n```",
+    "keyPoints": [
+      "Represent a plan as an ordered list of typed steps so the executor can reason about progress and outcome.",
+      "Execute steps sequentially with a controlled failure handoff back to the planner.",
+      "Replan from the current cursor with the prior error in the context so the next plan is informed.",
+      "Emit a plan diff on each revision so a downstream tracer or UI can show why the plan changed.",
+      "Enforce two budgets: a hard step ceiling and a hard replan ceiling."
+    ],
+    "commands": []
+  },
+  {
+    "id": "plan-and-execute-not-chain-of-thought",
+    "title": "Plan and execute, not chain-of-thought",
+    "bodyMarkdown": "A chain-of-thought agent emits tokens and lets the loop guess where the tool call ends. A plan-and-execute agent emits a structured plan first, then executes each step deterministically. The plan is data the harness can introspect. The execution is the harness running that data through a dispatcher.\n\nTwo pieces. A planner that produces a plan. An executor that runs the plan. The interesting work is what happens when the executor hits a failure. Three options:\n\n```text\n1. Abort         (return failed, surface the error)\n2. Skip          (mark step failed, continue with the rest)\n3. Replan        (hand the error to the planner, get a new plan from the cursor)\n```\n\nReplan is the one that turns a script into an agent.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "1. Abort         (return failed, surface the error)\n2. Skip          (mark step failed, continue with the rest)\n3. Replan        (hand the error to the planner, get a new plan from the cursor)"
+      }
+    ]
+  },
+  {
+    "id": "the-step-shape",
+    "title": "The Step shape",
+    "bodyMarkdown": "```text\nStep\n  id              : int           (monotonic within a plan revision)\n  tool_name       : str\n  args            : dict\n  expected_outcome: str           (planner's stated success condition)\n  result          : Any | None\n  error           : str | None\n```\n\n`expected_outcome` is a short sentence the planner emits alongside the step. It is not enforced by the executor. It is for two things: the replanner reads it when revising the plan; the event stream emits it so a tracer can show \"this step was supposed to do X.\"",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Step\n  id              : int           (monotonic within a plan revision)\n  tool_name       : str\n  args            : dict\n  expected_outcome: str           (planner's stated success condition)\n  result          : Any | None\n  error           : str | None"
+      }
+    ]
+  },
+  {
+    "id": "the-planner-shape",
+    "title": "The planner shape",
+    "bodyMarkdown": "```python\ndef planner(goal: str, history: list[Step], last_error: str | None) -> list[Step]:\n    ...\n```\n\nA pure function. `goal` is the user goal. `history` is the steps already executed (with results and errors filled in). `last_error` is None on the first call and the most recent failure message on every subsequent call. The planner returns the next plan starting from the cursor.\n\nThe planner does not know about the executor. It does not know about retries. It does not know about timeouts. It produces a plan. That is all.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-executor",
+    "title": "The executor",
+    "bodyMarkdown": "The executor is a small state machine. Each step runs through the dispatcher. The outcome is one of three things: success, failure-replannable, failure-fatal. Replannable failures hand back to the planner. Fatal failures (budget exceeded, replan ceiling hit) return a `FAILED` session result.\n\n```mermaid\nstateDiagram-v2\n    [*] --> EXEC\n    EXEC --> NEXT: success\n    NEXT --> EXEC: n+1 < len(plan)\n    NEXT --> DONE: n+1 == len(plan)\n    EXEC --> REPLAN: failure\n    REPLAN --> EXEC: new plan, replans_used < max_replans\n    REPLAN --> FAILED: replans_used >= max_replans\n    FAILED --> [*]\n    DONE --> [*]\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "plan-diffs-on-revision",
+    "title": "Plan diffs on revision",
+    "bodyMarkdown": "When the planner returns a new plan after a failure, the executor emits a `plan.diff` event with three fields.\n\n```text\nremoved: list of step ids that were in the old plan and are not in the new\nadded  : list of step ids in the new plan that were not in the old\nrevised: list of step ids whose tool_name or args changed\n```\n\nA tracer or UI can render this as a strikethrough on the removed steps and a highlight on the added ones. The point is not the diff format. The point is that revision is a visible event, not a silent rewrite.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "removed: list of step ids that were in the old plan and are not in the new\nadded  : list of step ids in the new plan that were not in the old\nrevised: list of step ids whose tool_name or args changed"
+      }
+    ]
+  },
+  {
+    "id": "two-budgets-both-hard",
+    "title": "Two budgets, both hard",
+    "bodyMarkdown": "`max_steps` caps total step executions across the whole session, including replans. Default is twelve. A linear five-step plan that replans twice and adds three steps each time hits sixteen executions and would exceed the budget. The executor will refuse the replan and return FAILED.\n\n`max_replans` caps the number of times the planner is called after the first plan. Default is five. This is the more important limit. A planner that returns the same broken plan five times in a row would otherwise loop until the step budget catches it. Capping replans makes the failure faster and the reason clearer.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-deterministic-planner-in-this-lesson",
+    "title": "The deterministic planner in this lesson",
+    "bodyMarkdown": "We do not call a model in this lesson. The lesson ships a deterministic planner that picks a plan based on `last_error`.\n\n```text\nlast_error is None    -> emit a four-step plan\nlast_error matches X  -> emit a three-step plan that routes around X\nlast_error matches Y  -> emit a two-step plan that gives up gracefully\notherwise             -> return [] (signals nothing to replan)\n```\n\nThis is enough to test the executor's behavior on every transition path: success, replan-once, replan-twice, replan-exhaustion, and step-budget exhaustion.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "last_error is None    -> emit a four-step plan\nlast_error matches X  -> emit a three-step plan that routes around X\nlast_error matches Y  -> emit a two-step plan that gives up gracefully\notherwise             -> return [] (signals nothing to replan)"
+      }
+    ]
+  },
+  {
+    "id": "result-shape",
+    "title": "Result shape",
+    "bodyMarkdown": "```text\nSessionResult\n  status      : \"completed\" | \"failed\"\n  reason      : str     (\"goal_met\" | \"step_budget\" | \"replan_budget\" | \"no_plan\")\n  history     : list[Step]\n  revisions   : list[PlanDiff]\n  events      : list[Event]\n```\n\nThe harness loop from lesson twenty can read this directly. The dispatcher from lesson twenty-three is what executes each step. The registry from lesson twenty-one validates each step's args. The transport from lesson twenty-two would surface this whole flow over JSON-RPC to a model client.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "SessionResult\n  status      : \"completed\" | \"failed\"\n  reason      : str     (\"goal_met\" | \"step_budget\" | \"replan_budget\" | \"no_plan\")\n  history     : list[Step]\n  revisions   : list[PlanDiff]\n  events      : list[Event]"
+      }
+    ]
+  },
+  {
+    "id": "how-to-read-the-code",
+    "title": "How to read the code",
+    "bodyMarkdown": "`code/main.py` defines `PlanExecuteAgent`, `Step`, `PlanDiff`, `SessionResult`, and the deterministic planner. The executor is a single `run(goal)` method that returns a `SessionResult`. The plan diff is computed by comparing step ids and `(tool_name, args)` tuples.\n\n`code/tests/test_agent.py` covers a linear success, a mid-plan failure that replans once, replan exhaustion that returns `failed:replan_budget`, step-budget exhaustion, and the plan-diff event format.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "going-further",
+    "title": "Going further",
+    "bodyMarkdown": "Two extensions you will want once you wire this to a real model. First, partial-plan caching: when a plan succeeds for the first three of six steps and then fails, you do not want to re-run the first three. The executor already keeps history; the planner just needs to read it. Second, parallel branches: the current executor is strictly sequential. A planner that emits an independent branch (`gather_step` instead of `next_step`) can run two tool calls concurrently through the dispatcher.\n\nBoth add real complexity. Both are easier to add once the linear executor is pinned. That is what this lesson does.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

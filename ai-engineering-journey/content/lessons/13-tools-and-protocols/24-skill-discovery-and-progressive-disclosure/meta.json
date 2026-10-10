@@ -1,0 +1,21 @@
+{
+  "id": "13-tools-and-protocols/24-skill-discovery-and-progressive-disclosure",
+  "slug": "24-skill-discovery-and-progressive-disclosure",
+  "phase": "13-tools-and-protocols",
+  "order": 24,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Skill Discovery and Progressive Disclosure",
+    "zh": ""
+  },
+  "hook": "A skill becomes useful before its body is loaded. Its name and description earn a place in the catalog; its deeper files earn context only when the task reaches them.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 22 (Agent Skills: Portable Contract and Runtime Boundary)"
+  ],
+  "timeMinutes": 105,
+  "needsTranslation": true
+}

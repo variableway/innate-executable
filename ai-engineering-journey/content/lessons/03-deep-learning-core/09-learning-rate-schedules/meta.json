@@ -1,0 +1,22 @@
+{
+  "id": "03-deep-learning-core/09-learning-rate-schedules",
+  "slug": "09-learning-rate-schedules",
+  "phase": "03-deep-learning-core",
+  "order": 9,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Learning Rate Schedules and Warmup",
+    "zh": ""
+  },
+  "hook": "The learning rate is the single most important hyperparameter. Not the architecture. Not the dataset size. Not the activation function. The learning rate. If you tune nothing else, tune this.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.06 (Optimizers)",
+    "Lesson 03.08 (Weight Initialization)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

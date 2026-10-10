@@ -1,0 +1,23 @@
+{
+  "id": "19-capstone-projects/33-multihead-self-attention",
+  "slug": "33-multihead-self-attention",
+  "phase": "19-capstone-projects",
+  "order": 33,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Multi-Head Self-Attention",
+    "zh": ""
+  },
+  "hook": "One linear projection, three views, H parallel heads, one mask. The attention block as the model actually uses it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 04 lessons",
+    "Phase 07 transformer lessons",
+    "Lessons 30 through 32 of this phase"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

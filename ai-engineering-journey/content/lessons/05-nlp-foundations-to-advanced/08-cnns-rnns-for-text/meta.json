@@ -1,0 +1,23 @@
+{
+  "id": "05-nlp-foundations-to-advanced/08-cnns-rnns-for-text",
+  "slug": "08-cnns-rnns-for-text",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 8,
+  "phaseOrder": 5,
+  "title": {
+    "en": "CNNs and RNNs for Text",
+    "zh": ""
+  },
+  "hook": "Convolutions learn n-grams. Recurrences remember. Both are superseded by attention. Both still matter on constrained hardware.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 · 11 (PyTorch Intro)",
+    "Phase 5 · 03 (Word Embeddings)",
+    "Phase 4 · 02 (Convolutions from Scratch)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

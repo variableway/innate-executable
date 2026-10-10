@@ -1,0 +1,22 @@
+{
+  "id": "09-reinforcement-learning/09-reward-modeling-rlhf",
+  "slug": "09-reward-modeling-rlhf",
+  "phase": "09-reinforcement-learning",
+  "order": 9,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Reward Modeling & RLHF",
+    "zh": ""
+  },
+  "hook": "Humans cannot write a reward function for \"good assistant response,\" but they can compare two responses and pick the better one. Fit a reward model to those comparisons, then RL the language model against it. Christiano 2017. InstructGPT 2022. The recipe that turned GPT-3 into ChatGPT. In 2026 it is mostly being replaced by DPO — but the mental model stays.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 05 (Sentiment)",
+    "Phase 9 · 08 (PPO)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

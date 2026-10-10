@@ -1,0 +1,100 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Function Call Dispatcher\n\n> The dispatcher is where the harness pays for every promise the schema made. Timeouts, retries, dedupe, error mapping. All on one seam.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13 lessons 01-07, Phase 14 lesson 01\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Wrap a tool handler in a per-call timeout that returns a typed error instead of hanging the loop.\n- Apply exponential backoff retry with jitter and a maximum attempt count.\n- Deduplicate retries on an idempotency key so a retry that races with a slow original does not run twice.\n- Map handler exceptions and transport faults onto a single error envelope the harness loop already understands.\n- Bound parallel dispatch with a concurrency limit so a fan-out of forty tool calls does not exhaust the event loop.\n\n```figure\ncf-dispatch-retry\n```",
+    "keyPoints": [
+      "Wrap a tool handler in a per-call timeout that returns a typed error instead of hanging the loop.",
+      "Apply exponential backoff retry with jitter and a maximum attempt count.",
+      "Deduplicate retries on an idempotency key so a retry that races with a slow original does not run twice.",
+      "Map handler exceptions and transport faults onto a single error envelope the harness loop already understands.",
+      "Bound parallel dispatch with a concurrency limit so a fan-out of forty tool calls does not exhaust the event loop."
+    ],
+    "commands": []
+  },
+  {
+    "id": "where-the-dispatcher-sits",
+    "title": "Where the dispatcher sits",
+    "bodyMarkdown": "Between the harness loop (lesson twenty) and the tool registry (lesson twenty-one). The transport (lesson twenty-two) feeds the loop. The loop hands a tool call to the dispatcher. The dispatcher calls the registry, runs the handler, and returns either a result or a JSON-RPC-shaped error envelope.\n\n```mermaid\nflowchart TD\n    loop[harness loop]\n    disp[dispatcher]\n    reg[tool registry]\n    handler[handler]\n    loop --> disp\n    disp -->|get name| reg\n    disp -->|validate args| reg\n    disp -->|asyncio.wait_for handler args timeout| handler\n    handler -->|success| disp\n    handler -->|TimeoutError -> retry or fail| disp\n    handler -->|Exception -> map to error code| disp\n    disp -->|Ok result or DispatchError| loop\n```\n\nThe dispatcher is the only layer that knows about timers, retries, and idempotency. The loop does not. The registry does not. The handler does not. That isolation is the point.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "timeouts",
+    "title": "Timeouts",
+    "bodyMarkdown": "Each tool has a default timeout. The registry record carries `timeout_ms`. The dispatcher overrides it from a per-call override when the harness passes one. We use `asyncio.wait_for`. On timeout, the handler task is cancelled and the dispatcher returns `DispatchError(kind=\"timeout\")`.\n\nA timeout is not a retryable error by default for non-idempotent tools. A `db.write` that timed out may or may not have committed. Retrying duplicates the write. The dispatcher honors the `idempotent` flag from the registry record. Idempotent tools retry. Non-idempotent tools do not.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "retries-with-exponential-backoff",
+    "title": "Retries with exponential backoff",
+    "bodyMarkdown": "The retry policy is three attempts maximum. Backoff is exponential with jitter.\n\n```text\nattempt 1  -> delay 0\nattempt 2  -> delay 0.1s * (1 + random[0..0.5])\nattempt 3  -> delay 0.4s * (1 + random[0..0.5])\n```\n\nOnly `timeout` and `transient` errors retry. A `schema` error, a `not_found`, or an `internal` error does not retry. Schema errors are deterministic. Retrying does not change the outcome and burns the budget.\n\nThe retry loop respects the budget from the harness. If the caller's budget has zero remaining tool calls, the dispatcher fails fast on the first attempt and returns `kind=\"budget_exceeded\"`.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "attempt 1  -> delay 0\nattempt 2  -> delay 0.1s * (1 + random[0..0.5])\nattempt 3  -> delay 0.4s * (1 + random[0..0.5])"
+      }
+    ]
+  },
+  {
+    "id": "idempotency-key-dedupe",
+    "title": "Idempotency key dedupe",
+    "bodyMarkdown": "A retry that fires while the original is still in flight is a real production bug. The first call hangs at four point nine seconds (just under the timeout). The retry fires at five seconds. Now two requests race against the same backend. If the tool is `payments.charge`, you charged twice.\n\nThe dispatcher accepts an optional `idempotency_key`. If the same key is in flight when a call arrives, the dispatcher waits on the in-flight future and returns its result. The cache holds keys for sixty seconds after completion to absorb late retries.\n\nThe key is the caller's responsibility. The harness derives it from the planner: `f\"{step_id}:{tool_name}:{hash(args)}\"`. The dispatcher does not invent keys, because deriving a key from arguments alone makes two semantically-different calls look the same.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "error-envelope",
+    "title": "Error envelope",
+    "bodyMarkdown": "A failed dispatch returns a single shape.\n\n```text\nDispatchError\n  kind        : \"timeout\" | \"transient\" | \"schema\" | \"not_found\" | \"internal\" | \"budget_exceeded\"\n  message     : str\n  attempts    : int\n  jsonrpc_code: int   (one of -32601, -32602, -32603)\n```\n\nThe harness loop maps `kind` to the next state. `schema` and `not_found` go to `on_error` and trigger a replan. `timeout` and `transient` go to `on_error` and may or may not replan depending on attempts. `budget_exceeded` triggers `on_budget_exceeded`.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "DispatchError\n  kind        : \"timeout\" | \"transient\" | \"schema\" | \"not_found\" | \"internal\" | \"budget_exceeded\"\n  message     : str\n  attempts    : int\n  jsonrpc_code: int   (one of -32601, -32602, -32603)"
+      }
+    ]
+  },
+  {
+    "id": "concurrency-limit-on-fan-out",
+    "title": "Concurrency limit on fan-out",
+    "bodyMarkdown": "`gather(*calls)` runs all coroutines simultaneously. With forty tool calls, that is forty open sockets or forty subprocess pipes. Most backends do not like forty parallel connections from one client.\n\nThe dispatcher wraps `gather` in a semaphore. Default concurrency limit is eight. Each call acquires the semaphore before dispatching and releases on completion. The caller sees `gather`-shaped output but the actual scheduling is bounded.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "flow-for-one-call",
+    "title": "Flow for one call",
+    "bodyMarkdown": "```mermaid\nflowchart TD\n    start([caller: dispatch name, args, opts])\n    validate[registry.validate name, args]\n    schema_err[DispatchError kind=schema]\n    idem_check{idempotency cache?}\n    in_flight[await existing future]\n    cached[return cached result]\n    attempt[asyncio.wait_for handler args, timeout]\n    success[cache + return result]\n    timeout_branch{TimeoutError + idempotent?}\n    retry[retry with backoff]\n    fail[DispatchError]\n    transient_branch{TransientError?}\n    other[map Exception to kind, no retry]\n    exhausted[DispatchError]\n\n    start --> validate\n    validate -->|errors| schema_err\n    validate -->|ok| idem_check\n    idem_check -->|hit in flight| in_flight\n    idem_check -->|hit recent| cached\n    idem_check -->|miss| attempt\n    attempt --> success\n    attempt --> timeout_branch\n    timeout_branch -->|yes| retry\n    timeout_branch -->|no| fail\n    attempt --> transient_branch\n    transient_branch -->|yes, attempts left| retry\n    transient_branch -->|exhausted| exhausted\n    attempt --> other\n    retry --> attempt\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "how-to-read-the-code",
+    "title": "How to read the code",
+    "bodyMarkdown": "`code/main.py` defines `Dispatcher`, `DispatchError`, and `TransientError`. The dispatcher takes a registry on construction. The async `dispatch(name, args, ...)` is the only entry point. Per-attempt timeouts are applied inline inside `_run_with_retries` using `asyncio.wait_for`. `gather_bounded(calls)` runs many dispatches with the concurrency limit.\n\n`code/tests/test_dispatcher.py` covers timeout firing, retry on transient, no-retry on schema error, idempotency dedupe (two concurrent calls with the same key collapse to one handler invocation), and concurrency limiting (the semaphore in action).\n\nThe tests use `asyncio.sleep(0)` and deterministic `Counter`-based handlers, so they finish in milliseconds and do not depend on wall-clock timing.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "going-further",
+    "title": "Going further",
+    "bodyMarkdown": "Two extensions production dispatchers add. First, structured logging at every transition (which the loop's event stream already gives you, but the dispatcher should also emit `dispatch.attempt` and `dispatch.retry` events). Second, circuit breakers: after N failures in a window, a tool gets a cool-down period where dispatches return immediately with `kind=\"circuit_open\"` instead of attempting the handler. Both fit on top of this dispatcher without changing the contract.\n\nLesson twenty-four glues the dispatcher to a plan-and-execute agent so you see all four pieces in motion.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "id": "08-generative-ai/04-conditional-gans-pix2pix",
+  "slug": "04-conditional-gans-pix2pix",
+  "phase": "08-generative-ai",
+  "order": 4,
+  "phaseOrder": 8,
+  "title": {
+    "en": "Conditional GANs & Pix2Pix",
+    "zh": ""
+  },
+  "hook": "The first big unlock of 2014-2017 was controlling what a GAN makes. Attach a label, or an image, or a sentence. Pix2Pix did the image version and it still beats every generic text-to-image model on narrow image-to-image tasks.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 8 · 03 (GANs)",
+    "Phase 4 · 06 (U-Net)",
+    "Phase 3 · 07 (CNNs)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

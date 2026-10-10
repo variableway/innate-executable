@@ -1,0 +1,22 @@
+{
+  "id": "03-deep-learning-core/12-intro-to-jax",
+  "slug": "12-intro-to-jax",
+  "phase": "03-deep-learning-core",
+  "order": 12,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Introduction to JAX",
+    "zh": ""
+  },
+  "hook": "PyTorch mutates tensors. TensorFlow builds graphs. JAX compiles pure functions. That last one changes how you think about deep learning.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 03 Lessons 01-10",
+    "basic NumPy"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

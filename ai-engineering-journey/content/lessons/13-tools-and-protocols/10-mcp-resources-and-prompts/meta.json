@@ -1,0 +1,24 @@
+{
+  "id": "13-tools-and-protocols/10-mcp-resources-and-prompts",
+  "slug": "10-mcp-resources-and-prompts",
+  "phase": "13-tools-and-protocols",
+  "order": 10,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Resources and Prompts: Addressable Context for Stateless Servers",
+    "zh": ""
+  },
+  "hook": "Tools perform operations. Resources expose addressable content. Prompts package user-selected message templates. A good MCP server keeps those contracts separate and predictable.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13",
+    "Lesson 07 (Building an MCP Server)",
+    "Phase 13",
+    "Lesson 09 (MCP Transports)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

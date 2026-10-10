@@ -1,0 +1,25 @@
+{
+  "id": "19-capstone-projects/68-rag-eval-precision-recall",
+  "slug": "68-rag-eval-precision-recall",
+  "phase": "19-capstone-projects",
+  "order": 68,
+  "phaseOrder": 19,
+  "title": {
+    "en": "RAG Evaluation: Precision, Recall, MRR, nDCG, Faithfulness, Answer Relevance",
+    "zh": ""
+  },
+  "hook": "If you cannot grade your retrieval and your answer at the same time, you cannot ship the system. The two are not the same metric and the same prompt fails on different axes.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 lessons 06 (RAG)",
+    "10 (evaluation); Phase 19 Track B foundations (lessons 20-29); Phase 19 lessons 64",
+    "65",
+    "66",
+    "67"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

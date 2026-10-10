@@ -1,0 +1,20 @@
+{
+  "id": "02-ml-fundamentals/11-ensemble-methods",
+  "slug": "11-ensemble-methods",
+  "phase": "02-ml-fundamentals",
+  "order": 11,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Ensemble Methods",
+    "zh": ""
+  },
+  "hook": "A group of weak learners, combined correctly, becomes a strong learner. This is not a metaphor. It is a theorem.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lesson 10 (Bias-Variance Tradeoff)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

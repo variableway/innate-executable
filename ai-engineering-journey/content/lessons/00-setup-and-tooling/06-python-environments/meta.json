@@ -1,0 +1,22 @@
+{
+  "id": "00-setup-and-tooling/06-python-environments",
+  "slug": "06-python-environments",
+  "phase": "00-setup-and-tooling",
+  "order": 6,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Python Environments",
+    "zh": "Python 环境"
+  },
+  "hook": "Dependency hell is real. Virtual environments are the cure.",
+  "type": "Build",
+  "languages": [
+    "Shell"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 30,
+  "needsTranslation": false
+}

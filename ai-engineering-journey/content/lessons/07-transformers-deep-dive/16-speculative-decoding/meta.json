@@ -1,0 +1,22 @@
+{
+  "id": "07-transformers-deep-dive/16-speculative-decoding",
+  "slug": "16-speculative-decoding",
+  "phase": "07-transformers-deep-dive",
+  "order": 16,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Speculative Decoding — Draft, Verify, Repeat",
+    "zh": ""
+  },
+  "hook": "Autoregressive decoding is serial. Each token waits for the previous one. Speculative decoding breaks the chain: a cheap model drafts N tokens, the expensive model verifies all N in one forward pass. When the draft is right you paid one big forward for N generations.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 07 (GPT Causal LM)",
+    "Phase 7 · 12 (KV Cache & Flash Attention)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

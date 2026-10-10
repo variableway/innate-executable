@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/10-evaluation",
+  "slug": "10-evaluation",
+  "phase": "11-llm-engineering",
+  "order": 10,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Evaluation & Testing LLM Applications",
+    "zh": ""
+  },
+  "hook": "You would never deploy a web app without tests. You would never ship a database migration without a rollback plan. But right now, most teams ship LLM applications by reading 10 outputs and saying \"yeah, looks good.\" That is not evaluation. That is hope. Hope is not an engineering practice. Every prompt change, every model swap, every temperature tweak changes your output distribution in ways you cannot predict by reading a handful of examples. Evaluation is the only thing standing between your application and silent degradation.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 Lesson 01 (Prompt Engineering)",
+    "Lesson 09 (Function Calling)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

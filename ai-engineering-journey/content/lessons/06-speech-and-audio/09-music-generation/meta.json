@@ -1,0 +1,22 @@
+{
+  "id": "06-speech-and-audio/09-music-generation",
+  "slug": "09-music-generation",
+  "phase": "06-speech-and-audio",
+  "order": 9,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Music Generation — MusicGen, Stable Audio, Suno, and the Licensing Earthquake",
+    "zh": ""
+  },
+  "hook": "2026 music generation: Suno v5 and Udio v4 dominate commercial; MusicGen, Stable Audio Open, and ACE-Step lead open-source. The technical problem is mostly solved. The legal problem (Warner Music $500M settlement, UMG settlement) reshaped the field in 2025-2026.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 02 (Spectrograms)",
+    "Phase 4 · 10 (Diffusion Models)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

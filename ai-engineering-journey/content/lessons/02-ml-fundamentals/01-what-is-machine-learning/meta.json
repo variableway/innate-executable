@@ -1,0 +1,21 @@
+{
+  "id": "02-ml-fundamentals/01-what-is-machine-learning",
+  "slug": "01-what-is-machine-learning",
+  "phase": "02-ml-fundamentals",
+  "order": 1,
+  "phaseOrder": 2,
+  "title": {
+    "en": "What Is Machine Learning",
+    "zh": ""
+  },
+  "hook": "Machine learning is teaching computers to find patterns in data instead of writing rules by hand.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 (Math Foundations)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

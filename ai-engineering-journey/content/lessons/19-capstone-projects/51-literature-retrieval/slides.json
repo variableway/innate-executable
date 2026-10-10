@@ -1,0 +1,112 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Literature Retrieval\n\n> A hypothesis is cheap. Knowing whether someone already proved it is the expensive part. Build the retrieval layer that answers that question before the runner spins up a sandbox.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 19 Track A lessons 20-29\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Model a small paper record with the fields the loop will read downstream.\n- Build a BM25 index over abstracts with stdlib data structures only.\n- Walk a citation graph to surface papers the lexical search missed.\n- Deduplicate hits across the lexical and graph passes by stable paper id.\n- Wrap two mock external APIs behind a single client so the upstream call site stays the same when real endpoints land.",
+    "keyPoints": [
+      "Model a small paper record with the fields the loop will read downstream.",
+      "Build a BM25 index over abstracts with stdlib data structures only.",
+      "Walk a citation graph to surface papers the lexical search missed.",
+      "Deduplicate hits across the lexical and graph passes by stable paper id.",
+      "Wrap two mock external APIs behind a single client so the upstream call site stays the same when real endpoints land."
+    ],
+    "commands": []
+  },
+  {
+    "id": "why-two-retrieval-passes",
+    "title": "Why two retrieval passes",
+    "bodyMarkdown": "A keyword search over abstracts returns papers that share vocabulary with the query. That covers most of the surface. It misses two cases. The first is when the foundational paper uses different vocabulary; for example a query for \"sparse attention\" misses a paper titled \"block selection in transformer routing.\" The second is when the relevant paper is a follow up that cites a known anchor; it is more efficient to find the anchor and walk forward than to brute force the abstract pool.\n\nThe lesson builds both passes. BM25 over abstracts catches the lexical hits. A citation graph traversal expands a seed set forward and backward by one or two hops. The union is deduplicated by paper id and ranked by a small combined score.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-paper-shape",
+    "title": "The Paper shape",
+    "bodyMarkdown": "```text\nPaper\n  id          : str           (stable identifier, \"p001\" for the mock corpus)\n  title       : str\n  abstract    : str\n  year        : int\n  authors     : list[str]\n  references  : list[str]     (paper ids this paper cites)\n  citations   : list[str]     (paper ids that cite this paper)\n  source      : str           (which mock api supplied it, \"arxiv\" or \"s2\")\n```\n\nThe references and citations fields form the directed citation graph. The two mock APIs return overlapping but not identical fields, so the corpus loader unions them on `id`.\n\n```figure\ncg-citation-hops\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Paper\n  id          : str           (stable identifier, \"p001\" for the mock corpus)\n  title       : str\n  abstract    : str\n  year        : int\n  authors     : list[str]\n  references  : list[str]     (paper ids this paper cites)\n  citations   : list[str]     (paper ids that cite this paper)\n  source      : str           (which mock api supplied it, \"arxiv\" or \"s2\")"
+      }
+    ]
+  },
+  {
+    "id": "architecture",
+    "title": "Architecture",
+    "bodyMarkdown": "```mermaid\nflowchart TD\n    Q[query string] --> A[arxiv mock client]\n    Q --> S[semantic scholar mock client]\n    A --> L[load corpus]\n    S --> L\n    L --> B[bm25 index]\n    L --> G[citation graph]\n    Q --> B\n    B --> R1[lexical hits]\n    R1 --> H[expand hops 1 to 2]\n    G --> H\n    H --> R2[graph hits]\n    R1 --> M[merge and dedup]\n    R2 --> M\n    M --> O[ranked paper list]\n```\n\nThe retrieval client owns both passes and the merge. The caller hands it a query and gets back a ranked list where each entry carries per paper score fields (`bm25_score`, `graph_distance`, `recency_score`, `final_score`) that explain the ranking.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "bm25-from-scratch",
+    "title": "BM25 from scratch",
+    "bodyMarkdown": "The implementation is the standard Okapi BM25 with default parameters `k1=1.5`, `b=0.75`. The index is two dictionaries: `term -> doc_frequency` and `term -> list of (doc_id, term_count)`. The document length is the token count of the abstract. The average document length is computed once at index build time. Scoring a query is a sum over query terms of `idf * tf_norm` where `tf_norm` is the standard BM25 length normalised term frequency.\n\nThe tokeniser is `lower` then split on non alphanumeric. It is not stemmed. A production system would swap in a small stemmer. The interface stays the same.\n\n```text\nidf(t)      = log((N - df + 0.5) / (df + 0.5) + 1.0)\ntf_norm(t)  = (f * (k1 + 1)) / (f + k1 * (1 - b + b * dl / avgdl))\nscore(d, q) = sum over t in q of idf(t) * tf_norm(t)\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "idf(t)      = log((N - df + 0.5) / (df + 0.5) + 1.0)\ntf_norm(t)  = (f * (k1 + 1)) / (f + k1 * (1 - b + b * dl / avgdl))\nscore(d, q) = sum over t in q of idf(t) * tf_norm(t)"
+      }
+    ]
+  },
+  {
+    "id": "citation-graph-traversal",
+    "title": "Citation graph traversal",
+    "bodyMarkdown": "The graph is built once from the corpus. Forward edges go from a paper to its references. Backward edges go from a paper to its citations. The traversal is a breadth first search seeded by the top BM25 hits, capped at two hops.\n\nTwo hops is a deliberate ceiling. One hop is too shallow; the agent often wants the immediate ancestor or descendant. Three hops blows up the result size on a connected graph and tends to drift off topic. The lesson exposes the hop limit as a config knob so a downstream loop can tighten it.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "dedup-and-ranking",
+    "title": "Dedup and ranking",
+    "bodyMarkdown": "The two passes return overlapping sets. The merge keys on paper id. For each paper the final score is a weighted blend.\n\n```text\nfinal_score = w_bm25 * bm25_score_norm\n            + w_graph * graph_score\n            + w_recency * recency_score\n```\n\n`bm25_score_norm` is the BM25 score divided by the maximum BM25 score in the merged set (so the field lives in zero to one). `graph_score` is one for direct lexical hits, then `0.6` for one hop, `0.3` for two hops, zero otherwise. `recency_score` is a linear ramp from zero at the corpus minimum year to one at the maximum.\n\nDefault weights are `0.5`, `0.3`, `0.2`. The weights are config; a stale topic might tune recency down while a fast moving topic raises it.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "final_score = w_bm25 * bm25_score_norm\n            + w_graph * graph_score\n            + w_recency * recency_score"
+      }
+    ]
+  },
+  {
+    "id": "mock-corpus",
+    "title": "Mock corpus",
+    "bodyMarkdown": "The corpus is one hundred papers, generated by `build_corpus()`. Each paper has a hand written title and abstract on one of five topics: attention sparsity, retrieval augmentation, low rank adapters, dataset distillation, and evaluation harnesses. References and citations are wired so each topic forms a connected sub graph with a few cross topic edges.\n\nThe two mock API clients (`ArxivMockClient`, `SemanticScholarMockClient`) read from the same corpus but expose different fields. Arxiv returns title, abstract, year, authors. Semantic Scholar adds references and citations. The retrieval client unions on id; cross client field disagreement handling is deferred to a follow up lesson.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-lessons-52-and-53-read",
+    "title": "What lessons 52 and 53 read",
+    "bodyMarkdown": "The runner in lesson fifty-two reads `paper.id`, `paper.title`, and the top three sentences of the abstract as context for the experiment. The evaluator in lesson fifty-three reads `paper.year` and `paper.references` to attribute a baseline to a specific paper.\n\nThe retrieval client returns a `RetrievalResult` with both the ranked list and the per query metrics: hit count, average score, top score, total wall time. The runner logs these so a downstream observability pass can plot quality over time.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "how-to-read-the-code",
+    "title": "How to read the code",
+    "bodyMarkdown": "`code/main.py` defines `Paper`, `ArxivMockClient`, `SemanticScholarMockClient`, `BM25Index`, `CitationGraph`, `RetrievalClient`, and a deterministic demo. The mock clients and the corpus are in the same file so the lesson stays portable. The BM25 implementation is one class, sixty lines. The graph traversal is one method.\n\n`code/tests/test_retrieval.py` covers the lexical path, the graph path, the merge, the dedup, and the empty query.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "where-this-slots-in",
+    "title": "Where this slots in",
+    "bodyMarkdown": "Lesson fifty produces a hypothesis. Lesson fifty-one searches the literature to see whether that hypothesis is already settled. Lesson fifty-two runs the experiment if it is not. Lesson fifty-three reads both the retrieval result and the experiment metrics to write the verdict. The retrieval client is the cheapest of the four stages and runs first in the orchestrator.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

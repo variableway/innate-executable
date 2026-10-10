@@ -1,0 +1,22 @@
+{
+  "id": "09-reinforcement-learning/03-monte-carlo-methods",
+  "slug": "03-monte-carlo-methods",
+  "phase": "09-reinforcement-learning",
+  "order": 3,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Monte Carlo Methods — Learning from Complete Episodes",
+    "zh": ""
+  },
+  "hook": "Dynamic programming needs a model. Monte Carlo needs nothing but episodes. Run the policy, watch the returns, average them. The simplest idea in RL — and the one that unlocks everything downstream.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 01 (MDPs)",
+    "Phase 9 · 02 (Dynamic Programming)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

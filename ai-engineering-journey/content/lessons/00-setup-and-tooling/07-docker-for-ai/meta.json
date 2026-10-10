@@ -1,0 +1,22 @@
+{
+  "id": "00-setup-and-tooling/07-docker-for-ai",
+  "slug": "07-docker-for-ai",
+  "phase": "00-setup-and-tooling",
+  "order": 7,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Docker for AI",
+    "zh": "AI 用 Docker"
+  },
+  "hook": "Containers make \"works on my machine\" a thing of the past.",
+  "type": "Build",
+  "languages": [
+    "Docker"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lessons 01 and 03"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": false
+}

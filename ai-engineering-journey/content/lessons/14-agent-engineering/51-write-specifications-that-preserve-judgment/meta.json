@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/51-write-specifications-that-preserve-judgment",
+  "slug": "51-write-specifications-that-preserve-judgment",
+  "phase": "14-agent-engineering",
+  "order": 51,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Write Specifications That Preserve Judgment",
+    "zh": ""
+  },
+  "hook": "A useful specification fixes invariants and evidence while leaving reversible implementation choices open. It is a decision boundary, not a screenplay.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lesson 50"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

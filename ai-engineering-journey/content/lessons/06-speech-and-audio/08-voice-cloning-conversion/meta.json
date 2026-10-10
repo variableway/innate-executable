@@ -1,0 +1,22 @@
+{
+  "id": "06-speech-and-audio/08-voice-cloning-conversion",
+  "slug": "08-voice-cloning-conversion",
+  "phase": "06-speech-and-audio",
+  "order": 8,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Voice Cloning & Voice Conversion",
+    "zh": ""
+  },
+  "hook": "Voice cloning reads your text in someone else's voice. Voice conversion rewrites your voice into someone else's while preserving what you said. Both hang on the same decomposition: separate speaker identity from content.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 06 (Speaker Recognition)",
+    "Phase 6 · 07 (TTS)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

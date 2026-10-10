@@ -1,0 +1,202 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# MCP Tasks Extension: Durable Work on a Stateless Core\n\n> Stateless MCP does not mean every operation must finish in one request. The official Tasks extension gives long-running work an explicit durable handle. A server can return that handle from `tools/call`, any instance can answer `tasks/get`, and client input arrives through `tasks/update` without reviving protocol sessions.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13 · 09 (transports), Phase 13 · 11 (stateless MRTR), Phase 13 · 12 (elicitation)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Distinguish stateless protocol transport from durable application task state.\n- Negotiate the `io.modelcontextprotocol/tasks` extension in per-request capabilities and `server/discover`.\n- Return a server-directed `CreateTaskResult` with `resultType: \"task\"` only after durable creation.\n- Poll with `tasks/get`, fulfill task input with `tasks/update`, and request cooperative cancellation with `tasks/cancel`.\n- Remove the older `tasks/status`, `tasks/result`, and `tasks/list` assumptions.\n- Subscribe to optional task notifications through `subscriptions/listen` on a POST response SSE stream.\n- Model task expiry, restart recovery, input-key deduplication, and execution errors correctly.",
+    "keyPoints": [
+      "Distinguish stateless protocol transport from durable application task state.",
+      "Negotiate the `io.modelcontextprotocol/tasks` extension in per-request capabilities and `server/discover`.",
+      "Return a server-directed `CreateTaskResult` with `resultType: \"task\"` only after durable creation.",
+      "Poll with `tasks/get`, fulfill task input with `tasks/update`, and request cooperative cancellation with `tasks/cancel`.",
+      "Remove the older `tasks/status`, `tasks/result`, and `tasks/list` assumptions.",
+      "Subscribe to optional task notifications through `subscriptions/listen` on a POST response SSE stream."
+    ],
+    "commands": []
+  },
+  {
+    "id": "why-tasks-are-an-extension",
+    "title": "Why Tasks Are an Extension",
+    "bodyMarkdown": "Tasks first appeared as an experimental core feature in 2025-11-25. The July 2026 redesign moves them into the official `io.modelcontextprotocol/tasks` extension so clients and servers can opt into the extra lifecycle without expanding the core protocol for everyone.\n\nThe extension specification remains a draft surface even though it is the current official home for Tasks. Pin the extension version supported by your SDK, run conformance scenarios, and isolate wire adapters from your worker and storage domain.\n\nUse a task when the operation has one or more of these properties:\n\n- It may outlive an ordinary request timeout.\n- A worker queue or external job system already owns execution.\n- The client needs to recover after its own restart.\n- The operation pauses for user or model input during execution.\n- Cancellation and durable result retrieval are product requirements.\n\nDo not create a task for a cheap deterministic lookup. A handle, persistence, polling, expiry, and cancellation are real complexity.",
+    "keyPoints": [
+      "It may outlive an ordinary request timeout.",
+      "A worker queue or external job system already owns execution.",
+      "The client needs to recover after its own restart.",
+      "The operation pauses for user or model input during execution.",
+      "Cancellation and durable result retrieval are product requirements."
+    ],
+    "commands": []
+  },
+  {
+    "id": "stateless-core-stateful-application",
+    "title": "Stateless Core, Stateful Application",
+    "bodyMarkdown": "MCP 2026-07-28 removes `initialize`, `notifications/initialized`, protocol sessions, and `Mcp-Session-Id`. That does not prohibit stateful products.\n\nA task id is explicit application state:\n\n- The server persists it before returning it.\n- The client can store it and poll again after restart.\n- The id can route to any replica backed by the same durable store.\n- Authorization is checked on every task method.\n- Expiry and deletion are defined by task fields, not a transport lifetime.\n\nThis is operationally different from hidden state attached to a connection.\n\nKeep four lifetimes separate:\n\n| State | Lifetime | Where it belongs |\n|---|---|---|\n| Protocol metadata | One request | `params._meta`, validated again on every call |\n| Transport work | One stdio request or HTTP response | In-flight coordinator with a bounded deadline |\n| MRTR continuation | One retry sequence | Integrity-protected `requestState`, plus replay controls when needed |\n| Durable task | Across requests, replicas, restarts, and reconnects | Shared application store keyed by an authorized `taskId` |\n\nMoving a task record into process memory does not make MCP stateful. It makes the application unreliable. The protocol stays stateless, but a later `tasks/get` routed to another replica cannot recover the record. Persist before returning the handle, then make every task method resolve the same shared record under tenant and principal checks.",
+    "keyPoints": [
+      "The server persists it before returning it.",
+      "The client can store it and poll again after restart.",
+      "The id can route to any replica backed by the same durable store.",
+      "Authorization is checked on every task method.",
+      "Expiry and deletion are defined by task fields, not a transport lifetime."
+    ],
+    "commands": []
+  },
+  {
+    "id": "capability-negotiation",
+    "title": "Capability Negotiation",
+    "bodyMarkdown": "The client advertises support on every eligible request:\n\n```json\n{\n  \"_meta\": {\n    \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n    \"io.modelcontextprotocol/clientCapabilities\": {\n      \"extensions\": {\n        \"io.modelcontextprotocol/tasks\": {}\n      }\n    },\n    \"io.modelcontextprotocol/clientInfo\": {\n      \"name\": \"lesson-client\",\n      \"version\": \"1.0.0\"\n    }\n  }\n}\n```\n\nThe server returns exact `supportedVersions`, capabilities, `ttlMs`, and `cacheScope` from `server/discover`, with the same extension under capabilities. Because it advertises tools, it also implements mandatory `tools/list`. That result returns a deterministic `generate_report` descriptor, valid object `inputSchema`, `resultType: \"complete\"`, server identity metadata, and public cache hints.\n\nA task method from a client that did not declare the extension returns `-32021`, Missing Required Client Capability, with `data.requiredCapabilities` set to `{\"extensions\":{\"io.modelcontextprotocol/tasks\":{}}}`. An unsupported protocol string returns `-32022` with exact `supported` and `requested` data; a missing or non-string version returns `-32602`.\n\nAn envelope without a JSON-RPC `id` is a notification. The receiver may process it, but it emits no JSON-RPC result or error. A Streamable HTTP adapter returns `202 Accepted` with no body for an accepted notification.\n\nAt present, only `tools/call` supports task-augmented execution. Design your internal abstraction so future request types do not require rewriting storage.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "server-directed-task-creation",
+    "title": "Server-Directed Task Creation",
+    "bodyMarkdown": "The old client flag `params._meta.task.required` is gone. The client declares extension support, then the server decides whether a particular `tools/call` becomes a task.\n\nRequest:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"generate_report\",\n    \"arguments\": {\"size\": \"large\"},\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {\n        \"extensions\": {\n          \"io.modelcontextprotocol/tasks\": {}\n        }\n      }\n    }\n  }\n}\n```\n\nResponse:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": {\n    \"resultType\": \"task\",\n    \"taskId\": \"tsk_786512e29e0d\",\n    \"status\": \"working\",\n    \"statusMessage\": \"Preparing report outline.\",\n    \"createdAt\": \"2026-08-21T10:30:00Z\",\n    \"lastUpdatedAt\": \"2026-08-21T10:30:00Z\",\n    \"ttlMs\": 900000,\n    \"pollIntervalMs\": 1000\n  }\n}\n```\n\nThe server must not return this handle until a `tasks/get` for the id can resolve. In an eventually consistent store, wait for read visibility before answering. Otherwise a client can receive a valid-looking id and immediately get \"not found.\"\n\nA task response is unsolicited in the sense that the client does not request task mode. It is not unnegotiated: the current request still must advertise the extension.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-task-shape",
+    "title": "The Task Shape",
+    "bodyMarkdown": "Every task carries:\n\n- `taskId`: stable server-generated identifier;\n- `status`: `working`, `input_required`, `completed`, `cancelled`, or `failed`;\n- `createdAt` and `lastUpdatedAt`: ISO 8601 timestamps;\n- `ttlMs`: expiry duration from creation, or `null` for no advertised limit;\n- optional `pollIntervalMs`: the server's current minimum suggested polling cadence;\n- optional `statusMessage`: user-facing or model-facing context.\n\nStatus-specific fields appear only when relevant:\n\n- `input_required` includes `inputRequests`.\n- `completed` includes the original request's `result` shape.\n- `failed` includes a JSON-RPC `error` object.\n\nThe client should honor `pollIntervalMs`. A server may rate-limit more aggressive polling and may change the interval over the task lifetime.",
+    "keyPoints": [
+      "`taskId`: stable server-generated identifier;",
+      "`status`: `working`, `input_required`, `completed`, `cancelled`, or `failed`;",
+      "`createdAt` and `lastUpdatedAt`: ISO 8601 timestamps;",
+      "`ttlMs`: expiry duration from creation, or `null` for no advertised limit;",
+      "optional `pollIntervalMs`: the server's current minimum suggested polling cadence;",
+      "optional `statusMessage`: user-facing or model-facing context."
+    ],
+    "commands": []
+  },
+  {
+    "id": "poll-with-tasks-get",
+    "title": "Poll with `tasks/get`",
+    "bodyMarkdown": "The client asks for a current snapshot:\n\n```http\nPOST /mcp HTTP/1.1\nContent-Type: application/json\nMCP-Protocol-Version: 2026-07-28\nMcp-Method: tasks/get\nMcp-Name: tsk_786512e29e0d\n```\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"tasks/get\",\n  \"params\": {\n    \"taskId\": \"tsk_786512e29e0d\",\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {\n        \"extensions\": {\n          \"io.modelcontextprotocol/tasks\": {}\n        }\n      }\n    }\n  }\n}\n```\n\n`tasks/get` itself completed, so its result always has `resultType: \"complete\"`. The nested task can still have `status: \"working\"` or `status: \"input_required\"`.\n\nThis distinction prevents a common parser bug:\n\n```text\nresult.resultType = complete    means the tasks/get RPC finished\nresult.status = working        means the represented job is still running\n```\n\nThere is no `tasks/result` call. When the task completes, the next `tasks/get` response inlines the original `CallToolResult` under `result`:\n\n```json\n{\n  \"resultType\": \"complete\",\n  \"taskId\": \"tsk_786512e29e0d\",\n  \"status\": \"completed\",\n  \"createdAt\": \"2026-08-21T10:30:00Z\",\n  \"lastUpdatedAt\": \"2026-08-21T10:34:12Z\",\n  \"ttlMs\": 900000,\n  \"result\": {\n    \"resultType\": \"complete\",\n    \"content\": [\n      {\"type\": \"text\", \"text\": \"Generated large report with approved outline.\"}\n    ],\n    \"structuredContent\": {\"size\": \"large\", \"approved\": true},\n    \"isError\": false,\n    \"_meta\": {\n      \"io.modelcontextprotocol/serverInfo\": {\n        \"name\": \"tasks-demo\",\n        \"version\": \"1.0.0\"\n      }\n    }\n  },\n  \"_meta\": {\n    \"io.modelcontextprotocol/serverInfo\": {\n      \"name\": \"tasks-demo\",\n      \"version\": \"1.0.0\"\n    }\n  }\n}\n```\n\nThe outer `resultType` says the `tasks/get` RPC completed. The nested `result.resultType` says the original tool call completed. That nested discriminator is required. The nested `CallToolResult` SHOULD also carry its own `io.modelcontextprotocol/serverInfo`; this lesson includes it instead of storing an untyped payload.\n\nThere is no `tasks/list`. Sessionless servers cannot safely infer which tasks belong in a connection-scoped list. Applications that need history should expose an authorized domain tool with explicit filters and ownership rules.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "result.resultType = complete    means the tasks/get RPC finished\nresult.status = working        means the represented job is still running"
+      }
+    ]
+  },
+  {
+    "id": "input-during-task-execution",
+    "title": "Input During Task Execution",
+    "bodyMarkdown": "Task input and core MRTR look similar but use different continuations.\n\n### Input needed before task creation\n\nReturn core `resultType: \"input_required\"` from the original `tools/call`. The client fulfills it and retries that original call. Only create the task after those synchronous MRTR rounds finish.\n\n### Input needed after task creation\n\nSet the task to `input_required`. `tasks/get` exposes the outstanding `inputRequests`, and the client sends responses through `tasks/update`. The client does not retry the original `tools/call`.\n\nSnapshot:\n\n```json\n{\n  \"resultType\": \"complete\",\n  \"taskId\": \"tsk_786512e29e0d\",\n  \"status\": \"input_required\",\n  \"createdAt\": \"2026-08-21T10:30:00Z\",\n  \"lastUpdatedAt\": \"2026-08-21T10:31:00Z\",\n  \"ttlMs\": 900000,\n  \"inputRequests\": {\n    \"approve_outline\": {\n      \"method\": \"elicitation/create\",\n      \"params\": {\n        \"mode\": \"form\",\n        \"message\": \"Approve the generated report outline?\",\n        \"requestedSchema\": {\n          \"type\": \"object\",\n          \"properties\": {\"approved\": {\"type\": \"boolean\"}},\n          \"required\": [\"approved\"]\n        }\n      }\n    }\n  }\n}\n```\n\nUpdate:\n\n```http\nPOST /mcp HTTP/1.1\nContent-Type: application/json\nMCP-Protocol-Version: 2026-07-28\nMcp-Method: tasks/update\nMcp-Name: tsk_786512e29e0d\n```\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 4,\n  \"method\": \"tasks/update\",\n  \"params\": {\n    \"taskId\": \"tsk_786512e29e0d\",\n    \"inputResponses\": {\n      \"approve_outline\": {\n        \"action\": \"accept\",\n        \"content\": {\"approved\": true}\n      }\n    },\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {\n        \"extensions\": {\n          \"io.modelcontextprotocol/tasks\": {}\n        }\n      }\n    }\n  }\n}\n```\n\nThe success response is an empty acknowledgement plus `resultType: \"complete\"`. The state change may be eventually consistent, so the client continues polling or listening.\n\nEach `inputRequests` key must be unique for the entire task lifetime. Repeated `tasks/get` snapshots may show the same outstanding key; clients deduplicate the UI and servers ignore responses for unknown, superseded, or already fulfilled keys. A partial update can leave the task in `input_required` until all required keys are answered.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "cancellation-is-cooperative",
+    "title": "Cancellation Is Cooperative",
+    "bodyMarkdown": "`tasks/cancel` signals intent and returns an empty complete acknowledgement. That acknowledgement does not guarantee the worker stopped. Work may finish first, ignore cancellation, or transition later.\n\n```http\nPOST /mcp HTTP/1.1\nContent-Type: application/json\nMCP-Protocol-Version: 2026-07-28\nMcp-Method: tasks/cancel\nMcp-Name: tsk_786512e29e0d\n```\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 5,\n  \"method\": \"tasks/cancel\",\n  \"params\": {\n    \"taskId\": \"tsk_786512e29e0d\",\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {\n        \"extensions\": {\n          \"io.modelcontextprotocol/tasks\": {}\n        }\n      }\n    }\n  }\n}\n```\n\nFor all three task methods, `Mcp-Name` mirrors `params.taskId`. It does not repeat the JSON-RPC method name. `code/main.py` centralizes this rule in `make_http_request`.\n\nThe lesson worker honors cancellation immediately, making repeated calls idempotent. A production client must still treat cancellation as cooperative rather than infer a final task status from the acknowledgement.\n\nDo not use `notifications/cancelled` to cancel a task. That notification belongs to request cancellation, not durable Tasks.\n\nThe distinction matters at the routing boundary. Request cancellation targets one in-flight JSON-RPC operation or its request-scoped HTTP response. If `tools/call` has already returned `resultType: \"task\"`, that request is complete and closing its transport cannot name or stop the durable job. `tasks/cancel` is a new authorized RPC. It carries `params.taskId`, mirrors that id in `Mcp-Name`, resolves the task's owning backend, records cooperative cancellation intent, and returns an acknowledgement without claiming the worker has stopped.\n\nA gateway must therefore keep request coordinators and task routes in different tables. The request table can disappear when the response finishes. The task route must survive until terminal state and retention expiry. [Lesson 29: MCP Reliability, Cancellation, and Flow Control](../../29-mcp-reliability-cancellation-and-flow-control/docs/en.md) builds the race, timeout, idempotency, backpressure, and retry rules for both paths.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "optional-notifications",
+    "title": "Optional Notifications",
+    "bodyMarkdown": "Polling is the baseline. A client that wants push updates sends `subscriptions/listen` with task ids. For Streamable HTTP, this is a POST whose response is a request-scoped SSE stream. There is no standalone GET event stream and no protocol session to keep alive.\n\nThe server acknowledges the accepted ids with `notifications/subscriptions/acknowledged` and can then send full snapshots through `notifications/tasks`. The acknowledgement and every task notification carry `io.modelcontextprotocol/subscriptionId` in `_meta`, equal to the `subscriptions/listen` request id. Each task notification is otherwise equivalent to what `tasks/get` would return at that moment.\n\nClients must still declare the Tasks extension. They should reconnect and resume from durable task ids rather than depend on event replay or `Last-Event-ID`.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "failure-semantics",
+    "title": "Failure Semantics",
+    "bodyMarkdown": "Use the two error layers correctly.\n\n### Protocol error\n\nInvalid method parameters or an unknown task id return a JSON-RPC error, commonly `-32602`. Missing extension support returns `-32021` with the required capability object.\n\n### Task execution outcome\n\n- A normal tool result with `isError: true` is still a `completed` task because the tool call produced its defined result.\n- A JSON-RPC error during deferred execution makes the task `failed` and stores that JSON-RPC error under `error`.\n- User refusal can produce `cancelled`, a completed refusal result, or another domain-specific safe outcome. Document the choice.",
+    "keyPoints": [
+      "A normal tool result with `isError: true` is still a `completed` task because the tool call produced its defined result.",
+      "A JSON-RPC error during deferred execution makes the task `failed` and stores that JSON-RPC error under `error`.",
+      "User refusal can produce `cancelled`, a completed refusal result, or another domain-specific safe outcome. Document the choice."
+    ],
+    "commands": []
+  },
+  {
+    "id": "durability-expiry-and-ownership",
+    "title": "Durability, Expiry, and Ownership",
+    "bodyMarkdown": "Persist at least the task id, status, timestamps, ttl, poll interval, original operation ownership, result or error, outstanding input requests, and all issued input keys.\n\nThe storage key must include or resolve an authoritative tenant and principal. Knowing a task id must not grant access. Check ownership on every `tasks/get`, `tasks/update`, `tasks/cancel`, and subscription.\n\n`ttlMs` is measured from creation and may change. A client can treat it as a backstop when a task has stopped producing observable updates. A server may fail and later delete an expired task. Do not describe it as a promise to retain a completed result for that many milliseconds after completion.\n\nUse atomic writes or transactions. The lesson writes a temporary file and atomically renames it. A multi-replica service should use a shared durable store and a worker lease or equivalent concurrency control.\n\n```figure\ntp-task-lifecycle\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements a deterministic task service:\n\n- `server/discover` returns `supportedVersions`, cache hints, and the Tasks extension.\n- `tools/list` returns a deterministic, cacheable `generate_report` descriptor with a valid input schema.\n- `tools/call` creates and persists the task before returning `resultType: \"task\"`.\n- A new service instance reloads the same task, demonstrating restart recovery.\n- `tasks/get` returns complete task snapshots.\n- The worker moves from `working` to `input_required`.\n- `tasks/update` accepts a form response and returns an empty complete acknowledgement.\n- The worker stores a nested `CallToolResult` with its own `resultType` and server identity, then transitions to `completed`.\n- `tasks/cancel` is idempotent in this implementation.\n- The HTTP builder sets `Mcp-Name` to `params.taskId` for `tasks/get`, `tasks/update`, and `tasks/cancel`.\n- Notification helpers use `notifications/subscriptions/acknowledged` and `notifications/tasks`, both tagged with the listen request id.\n- Id-less notifications produce no JSON-RPC response.\n\nThe worker advances explicitly instead of sleeping in a background thread. That makes every state transition deterministic and keeps the protocol example separate from queue mechanics.",
+    "keyPoints": [
+      "`server/discover` returns `supportedVersions`, cache hints, and the Tasks extension.",
+      "`tools/list` returns a deterministic, cacheable `generate_report` descriptor with a valid input schema.",
+      "`tools/call` creates and persists the task before returning `resultType: \"task\"`.",
+      "A new service instance reloads the same task, demonstrating restart recovery.",
+      "`tasks/get` returns complete task snapshots.",
+      "The worker moves from `working` to `input_required`."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "From the repository root:\n\n```bash\ncd phases/13-tools-and-protocols/13-mcp-async-tasks/code\npython3 main.py\npython3 -m unittest discover tests -v\n```\n\nExpected result sequence:\n\n```text\nid=0 resultType=complete status=ack\nid=1 resultType=task status=working\nid=2 resultType=complete status=working\nid=3 resultType=complete status=input_required\nid=4 resultType=complete status=ack\nid=5 resultType=complete status=completed\n```\n\nAlso verify that `tasks/status`, `tasks/result`, and `tasks/list` return method-not-found in the modern service.\nVerify that `tools/list` is deterministic and every current HTTP task method mirrors its task id through `Mcp-Name`.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/13-mcp-async-tasks/code\npython3 main.py\npython3 -m unittest discover tests -v"
+      },
+      {
+        "lang": "text",
+        "code": "id=0 resultType=complete status=ack\nid=1 resultType=task status=working\nid=2 resultType=complete status=working\nid=3 resultType=complete status=input_required\nid=4 resultType=complete status=ack\nid=5 resultType=complete status=completed"
+      }
+    ]
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "`outputs/skill-task-store-designer.md` now produces an extension-aware design: capability negotiation, durable-before-return creation, current methods, input update flow, ownership, expiry, cancellation, subscription, and migration from the removed experimental methods.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add a second outstanding input key. Send a partial `tasks/update` and prove the task remains `input_required` until both keys are answered.\n2. Add tenant ownership to the store and reject a valid task id presented by the wrong authenticated principal.\n3. Add a worker lease with expiry. Demonstrate that two service instances cannot complete the same task concurrently.\n4. Implement a POST-response SSE adapter for `subscriptions/listen`. Do not add GET, `Last-Event-ID`, or a session header.\n5. Add expiry cleanup. Distinguish an expired task from a malformed task id without leaking cross-tenant existence.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | Meaning in the current extension |\n|------|----------------------------------|\n| Tasks extension | Optional `io.modelcontextprotocol/tasks` capability for durable async work |\n| `CreateTaskResult` | Server-directed `resultType: \"task\"` response to an eligible request |\n| `tasks/get` | Poll a full current task snapshot, including terminal result or pending input |\n| `tasks/update` | Submit responses to a task's outstanding `inputRequests` |\n| `tasks/cancel` | Acknowledge cooperative cancellation intent |\n| `input_required` | Task status indicating client input is outstanding |\n| `pollIntervalMs` | Server-suggested minimum delay before another poll |\n| `ttlMs` | Expiry duration measured from task creation |\n| Durable-before-return | Rule that the task id must resolve before its handle is sent |\n| `notifications/tasks` | Optional full task snapshot delivered on a subscribed SSE response |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "legacy-compatibility",
+    "title": "Legacy Compatibility",
+    "bodyMarkdown": "The 2025-11-25 experimental surface used client-requested task augmentation, `tasks/status`, `tasks/result`, and optional `tasks/list`. Keep those names only inside a pinned legacy adapter. A current client uses the extension capability, accepts server-directed handles, polls `tasks/get`, supplies input with `tasks/update`, and reads the final result from the task snapshot.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Official MCP Tasks extension](https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks)\n- [MCP 2026-07-28 Multi Round-Trip Requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)\n- [MCP 2026-07-28 Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)",
+    "keyPoints": [
+      "[Official MCP Tasks extension](https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks)",
+      "[MCP 2026-07-28 Multi Round-Trip Requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)",
+      "[MCP 2026-07-28 Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)"
+    ],
+    "commands": []
+  }
+]

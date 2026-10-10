@@ -1,0 +1,106 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Failure Modes: Why Agents Break\n\n> MASFT (Berkeley, 2025) catalogs 14 multi-agent failure modes in 3 categories. Microsoft's Taxonomy documents how existing AI failures amplify in agentic settings. Industry field data converges on five recurring modes: hallucinated actions, scope creep, cascading errors, context loss, tool misuse.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 · 05 (Self-Refine and CRITIC), Phase 14 · 24 (Observability)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Name MASFT's three failure categories and at least four specific modes in each.\n- Explain why agentic failure amplifies existing AI failure modes (bias, hallucination).\n- Describe the five industry-recurring modes and their mitigations.\n- Implement a stdlib detector that tags agent traces with failure-mode labels.",
+    "keyPoints": [
+      "Name MASFT's three failure categories and at least four specific modes in each.",
+      "Explain why agentic failure amplifies existing AI failure modes (bias, hallucination).",
+      "Describe the five industry-recurring modes and their mitigations.",
+      "Implement a stdlib detector that tags agent traces with failure-mode labels."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Teams ship agents that work on 90% of traces. The 10% failures are not random noise — they fall into a small number of recurring categories. Once you can name them, you can monitor for them and fix them.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### MASFT (Berkeley, arXiv:2503.13657)\n\nMulti-Agent System Failure Taxonomy. 14 failure modes clustered into 3 categories. Inter-annotator Cohen's Kappa 0.88 — the categories are reliably distinguishable.\n\nCentral claim: failures are fundamental design flaws in multi-agent systems, not LLM limitations to be fixed with better base models.\n\n### Microsoft Taxonomy of Failure Mode in Agentic AI Systems\n\n- Existing AI failures (bias, hallucination, data leakage) amplify in agentic settings.\n- New failures emerge from autonomy: unintended action at scale, tool misuse, mission drift.\n- The whitepaper is the risk register for agentic products.\n\n### Characterizing Faults in Agentic AI (arXiv:2603.06847)\n\n- Failures arise from orchestration, internal state evolution, and environment interaction.\n- Not just \"bad code\" or \"bad model output.\"\n\n### LLM Agent Hallucinations Survey (arXiv:2509.18970)\n\nTwo primary manifestations:\n\n1. **Instruction-following Deviation** — agent doesn't follow the system prompt.\n2. **Long-range Contextual Misuse** — agent forgets or misapplies context from earlier turns.\n\nSub-intention errors: Omission (missed step), Redundancy (repeated step), Disorder (out-of-order steps).\n\n### The five industry-recurring modes\n\nArize, Galileo, NimbleBrain 2024-2026 field analyses converge on:\n\n1. **Hallucinated actions.** Agent invokes a tool that doesn't exist or fabricates arguments.\n2. **Scope creep.** Agent expands task beyond the user's ask (creates extra PRs, sends extra emails).\n3. **Cascading errors.** One wrong call triggers downstream effects. A phantom SKU hallucination triggers four API calls — a multi-system incident.\n4. **Context loss.** Long-horizon tasks forget early-turn constraints.\n5. **Tool misuse.** Calls the right tool with wrong arguments, or the wrong tool entirely.\n\nCascading is the killer. Agents cannot distinguish \"I failed\" from \"the task is impossible\" and often hallucinate a success message on 400 errors to close the loop.\n\n### Mitigation: gates at every step\n\nAutomated verification gates at every step of a reasoning chain, checking factual grounding against environment state. Concretely:\n\n- Per-step safety classifier (Lesson 21).\n- Tool-call argument validation (Lesson 06).\n- Cross-check retrieved content against known facts (Lesson 05, CRITIC).\n- Detect success hallucination by re-probing state (was the file actually created?).\n\n### Where failure monitoring goes wrong\n\n- **Tagging only crashes.** Most agent failures produce valid-looking output. Need content-level checks.\n- **No baseline.** Drift detection needs a last-known-good; without it you cannot say \"this is getting worse.\"\n- **Over-alerting.** Every failure produces a page. Cluster and rate-limit.\n\n```figure\nfailure-cascade\n```",
+    "keyPoints": [
+      "Existing AI failures (bias, hallucination, data leakage) amplify in agentic settings.",
+      "New failures emerge from autonomy: unintended action at scale, tool misuse, mission drift.",
+      "The whitepaper is the risk register for agentic products.",
+      "Failures arise from orchestration, internal state evolution, and environment interaction.",
+      "Not just \"bad code\" or \"bad model output.\"",
+      "Instruction-following Deviation"
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements a stdlib failure-mode tagger:\n\n- A synthetic trace dataset covering the five modes.\n- Detector functions per mode (signature patterns on tool calls, outputs, repeat actions).\n- A tagger that labels each trace and reports mode distribution.\n\nRun it:\n\n```\npython3 code/main.py\n```\n\nOutput: per-trace labels + aggregate distribution, a cheap reproduction of what Phoenix's trace clustering surfaces.",
+    "keyPoints": [
+      "A synthetic trace dataset covering the five modes.",
+      "Detector functions per mode (signature patterns on tool calls, outputs, repeat actions).",
+      "A tagger that labels each trace and reports mode distribution."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "- **Phoenix** for production drift clustering (Lesson 24).\n- **Langfuse** for session replay + annotation.\n- **Custom** for domain-specific signatures your observability platform can't detect.",
+    "keyPoints": [
+      "Phoenix: for production drift clustering (Lesson 24).",
+      "Langfuse: for session replay + annotation.",
+      "Custom: for domain-specific signatures your observability platform can't detect."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "`outputs/skill-failure-detector.md` generates failure-mode detectors tailored to your domain, wired to a trace store.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add a detector for \"success hallucination\": agent returns success but the target state is unchanged.\n2. Tag 100 real traces from a product you've built. Which mode dominates? What's the cost of fixing it?\n3. Implement a \"cascade radius\" metric: given a failure at step N, how many downstream steps did it affect?\n4. Read MASFT's 14 failure modes. Pick three that apply to your product. Write detectors.\n5. Wire one detector into a CI job: fail the build if >=5% of traces tag a mode.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| MASFT | \"Multi-agent failure taxonomy\" | Berkeley 14-mode categorization |\n| Cascading error | \"Ripple failure\" | One early mistake propagates through N steps |\n| Context loss | \"Forgot the constraint\" | Long-horizon turn drops early-turn facts |\n| Tool misuse | \"Wrong tool / wrong args\" | Valid call, wrong invocation |\n| Success hallucination | \"Faked completion\" | Agent claims success on a 400; state unchanged |\n| Scope creep | \"Overreach\" | Agent does more than asked |\n| Instruction-following deviation | \"Disobedience\" | Ignores system prompt or user constraint |\n| Sub-intention errors | \"Plan bugs\" | Omission, redundancy, disorder in plan execution |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Cemri et al., MASFT (arXiv:2503.13657)](https://arxiv.org/abs/2503.13657) — 14 failure modes, 3 categories\n- [Microsoft, Taxonomy of Failure Mode in Agentic AI Systems](https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/final/en-us/microsoft-brand/documents/Taxonomy-of-Failure-Mode-in-Agentic-AI-Systems-Whitepaper.pdf) — risk register\n- [Arize Phoenix](https://docs.arize.com/phoenix) — drift clustering in practice\n- [Anthropic, Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) — when simpler patterns avoid modes entirely",
+    "keyPoints": [
+      "[Cemri et al., MASFT (arXiv:2503.13657)](https://arxiv.org/abs/2503.13657) — 14 failure modes, 3 categories",
+      "[Arize Phoenix](https://docs.arize.com/phoenix) — drift clustering in practice",
+      "[Anthropic, Building Effective Agents](https://www.anthropic.com/research/building-effective-agents) — when simpler patterns avoid modes entirely"
+    ],
+    "commands": []
+  }
+]

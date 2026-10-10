@@ -1,0 +1,102 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Critic Loop\n\n> A critic that returns \"looks good\" the first time is broken. A critic that always returns \"needs work\" is broken. The interesting critic is the one that converges, and you have to engineer convergence.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 19 lessons 50-53\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Score a paper draft across five fixed dimensions: clarity, novelty, evidence, methodology, related-work.\n- Apply each round's critique as a structured revision diff rather than a freeform rewrite.\n- Detect convergence by comparing scores across rounds; stop on plateau, target met, or budget exhausted.\n- Cap rounds with a max-iteration budget so a non-converging critic does not run forever.\n- Emit a per-round trace so the dashboard or the next stage can render the score trajectory.\n\n```figure\nch-critic-converge\n```",
+    "keyPoints": [
+      "Score a paper draft across five fixed dimensions: clarity, novelty, evidence, methodology, related-work.",
+      "Apply each round's critique as a structured revision diff rather than a freeform rewrite.",
+      "Detect convergence by comparing scores across rounds; stop on plateau, target met, or budget exhausted.",
+      "Cap rounds with a max-iteration budget so a non-converging critic does not run forever.",
+      "Emit a per-round trace so the dashboard or the next stage can render the score trajectory."
+    ],
+    "commands": []
+  },
+  {
+    "id": "why-five-fixed-dimensions",
+    "title": "Why five fixed dimensions",
+    "bodyMarkdown": "A freeform critic is a model that returns a paragraph of suggestions. The next round's revision treats the paragraph as ambient context. Whether the rewrite addresses the criticism is unverifiable because the criticism never had structure.\n\nFive dimensions give the harness a contract.\n\n```mermaid\nflowchart LR\n    Draft[Paper draft] --> Critic[Critic]\n    Critic --> Scores\n    Scores --> Clar[clarity 0-10]\n    Scores --> Nov[novelty 0-10]\n    Scores --> Ev[evidence 0-10]\n    Scores --> Meth[methodology 0-10]\n    Scores --> Rel[related-work 0-10]\n    Scores --> Revs[revision suggestions]\n```\n\nThe score is a vector. The harness watches each dimension across rounds. A revision that raises clarity but tanks evidence is a regression on evidence, and the convergence check sees it. A model-only critic cannot offer that guarantee.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-critique-shape",
+    "title": "The Critique shape",
+    "bodyMarkdown": "```mermaid\nflowchart TB\n    Critique[Critique] --> Scores[scores dict]\n    Critique --> Sugg[suggestions list]\n    Sugg --> S1[Suggestion: dimension, target, edit]\n    Critique --> Round[round int]\n    Critique --> Reason[overall reason str]\n```\n\nEvery suggestion carries the dimension it improves, the section it targets, and an `edit` instruction the reviser can apply. The reviser is also a callable. The lesson ships a deterministic reviser that interprets the edit instruction as an append-to-section operation. A model-driven reviser would interpret the same field as a prompt. The contract does not change.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "convergence-rules-in-order",
+    "title": "Convergence rules, in order",
+    "bodyMarkdown": "The critic loop terminates when any one of three conditions fires.\n\n```mermaid\nflowchart TB\n    Start[Round n complete] --> A{All five dimensions ge target?}\n    A -- yes --> Stop1[converged: target]\n    A -- no --> B{Plateau detected?}\n    B -- yes --> Stop2[converged: plateau]\n    B -- no --> C{Round ge max?}\n    C -- yes --> Stop3[stopped: budget]\n    C -- no --> Next[Run round n plus 1]\n```\n\nThe target is the strictest case: every one of the five dimensions (clarity, novelty, evidence, methodology, related_work) must hit `>= target_score` (default `8.0`) before the loop returns success. A high mean with one weak dimension is not enough. Plateau detection compares the current round's mean to the previous round's mean. If the improvement is below `plateau_epsilon` (default `0.1`) for two consecutive rounds, the loop exits with `plateau`. The budget is a hard cap on rounds (default `5`) and exits with `budget`.\n\nThe order matters. Target wins over plateau wins over budget. If round three hits the target on the same iteration that would also trigger a plateau, the result is `target`, not `plateau`.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "why-plateau-detection-runs-over-two-rounds",
+    "title": "Why plateau detection runs over two rounds",
+    "bodyMarkdown": "A one-round plateau is noise. A real critic returns a slightly different score each iteration even on a fixed draft, because deterministic scoring still depends on which suggestions were applied and in what order. Requiring two consecutive plateau rounds filters that noise out. If the harness reports a plateau, the draft has genuinely stopped improving.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-deterministic-critic-in-this-lesson",
+    "title": "The deterministic critic in this lesson",
+    "bodyMarkdown": "The lesson does not call a model. The shipped critic is a callable that scores a draft based on three signals: average section body length (clarity), figure count and citation count (evidence), and an `originality_tag` field on the paper metadata (novelty). The reviser knows how to push each score upward.\n\n```text\nclarity      grows when the average section body length increases\nnovelty      grows when originality_tag is set to \"high\"\nevidence     grows when a section's figure_refs is non-empty\nmethodology  grows when a section titled \"Method\" exists with body\nrelated-work grows when a section titled \"Related Work\" exists with body\n```\n\nThe reviser interprets each suggestion as a targeted append. After round one, the harness can observe the score going up. The tests use this property to assert the loop reduces the gap.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "clarity      grows when the average section body length increases\nnovelty      grows when originality_tag is set to \"high\"\nevidence     grows when a section's figure_refs is non-empty\nmethodology  grows when a section titled \"Method\" exists with body\nrelated-work grows when a section titled \"Related Work\" exists with body"
+      }
+    ]
+  },
+  {
+    "id": "the-full-loop-contract",
+    "title": "The full loop contract",
+    "bodyMarkdown": "```mermaid\nsequenceDiagram\n    autonumber\n    participant H as Harness\n    participant C as Critic\n    participant R as Reviser\n    H->>C: critique(draft, round=1)\n    C-->>H: Critique{scores, suggestions}\n    H->>R: revise(draft, suggestions)\n    R-->>H: revised draft\n    H->>H: convergence check\n    alt converged\n        H-->>H: stop with reason\n    else continue\n        H->>C: critique(draft, round=2)\n    end\n```\n\nThe harness owns the round counter, the trace, and the convergence check. The critic owns the score. The reviser owns the diff. None of the three touches the others' state.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-trace-output",
+    "title": "The Trace output",
+    "bodyMarkdown": "Every round emits one trace event with the round number, the score vector, the suggestion count, and the convergence verdict. The full trace is returned alongside the final draft. A downstream dashboard can render the score-per-round chart. The next lesson, the iteration scheduler, reads the trace to decide whether the branch is worth keeping.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "budgets-that-protect-against-bad-critics",
+    "title": "Budgets that protect against bad critics",
+    "bodyMarkdown": "A critic that produces suggestions that never improve the score will lock the loop into the max-iteration ceiling. The trace makes that visible: five rounds, scores flat, verdict `budget`. The user reads that as a critic bug, not a draft bug. The alternative, surfacing only the final draft, hides the diagnosis. Trace-first design surfaces it.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "how-to-read-the-code",
+    "title": "How to read the code",
+    "bodyMarkdown": "`code/main.py` defines `Critique`, `Suggestion`, `Critic` protocol, `Reviser` protocol, `CriticLoop`, and a `make_deterministic_critic_pair` factory that returns the deterministic critic and a matching reviser. A minimal `Paper` shape is included so the lesson stands alone.\n\n`code/tests/test_critic_loop.py` covers: monotone improvement after round one, target convergence on a tuned draft, plateau detection after two flat rounds, budget exhaustion when no suggestion improves, suggestion application by the reviser, and trace shape.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "going-further",
+    "title": "Going further",
+    "bodyMarkdown": "Two extensions a real implementation will want. First, dimension weights: a paper for a workshop weights novelty higher than methodology; a journal weights the inverse. The convergence check becomes a weighted mean. Second, paired critics: one critic scores, a second critic adjudicates the suggestions before the reviser sees them. Both add value, both compose on the same `Critique` shape.\n\nThe bet is the score vector. Once the critique is structured, every other improvement, convergence rule, dashboard, paired critic, drops in without changing the loop.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

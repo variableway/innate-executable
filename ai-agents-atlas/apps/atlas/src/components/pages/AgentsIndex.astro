@@ -1,0 +1,52 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@atlas/ui/components/ui/card';
+import { Badge } from '@atlas/ui/components/ui/badge';
+import { frameworkMeta } from '@/lib/frameworks';
+import { useTranslations, type Locale } from '@/i18n/ui';
+import { localePath } from '@/i18n/utils';
+import { getLocalizedEntries } from '@/i18n/content';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = useTranslations(locale);
+
+const agents = (await getLocalizedEntries('agents', locale))
+  .sort((a, b) => a.entry.data.order - b.entry.data.order);
+---
+
+<BaseLayout title={t('agents.index.title')} description={t('agents.index.lede')}>
+  <header class="space-y-3 border-b border-border pb-8">
+    <p class="text-sm uppercase tracking-wider text-muted-foreground">{t('agents.kicker')}</p>
+    <h1 class="text-4xl font-bold tracking-tight">{t('agents.index.title')}</h1>
+    <p class="max-w-2xl text-lg text-muted-foreground">
+      {t('agents.index.lede')}
+    </p>
+  </header>
+
+  <section class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    {agents.map((agent) => (
+      <a href={localePath(locale, `/agents/${agent.slug}`)} class="group">
+        <Card className="h-full transition-colors group-hover:border-primary/40">
+          <CardHeader>
+            <div class="flex flex-wrap gap-1.5">
+              <Badge variant="outline">
+                {frameworkMeta[agent.entry.data.framework].name}
+              </Badge>
+              <Badge variant="secondary">{agent.entry.data.difficulty}</Badge>
+              <Badge variant="secondary">{agent.entry.data.industry}</Badge>
+            </div>
+            <CardTitle className="mt-2">{agent.entry.data.title}</CardTitle>
+            <CardDescription>{agent.entry.data.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p class="text-xs text-muted-foreground">LLM · {agent.entry.data.llm}</p>
+          </CardContent>
+        </Card>
+      </a>
+    ))}
+  </section>
+</BaseLayout>

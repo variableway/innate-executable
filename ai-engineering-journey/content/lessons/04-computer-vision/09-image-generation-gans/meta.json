@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/09-image-generation-gans",
+  "slug": "09-image-generation-gans",
+  "phase": "04-computer-vision",
+  "order": 9,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Image Generation — GANs",
+    "zh": ""
+  },
+  "hook": "A GAN is two neural networks in a fixed game. One draws, one critiques. They get better together until the drawings fool the critic.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 03 (CNNs)",
+    "Phase 3 Lesson 06 (Optimizers)",
+    "Phase 3 Lesson 07 (Regularization)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

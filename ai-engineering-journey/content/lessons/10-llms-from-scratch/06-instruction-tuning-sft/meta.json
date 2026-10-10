@@ -1,0 +1,22 @@
+{
+  "id": "10-llms-from-scratch/06-instruction-tuning-sft",
+  "slug": "06-instruction-tuning-sft",
+  "phase": "10-llms-from-scratch",
+  "order": 6,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Instruction Tuning (SFT)",
+    "zh": ""
+  },
+  "hook": "A base model predicts the next token. That's it. It doesn't follow instructions, answer questions, or refuse harmful requests. SFT is the bridge between a token predictor and a useful assistant. Every model you've ever talked to -- Claude, GPT, Llama Chat -- went through this step.",
+  "type": "Build",
+  "languages": [
+    "Python (with numpy)"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lesson 04 (Pre-Training a Mini GPT)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

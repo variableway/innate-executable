@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/29-production-runtimes",
+  "slug": "29-production-runtimes",
+  "phase": "14-agent-engineering",
+  "order": 29,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Production Runtimes: Queue, Event, Cron",
+    "zh": ""
+  },
+  "hook": "Production agents run on six runtime shapes: request-response, streaming, durable execution, queue-based background, event-driven, and scheduled. Pick the shape before you pick the framework. Observability is load-bearing at every shape.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 13 (LangGraph)",
+    "Phase 14 · 22 (Voice)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,20 @@
+{
+  "id": "00-setup-and-tooling/09-data-management",
+  "slug": "09-data-management",
+  "phase": "00-setup-and-tooling",
+  "order": 9,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Data Management",
+    "zh": "数据管理"
+  },
+  "hook": "Data is the fuel. How you manage it determines how fast you go.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": false
+}

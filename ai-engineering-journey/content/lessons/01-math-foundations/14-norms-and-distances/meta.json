@@ -1,0 +1,22 @@
+{
+  "id": "01-math-foundations/14-norms-and-distances",
+  "slug": "14-norms-and-distances",
+  "phase": "01-math-foundations",
+  "order": 14,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Norms and Distances",
+    "zh": "范数与距离"
+  },
+  "hook": "Your distance function defines what \"similar\" means. Choose wrong and everything downstream breaks.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01 (Linear Algebra Intuition)",
+    "02 (Vectors",
+    "Matrices & Operations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": false
+}

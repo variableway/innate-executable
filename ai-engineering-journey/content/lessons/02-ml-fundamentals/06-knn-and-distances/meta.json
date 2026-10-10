@@ -1,0 +1,19 @@
+{
+  "id": "02-ml-fundamentals/06-knn-and-distances",
+  "slug": "06-knn-and-distances",
+  "phase": "02-ml-fundamentals",
+  "order": 6,
+  "phaseOrder": 2,
+  "title": {
+    "en": "K-Nearest Neighbors and Distances",
+    "zh": ""
+  },
+  "hook": "Store everything. Predict by looking at your neighbors. The simplest algorithm that actually works.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1 (Lesson 14 Norms and Distances)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

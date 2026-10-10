@@ -1,0 +1,23 @@
+{
+  "id": "08-generative-ai/03-gans-generator-discriminator",
+  "slug": "03-gans-generator-discriminator",
+  "phase": "08-generative-ai",
+  "order": 3,
+  "phaseOrder": 8,
+  "title": {
+    "en": "GANs — Generator vs Discriminator",
+    "zh": ""
+  },
+  "hook": "Goodfellow's trick in 2014 was to skip density entirely. Two networks. One makes fakes. One catches them. They fight until the fakes are indistinguishable from real. It shouldn't work. It often doesn't. When it does, the samples are still the sharpest in the literature for narrow domains.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 · 02 (Backprop)",
+    "Phase 3 · 08 (Optimizers)",
+    "Phase 8 · 02 (VAE)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

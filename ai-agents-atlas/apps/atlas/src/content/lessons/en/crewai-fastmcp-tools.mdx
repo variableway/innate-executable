@@ -1,0 +1,167 @@
+---
+title: "CrewAI with FastMCP-style tools"
+description: "Stand up a FastMCP server, mirror its tool contracts as CrewAI BaseTool wrappers, and run a project status workflow."
+author: "Atlas Team"
+publishedAt: 2025-10-01
+level: "advanced"
+framework: "crewai"
+industry: "general"
+tags: ["crewai", "mcp", "tools", "production-pattern"]
+duration: 18
+order: 3
+prerequisites: ["crewai-multi-agent-crew"]
+related: []
+objectives:
+  - "Model a tool contract that resembles MCP server access"
+  - "Let agents request project records through tools"
+  - "Generate a management-ready project status report"
+  - "See how MCP-style boundaries improve agent design"
+resources:
+  - { label: "agent.py", url: "https://github.com/ashishpatel26/500-AI-Agents-Projects/blob/main/crewai_mcp_course/lesson_03/agent.py", type: "github" }
+  - { label: "mcp_server.py", url: "https://github.com/ashishpatel26/500-AI-Agents-Projects/blob/main/crewai_mcp_course/lesson_03/mcp_server.py", type: "github" }
+---
+
+## The boundary problem
+
+When your crew depends on five tools, three APIs, and a database, mixing those implementations into a single Python file gets unwieldy fast. **MCP (Model Context Protocol)** solves this by giving tools a stable contract — name, schema, description — that any agent runtime can consume.
+
+In this lesson you will:
+
+1. Define a small FastMCP server with four tools.
+2. Mirror those tools as CrewAI `BaseTool` subclasses.
+3. Run a crew that uses both the local wrappers and the server.
+
+## 1. The FastMCP server
+
+```python title="mcp_server.py"
+from fastmcp import FastMCP
+from datetime import datetime
+import json
+
+mcp = FastMCP("CrewAI Course Tools")
+
+@mcp.tool()
+def get_datetime() -> str:
+    """Get the current date and time in UTC."""
+    return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+@mcp.tool()
+def prioritize_tasks(tasks: list[str]) -> str:
+    """Prioritize a list of tasks by importance. Returns JSON."""
+    out = []
+    for i, t in enumerate(tasks):
+        priority = "HIGH" if i < len(tasks) // 3 else "MEDIUM" if i < 2 * len(tasks) // 3 else "LOW"
+        out.append({"rank": i + 1, "task": t, "priority": priority})
+    return json.dumps(out, indent=2)
+
+@mcp.tool()
+def format_as_json(data: dict) -> str:
+    """Pretty-print data as JSON."""
+    return json.dumps(data, indent=2, default=str)
+
+@mcp.tool()
+def calculate_project_metrics(tasks_completed: int, tasks_total: int) -> dict:
+    """Calculate project completion percentage and status."""
+    pct = (tasks_completed / tasks_total * 100) if tasks_total else 0
+    return {"percentage": round(pct, 1), "status": "On Track" if pct >= 50 else "At Risk" if pct >= 25 else "Behind"}
+
+if __name__ == "__main__":
+    mcp.run(transport="streamable-http", host="localhost", port=8000)
+```
+
+```bash
+pip install fastmcp
+python mcp_server.py   # keep running in another terminal
+```
+
+## 2. The CrewAI wrappers
+
+Mirror the server's tool contract 1:1:
+
+```python title="agent.py"
+from crewai import Agent, Crew, Process, Task
+from crewai.tools import BaseTool
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+
+class DateTimeTool(BaseTool):
+    name = "get_datetime"
+    description = "Get the current date and time"
+    def _run(self, query: str = "") -> str:
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+
+class TaskPrioritizerTool(BaseTool):
+    name = "prioritize_tasks"
+    description = "Prioritize a list of tasks by importance. Input: comma-separated task list."
+    def _run(self, tasks_csv: str) -> str:
+        tasks = [t.strip() for t in tasks_csv.split(",")]
+        prioritized = [
+            {"rank": i + 1, "task": t, "priority": ["HIGH", "MEDIUM", "LOW"][i % 3]}
+            for i, t in enumerate(tasks)
+        ]
+        return json.dumps(prioritized, indent=2)
+
+class JsonFormatterTool(BaseTool):
+    name = "format_as_json"
+    description = "Format data as structured JSON."
+    def _run(self, data_description: str) -> str:
+        return json.dumps({"formatted": True, "data": data_description}, indent=2)
+
+mcp_agent = Agent(
+    role="MCP-Powered Workflow Orchestrator",
+    goal="Use MCP tools to gather, format, and prioritise information.",
+    tools=[DateTimeTool(), JsonFormatterTool(), TaskPrioritizerTool()],
+    llm=llm,
+    verbose=True,
+)
+
+coordinator = Agent(
+    role="Project Coordinator",
+    goal="Produce a final project status report.",
+    llm=llm,
+    verbose=True,
+)
+```
+
+> In production, replace these hand-written wrappers with a real MCP client adapter. The wrappers here exist so the lesson runs without a separate server process.
+
+## 3. The workflow
+
+```python
+def run_mcp_workflow(project: str, tasks: list[str]) -> str:
+    gather = Task(
+        description=f"For project '{project}', call get_datetime, prioritise {tasks}, and format the result as JSON.",
+        agent=mcp_agent,
+    )
+    report = Task(
+        description=f"Write a project status report for '{project}' using the gathered data.",
+        agent=coordinator,
+        context=[gather],
+    )
+    crew = Crew(agents=[mcp_agent, coordinator], tasks=[gather, report], process=Process.sequential)
+    return str(crew.kickoff())
+```
+
+## Why the boundary matters
+
+| Without MCP | With MCP |
+|---|---|
+| Tools live inside the agent file | Tools live behind a stable contract |
+| Swapping implementations means editing the agent | Swap the server, agent code unchanged |
+| Hard to share tools across teams | One server, many agent front-ends |
+| Hard to test tools independently | Hit the server directly with curl/pytest |
+
+## Try it
+
+```bash
+python agent.py
+```
+
+You should see the MCP agent call all three tools, then the coordinator synthesise a status report.
+
+## Where to go from here
+
+- Real MCP client: replace the wrappers with `mcp.client.session.ClientSession` and load tools dynamically.
+- Tool versioning: bump the server, gate the agent behind feature flags.
+- Observability: log every tool call with timing; trace via OpenTelemetry.

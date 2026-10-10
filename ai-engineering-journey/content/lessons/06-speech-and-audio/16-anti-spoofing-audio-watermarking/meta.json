@@ -1,0 +1,22 @@
+{
+  "id": "06-speech-and-audio/16-anti-spoofing-audio-watermarking",
+  "slug": "16-anti-spoofing-audio-watermarking",
+  "phase": "06-speech-and-audio",
+  "order": 16,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Voice Anti-Spoofing & Audio Watermarking — ASVspoof 5, AudioSeal, WaveVerify",
+    "zh": ""
+  },
+  "hook": "Voice cloning shipped faster than defenses. 2026 production voice systems need two things: a detector (AASIST, RawNet2) that classifies real vs fake speech, and a watermark (AudioSeal) that survives compression and editing. Ship both or do not ship voice cloning.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 06 (Speaker Recognition)",
+    "Phase 6 · 08 (Voice Cloning)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

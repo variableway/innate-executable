@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/04-image-classification",
+  "slug": "04-image-classification",
+  "phase": "04-computer-vision",
+  "order": 4,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Image Classification",
+    "zh": ""
+  },
+  "hook": "A classifier is a function from pixels to a probability distribution over classes. Everything else is plumbing.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 2 Lesson 09 (Model Evaluation)",
+    "Phase 3 Lesson 10 (Mini Framework)",
+    "Phase 4 Lesson 03 (CNNs)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

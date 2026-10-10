@@ -1,0 +1,24 @@
+{
+  "id": "02-ml-fundamentals/02-linear-regression",
+  "slug": "02-linear-regression",
+  "phase": "02-ml-fundamentals",
+  "order": 2,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Linear Regression",
+    "zh": ""
+  },
+  "hook": "Linear regression draws the best straight line through your data. It is the \"hello world\" of machine learning.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 (Linear Algebra",
+    "Calculus",
+    "Optimization)",
+    "Phase 2 Lesson 1"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

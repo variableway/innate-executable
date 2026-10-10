@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/18-convex-optimization",
+  "slug": "18-convex-optimization",
+  "phase": "01-math-foundations",
+  "order": 18,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Convex Optimization",
+    "zh": "凸优化"
+  },
+  "hook": "Convex problems have one valley. Neural networks have millions. Knowing the difference matters.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 04 (Calculus for ML)",
+    "08 (Optimization)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": false
+}

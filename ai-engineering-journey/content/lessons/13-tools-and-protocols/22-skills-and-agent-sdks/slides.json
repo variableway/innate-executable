@@ -1,0 +1,162 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Agent Skills: Portable Contract and Runtime Boundary\n\n> A skill is not a long prompt with a better filename. It is a discoverable package of instructions, resources, and executable helpers that enters an agent's context through a runtime contract.\n\n**Type:** Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 13 · 01 (The Tool Interface), Phase 13 · 05 (Tool Schema Design)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Define an agent skill without confusing it with a prompt, repository instructions, a tool, a hook, a subagent, or a plugin.\n- Read the portable `SKILL.md` contract and separate it from runtime-specific extensions.\n- Explain discovery, selection, activation, resource loading, tool use, and verification as distinct lifecycle stages.\n- Validate a skill package before a runtime places it in an agent's catalog.\n- Choose between a skill, MCP tool, hook, subagent, or ordinary code for a concrete task.",
+    "keyPoints": [
+      "Define an agent skill without confusing it with a prompt, repository instructions, a tool, a hook, a subagent, or a plugin.",
+      "Read the portable `SKILL.md` contract and separate it from runtime-specific extensions.",
+      "Explain discovery, selection, activation, resource loading, tool use, and verification as distinct lifecycle stages.",
+      "Validate a skill package before a runtime places it in an agent's catalog.",
+      "Choose between a skill, MCP tool, hook, subagent, or ordinary code for a concrete task."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ten-minute-first-success",
+    "title": "Ten-Minute First Success",
+    "bodyMarkdown": "Do this before the long explanation. You will create a small skill, install\nthe complete reviewer bundle into a real agent host, invoke it, verify the\nresult, and remove it. This proves the lifecycle with an observable result.\n\n### Preflight for the real-host lab\n\nThe real-host checkpoint requires Node.js, `npx`, Python 3, one selected\nskill-capable host, and write access to the project or user scope you choose in\nthe installer. Verify the local commands first:\n\n```bash\nnode --version\nnpx --version\npython3 --version\n```\n\nDecide which host and scope you will use before installation. If any\nrequirement is unavailable, read this lesson on the website or continue with\nthe manual package exercise below. That fallback teaches the contract, but it\ndoes not prove host discovery, invocation, bundled-script execution, or\nuninstall behavior. Keep those observations marked pending.\n\n### 1. Start in an empty working directory\n\nRun these commands from any parent directory where you keep learning work:\n\n```bash\nmkdir -p agent-skills-first-run\ncd agent-skills-first-run\nTARGET_ROOT=\"$(pwd -P)\"\nprintf 'TARGET_ROOT=%s\\n' \"$TARGET_ROOT\"\nls -A\n```\n\nThe final command should print nothing. If it prints files, choose a different\nempty directory so the review has a clear boundary.\n\nCreate a directory for your first skill:\n\n```bash\nmkdir -p my-first-skill\n```\n\nCreate `my-first-skill/SKILL.md` with this content:\n\n```markdown\n---\nname: my-first-skill\ndescription: Turn rough meeting notes into a compact decision record when the user asks to capture a technical decision.\n---\n\n# Decision record\n\nExtract the decision, context, alternatives, owner, and next review date.\nIf the notes do not contain a decision, ask one clarifying question instead\nof inventing one.\n```\n\nVerify that you created the file in the intended directory:\n\n```bash\ntest -f my-first-skill/SKILL.md\n```\n\nNo output and exit code 0 means the file exists.\n\n### 2. Install the complete reviewer bundle\n\nStay in `agent-skills-first-run` and run:\n\n```bash\nnpx skills add rohitg00/ai-engineering-from-scratch --skill skill-contract-reviewer --full-depth\n```\n\nChoose the agent host and scope you are using. The installer should list\n`skill-contract-reviewer` and the destination it wrote. `--full-depth` is\nrequired because this lesson's skill is a nested bundle with references, a\nscript, and an asset.\n\nSet `SKILL_ROOT` to the absolute directory reported by the installer. It must\nbe the directory containing the installed `SKILL.md`, not the lesson source\ndirectory and not the current workspace:\n\n```bash\n# Replace the placeholder with the destination printed by the installer.\nSKILL_ROOT=\"$(cd \"/absolute/path/to/skill-contract-reviewer\" && pwd -P)\"\ntest -f \"$SKILL_ROOT/SKILL.md\"\nprintf 'SKILL_ROOT=%s\\n' \"$SKILL_ROOT\"\n```\n\nIf the agent session was already open, start a new session or use that host's\nskill rescan command. Do not assume every host hot-reloads its catalog.\n\n### 3. Invoke it explicitly\n\nIn the installed agent, with `agent-skills-first-run` as the working\ndirectory, use the syntax supported by that host:\n\n| Host | Explicit invocation |\n|---|---|\n| Codex | `skill-contract-reviewer`, or choose it from `/skills`, then provide the review request |\n| Claude Code | `/skill-contract-reviewer` followed by the review request |\n| Portable fallback | `Use skill-contract-reviewer to review the target package.` |\n\nUse the absolute values printed for `SKILL_ROOT` and `TARGET_ROOT` in the\nrequest. Require the host to expand them before execution and show the exact\nresolved command, not a command that depends on the process working directory:\n\n```text\nUse skill-contract-reviewer to review <TARGET_ROOT>/my-first-skill. The installed bundle root is <SKILL_ROOT>. Run python3 <SKILL_ROOT>/scripts/check_skill.py <TARGET_ROOT>/my-first-skill. Before running it, show the fully resolved argv. Return the validation report, selected primitives, and one sentence for each selection. Include the resolved script path, resolved target path, cwd, argv, and exit code as execution evidence.\n```\n\nThe resolved command should have this shape, with no placeholders remaining:\n\n```bash\npython3 \"/absolute/install/path/skill-contract-reviewer/scripts/check_skill.py\" \\\n  \"/absolute/workspace/path/agent-skills-first-run/my-first-skill\"\n```\n\nA successful result has all three properties:\n\n1. The host finds `skill-contract-reviewer` by name.\n2. The reviewer reads the package contract and runs its bundled validator.\n3. The response contains a validation report with no structural error for the\n   sample, plus a justified primitive selection.\n\nThe execution evidence must also name the script path, target path, cwd, exact\nargument vector, and exit code. A fluent report without those fields does not\nprove that the installed companion script ran.\n\nIf the host reports that the skill is unavailable, verify the install\ndestination, rescan or restart once, and retry the explicit request. Do not\nrewrite the skill description to hide an installation failure.\n\n### 4. Probe implicit selection\n\nStart a fresh agent turn and enter the same task without naming the skill:\n\n```text\nReview <TARGET_ROOT>/my-first-skill as a reusable agent package and tell me whether its package contract is valid.\n```\n\nIf the host exposes selected skills, record whether it chose\n`skill-contract-reviewer`. If the host does not expose routing, mark implicit\nselection as unverified. The explicit invocation is the portable fallback.\n\n### 5. Clean up\n\nRemove only the installed reviewer bundle:\n\n```bash\nnpx skills remove skill-contract-reviewer\n```\n\nSelect the same host and scope used during installation. After a rescan or new\nsession, an explicit request for `skill-contract-reviewer` should report that\nit is unavailable. Keep `my-first-skill` for the later lessons, or remove the\nlab directory after you finish the track.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "node --version\nnpx --version\npython3 --version"
+      },
+      {
+        "lang": "bash",
+        "code": "mkdir -p agent-skills-first-run\ncd agent-skills-first-run\nTARGET_ROOT=\"$(pwd -P)\"\nprintf 'TARGET_ROOT=%s\\n' \"$TARGET_ROOT\"\nls -A"
+      },
+      {
+        "lang": "bash",
+        "code": "mkdir -p my-first-skill"
+      },
+      {
+        "lang": "bash",
+        "code": "test -f my-first-skill/SKILL.md"
+      },
+      {
+        "lang": "bash",
+        "code": "npx skills add rohitg00/ai-engineering-from-scratch --skill skill-contract-reviewer --full-depth"
+      },
+      {
+        "lang": "bash",
+        "code": "# Replace the placeholder with the destination printed by the installer.\nSKILL_ROOT=\"$(cd \"/absolute/path/to/skill-contract-reviewer\" && pwd -P)\"\ntest -f \"$SKILL_ROOT/SKILL.md\"\nprintf 'SKILL_ROOT=%s\\n' \"$SKILL_ROOT\""
+      },
+      {
+        "lang": "text",
+        "code": "Use skill-contract-reviewer to review <TARGET_ROOT>/my-first-skill. The installed bundle root is <SKILL_ROOT>. Run python3 <SKILL_ROOT>/scripts/check_skill.py <TARGET_ROOT>/my-first-skill. Before running it, show the fully resolved argv. Return the validation report, selected primitives, and one sentence for each selection. Include the resolved script path, resolved target path, cwd, argv, and exit code as execution evidence."
+      },
+      {
+        "lang": "bash",
+        "code": "python3 \"/absolute/install/path/skill-contract-reviewer/scripts/check_skill.py\" \\\n  \"/absolute/workspace/path/agent-skills-first-run/my-first-skill\""
+      },
+      {
+        "lang": "text",
+        "code": "Review <TARGET_ROOT>/my-first-skill as a reusable agent package and tell me whether its package contract is valid."
+      },
+      {
+        "lang": "bash",
+        "code": "npx skills remove skill-contract-reviewer"
+      }
+    ]
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Suppose your team has a reliable release workflow. It finds merged changes, checks migration notes, updates the changelog, runs a packaging command, and produces a review checklist.\n\nPutting that workflow in one prompt makes it easy to paste and hard to operate. The prompt has no stable identity, no discovery rule, no resource boundary, no testable package shape, and no answer to basic questions: Who may invoke it? When should the model select it? Which scripts can it run? Which files are trusted? What survives when context is compacted?\n\nThe opposite mistake is to treat every reusable instruction as a skill. Repository conventions, deterministic automation, external tools, event hooks, and delegated agents solve different problems. Packing all of them into `SKILL.md` produces a directory that looks portable while depending on one host's undocumented behavior.\n\nThe first engineering task is classification. Decide what the artifact is before you decide how to package it.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Skills encode procedural knowledge\n\nAn agent skill is a directory whose entry point is `SKILL.md`. The entry file contains YAML frontmatter followed by Markdown instructions. The directory can also contain references, scripts, and assets.\n\n```figure\nskill-package-anatomy\n```\n\nThe directory, not the Markdown file alone, is the deployable unit. A copied `SKILL.md` with missing references is a broken package even if its frontmatter parses.\n\n### The neighboring abstractions\n\n| Artifact | Primary job | Loaded or run when | What it should not impersonate |\n|---|---|---|---|\n| Prompt | Shape one model interaction | Included by an application or user | A versioned package with resources |\n| Repository instructions | Explain one codebase's standing rules | A coding runtime enters that scope | A reusable task workflow |\n| Agent skill | Supply reusable procedural knowledge | Explicit or implicit activation | A hard authorization boundary |\n| MCP tool | Expose a typed remote capability | The model or application calls it | A detailed operating procedure |\n| Hook | Run deterministic logic on an event | The declared event occurs | Probabilistic model routing |\n| Subagent | Delegate work with separate context and state | An orchestrator creates or calls it | A static instruction bundle |\n| Plugin | Distribute a larger runtime extension | The host installs or enables it | The portable skill contract itself |\n| Learned skill library | Store behavior discovered through experience | A policy retrieves a prior program or trajectory | A standards-based `SKILL.md` package |\n\nA release skill can tell the agent how to inspect a release. An MCP server can expose the release registry. A hook can forbid direct pushes. A subagent can independently audit the candidate. These pieces compose because they keep different responsibilities.\n\n### The word \"skill\" names two different ideas\n\nResearch systems sometimes call a learned program, successful trajectory, or environment-specific policy fragment a skill. An agent can create these artifacts during exploration, retrieve them by task similarity, execute them, and revise the library from feedback. Phase 14 · 10 builds that kind of lifelong-learning library.\n\nAn Agent Skill in this mini-track is different. It is an authored package with a declared filesystem contract, catalog metadata, progressive disclosure, runtime-mediated invocation, and host-controlled tools. It can be generated or improved by an agent, but learning is not required for the format.\n\n| Dimension | Agent Skill package | Learned skill library |\n|---|---|---|\n| Primary unit | `SKILL.md` directory | Program, policy, trajectory, or memory record |\n| Creation | Authored, generated, or curated | Usually discovered from environment experience |\n| Selection | Catalog description plus runtime policy | Retrieval or policy over task state |\n| Execution | Model follows instructions and calls host tools | Environment runs a stored behavior or code artifact |\n| Portability | Package contract can cross compatible hosts | Often tied to one environment and action space |\n| Evaluation | Routing, artifact, safety, and host compatibility | Reward, success rate, transfer, and library growth |\n\nBoth ideas package reusable competence. They should not share implementation claims merely because they share a name.\n\n### The portable core\n\nThe Agent Skills specification requires two frontmatter fields:\n\n```yaml\n---\nname: release-readiness\ndescription: Inspect a release candidate when the user asks whether a version is ready to publish.\n---\n```\n\n`name` is the stable identifier. It must satisfy the specification's naming rules and match the parent directory. `description` is both documentation and routing metadata. It should say what the skill does and when it applies.\n\nThe portable optional fields are:\n\n| Field | Purpose | Portability note |\n|---|---|---|\n| `license` | State the terms for the package | Core specification |\n| `compatibility` | State environmental requirements | Core specification |\n| `metadata` | Carry string-valued extension data | Core specification |\n| `allowed-tools` | Suggest pre-approved tools | Experimental; host support varies |\n\nThe Markdown body holds the operational instructions. It should define the workflow, decision points, failure behavior, and direct paths to supporting resources.\n\n```markdown\n# Release readiness\n\nUse this workflow for a release candidate, not for ordinary development builds.\n\n1. Read `references/release-policy.md`.\n2. Run `python3 scripts/inspect_release.py --format json`.\n3. Stop if the report contains a blocking failure.\n4. Produce the checklist from `assets/release-checklist.md`.\n5. Ask for approval before any publish or tag action.\n```\n\n### Runtime extensions are a second layer\n\nSome hosts accept extra frontmatter or companion configuration. Those fields can be useful, but they are not automatically portable.\n\n| Behavior | Example host extension | Portable core? |\n|---|---|:---:|\n| Hide a skill from model routing while keeping direct user invocation | `disable-model-invocation` | No |\n| Hide a skill from the user's command menu while allowing model routing | `user-invocable` | No |\n| Show argument help in a command menu | `argument-hint` | No |\n| Run the skill in delegated context | `context`, `agent` | No |\n| Pin model or reasoning settings | `model`, `effort` | No |\n| Register lifecycle automation | `hooks` | No |\n| Disable implicit invocation in Codex | `agents/openai.yaml` policy | No |\n\nTreat each extension as an adapter. Keep the core workflow valid without it, document the fallback, and test the host that consumes it. A runtime may ignore an unknown field, reject it, or preserve it without implementing the behavior.\n\n### Frontmatter is executable metadata\n\nMetadata changes system behavior before the skill body is read.\n\n- A malformed `name` can make discovery fail.\n- A vague `description` can route the wrong requests.\n- A human-only flag can remove the skill from the model's catalog.\n- A tool allowance can change whether a host asks for permission.\n- A context setting can move execution into a separate agent session.\n\nReview frontmatter like configuration code. Validate it, version it, and include its behavior in evals.\n\n### The skill lifecycle\n\n```figure\nskill-runtime-lifecycle\n```\n\nEach arrow is a boundary with its own failure modes.\n\n1. **Discovery** finds possible packages in configured locations.\n2. **Validation** rejects malformed or unsafe packages before catalog publication.\n3. **Cataloging** exposes a compact `name` and `description`, not the full package.\n4. **Selection** decides whether the skill is relevant.\n5. **Activation** loads the body into model-visible context.\n6. **Disclosure** reads references or assets only when a branch requires them.\n7. **Execution** uses host tools under the host's permission and isolation rules.\n8. **Verification** checks the produced artifact independently of the model's claim.\n\nCollapsing these stages causes bad mental models. A discovered skill is not active. An active skill is not authorized to do everything it describes. A permitted tool call is not proof that the result is correct.\n\n### Skills and tools are orthogonal\n\nMCP answers, \"Which capabilities can this application call, and what are their schemas?\" A skill answers, \"How should an agent approach this class of task?\"\n\n```figure\nskill-tool-orthogonality\n```\n\nThe skill may name a tool, but the host owns the actual capability registry. If the tool is absent, the skill should state a fallback or fail clearly. It should never imply that naming a capability creates it.\n\n### Skills and repository instructions are different scopes\n\nRepository instructions describe the environment you are already in: commands, conventions, generated files, and boundaries. A skill provides reusable procedure for a task that may occur across many repositories.\n\nWhen both apply, the active user request and repository rules constrain the skill. A generic refactoring skill must not override a repository rule that forbids editing generated files.\n\n### Skills do not import one another\n\nOne skill can direct the agent to invoke another, but this is not a language-level import. The second skill still goes through runtime discovery, eligibility, activation, permissions, and context handling.\n\nWrite cross-skill dependencies as observable workflow edges:\n\n```markdown\nAfter producing the candidate changelog, invoke the `release-risk-review` skill.\nPass the candidate path and require a blocking or non-blocking verdict.\nIf that skill is unavailable, stop and report the missing dependency.\n```\n\nThis makes the dependency testable and gives the host a chance to enforce policy.",
+    "keyPoints": [
+      "A malformed `name` can make discovery fail.",
+      "A vague `description` can route the wrong requests.",
+      "A human-only flag can remove the skill from the model's catalog.",
+      "A tool allowance can change whether a host asks for permission.",
+      "A context setting can move execution into a separate agent session.",
+      "Discovery"
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements a small standards-oriented validator and an artifact chooser. It stays stdlib-only so every rule is visible.\n\nThe validator exposes:\n\n- `parse_frontmatter(text)` to separate metadata from the body.\n- `validate_skill_text(text, directory_name, allowed_runtime_extensions=())` to check required fields, naming, unknown extensions, body presence, and portable limits.\n- `ValidationIssue` and `SkillReport` to return structured evidence instead of one opaque boolean.\n- `FrontmatterSyntaxError` for input that cannot be interpreted safely.\n\nThe chooser exposes `TaskShape` and `select_primitives(task)`. It maps a task's needs to ordinary code, repository instructions, a skill, a hook, a subagent, or an MCP tool.\n\nRun the lab:\n\n```bash\ncd \"$(git rev-parse --show-toplevel)\"\ncd phases/13-tools-and-protocols/22-skills-and-agent-sdks\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v\n```\n\nThis command block requires a local clone and must start from anywhere inside\nthat clone so `git rev-parse --show-toplevel` can resolve the repository root.\n\nThe demo prints JSON for one valid portable skill, one host-extended skill, one invalid package, and several task-shape decisions. Inspect the issue codes. A package validator should explain how to fix an artifact without guessing on the author's behalf.\n\n### Validation order matters\n\nValidate cheap structural facts before deeper content rules:\n\n```figure\nskill-validation-order\n```\n\nThis order prevents secondary errors from obscuring the first broken invariant.",
+    "keyPoints": [
+      "`parse_frontmatter(text)` to separate metadata from the body.",
+      "`ValidationIssue` and `SkillReport` to return structured evidence instead of one opaque boolean.",
+      "`FrontmatterSyntaxError` for input that cannot be interpreted safely."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd \"$(git rev-parse --show-toplevel)\"\ncd phases/13-tools-and-protocols/22-skills-and-agent-sdks\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Before writing a skill, fill out this decision card:\n\n| Question | If yes | Likely primitive |\n|---|---|---|\n| Does this need reusable model judgment across several steps? | The procedure is stable but decisions vary | Skill |\n| Must this happen every time an event fires? | Missing one execution is unacceptable | Hook or application code |\n| Does the model need an external capability with typed inputs? | The operation lives outside model context | Tool or MCP server |\n| Does the work need isolated context, state, or ownership? | A separate worker returns a bounded result | Subagent |\n| Is this guidance specific to one repository? | It describes local commands and constraints | Repository instructions |\n| Is one interaction enough? | No package lifecycle is needed | Prompt |\n\nMany production workflows use more than one row. The card prevents one artifact from pretending to provide every property.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces the `skill-contract-reviewer` bundle under `outputs/`. It contains:\n\n- a portable `SKILL.md` that reviews a proposed skill package;\n- reference checklists for the portable contract and primitive selection;\n- a deterministic validation script;\n- task-shape fixtures covering prompts, skills, tools, hooks, ordinary code, and subagents.\n\nInstall the full bundle, not only its entry file:\n\n```bash\ncd \"$(git rev-parse --show-toplevel)\"\npython3 scripts/install_skills.py /tmp/aiefs-skills --phase 13 --type skill\n```\n\nThe course installer reports each copied Phase 13 skill and writes\n`/tmp/aiefs-skills/manifest.json`. This clean destination checks package shape;\nthe first-success loop above checks discovery and invocation in a real host.\n\nThe following lessons deepen each lifecycle stage. Lesson 24 builds discovery and progressive disclosure. Lesson 25 builds invocation policy and routing. Lesson 26 separates permissions from sandboxing. Lesson 27 turns the whole package into an evaluated release artifact.",
+    "keyPoints": [
+      "a portable `SKILL.md` that reviews a proposed skill package;",
+      "reference checklists for the portable contract and primitive selection;",
+      "a deterministic validation script;",
+      "task-shape fixtures covering prompts, skills, tools, hooks, ordinary code, and subagents."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd \"$(git rev-parse --show-toplevel)\"\npython3 scripts/install_skills.py /tmp/aiefs-skills --phase 13 --type skill"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Classify five workflows from your own team using `TaskShape`. Defend every case where you choose more than one primitive.\n2. Add boundary tests proving that a 500-character `compatibility` value passes and a 501-character value fails as a specification error.\n3. Add one runtime extension to the allowlist. Write a test proving the same file is still distinguishable from a portable-only skill.\n4. Split a 400-line prompt into `SKILL.md`, one reference, one script contract, and one output template. Keep every file responsible for one kind of information.\n5. Design a failure response for a skill that references an unavailable MCP tool. Do not silently substitute a tool with broader permissions.\n6. Review an existing skill and label every sentence as routing, procedure, policy, reference pointer, or output contract. Move anything that does not belong.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|---|---|---|\n| Agent skill | \"A saved prompt\" | A discoverable directory of procedural instructions and optional resources |\n| Portable core | \"Fields every runtime shares\" | The contract defined by the Agent Skills specification |\n| Runtime extension | \"Extra frontmatter\" | Host-specific configuration whose behavior requires a compatible adapter |\n| Activation | \"The skill ran\" | The skill body entered model-visible context; execution may come later |\n| Skill dependency | \"Import another skill\" | A runtime-mediated invocation edge with availability and policy checks |\n| Tool contract | \"A function schema\" | Inputs, outputs, permissions, side effects, errors, and evidence for a capability |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Agent Skills specification](https://agentskills.io/specification) for the portable directory and frontmatter contract.\n- [Agent Skills best practices](https://agentskills.io/skill-creation/best-practices) for scope, instructions, and resource organization.\n- [OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills) for current Codex discovery and invocation behavior.\n- [Claude Code skills](https://code.claude.com/docs/en/skills) for one runtime's invocation, argument, tool, and delegated-context extensions.",
+    "keyPoints": [
+      "[Agent Skills specification](https://agentskills.io/specification) for the portable directory and frontmatter contract.",
+      "[Agent Skills best practices](https://agentskills.io/skill-creation/best-practices) for scope, instructions, and resource organization.",
+      "[OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills) for current Codex discovery and invocation behavior.",
+      "[Claude Code skills](https://code.claude.com/docs/en/skills) for one runtime's invocation, argument, tool, and delegated-context extensions."
+    ],
+    "commands": []
+  }
+]

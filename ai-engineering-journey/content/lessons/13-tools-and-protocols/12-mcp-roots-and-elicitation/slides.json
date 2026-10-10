@@ -1,0 +1,181 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Explicit Scope and Stateless Elicitation\n\n> Roots are deprecated in MCP 2026-07-28 and were never a security sandbox. Put scope in visible tool arguments or resource URIs, authorize it on the server, and use MRTR when a tool genuinely needs user input. The user sees the decision, the model sees the handle, and any server instance can process the retry.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13 · 07 (MCP server), Phase 13 · 11 (stateless MRTR)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Replace deprecated Roots with explicit workspace parameters, resource URIs, or server configuration.\n- Separate scope hints from authorization, path containment, and operating-system sandboxing.\n- Deliver form-mode `elicitation/create` through an MRTR `input_required` result.\n- Advertise elicitation support in per-request client capabilities and reject unsupported modes.\n- Validate `accept`, `decline`, and `cancel` as distinct outcomes.\n- Bind destructive confirmation to an authenticated principal, original arguments, candidate set, and expiry.",
+    "keyPoints": [
+      "Replace deprecated Roots with explicit workspace parameters, resource URIs, or server configuration.",
+      "Separate scope hints from authorization, path containment, and operating-system sandboxing.",
+      "Deliver form-mode `elicitation/create` through an MRTR `input_required` result.",
+      "Advertise elicitation support in per-request client capabilities and reject unsupported modes.",
+      "Validate `accept`, `decline`, and `cancel` as distinct outcomes.",
+      "Bind destructive confirmation to an authenticated principal, original arguments, candidate set, and expiry."
+    ],
+    "commands": []
+  },
+  {
+    "id": "two-problems-that-look-similar",
+    "title": "Two Problems That Look Similar",
+    "bodyMarkdown": "A notes tool receives this request: \"Delete the old TPS report.\"\n\nThe server must answer two different questions.\n\n1. Which workspace may this operation touch?\n2. Which of three matching notes did the user mean?\n\nThe first is scope and authorization. The second is interactive disambiguation. Mixing them leads to dangerous designs, such as treating a client-provided folder as proof that the caller may delete everything inside it.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "roots-are-a-migration-surface",
+    "title": "Roots Are a Migration Surface",
+    "bodyMarkdown": "Earlier MCP revisions let a client advertise Roots and notify a server when the list changed. Roots were informational guidance. They did not constrain what the server process could read, did not authorize the caller, and did not create an operating-system sandbox.\n\nMCP 2026-07-28 deprecates `roots/list` and `notifications/roots/list_changed` for new designs. Prefer one of these explicit replacements:\n\n- A `workspaceUri` or `directory` tool argument when scope varies per call.\n- A resource URI when the operation already targets a resource.\n- Server configuration when one deployment owns one fixed workspace.\n- A process sandbox or jailed filesystem when code must be technically unable to escape.\n\nIf an existing 2026-07-28 integration still needs `roots/list` during the deprecation window, the server embeds it in MRTR `inputRequests`. It must not send a live reverse request. That is a migration adapter; new handlers should accept explicit scope instead.\n\nThe model can see and repeat an explicit handle. Hidden transport-session scope is harder to inspect, replay, audit, and route.\n\n### The three-layer rule\n\nAn explicit URI still does not authorize itself. Enforce all three layers:\n\n1. **Authorization:** Is this authenticated principal allowed to use this workspace?\n2. **Containment:** Does the normalized target URI stay inside the authorized workspace boundary?\n3. **Sandbox:** Can the operating system stop a compromised server from escaping anyway?\n\nThe runnable server keeps an allowlist of authorized workspace URIs, normalizes percent-encoded paths, checks a real path-component boundary, and re-checks containment immediately before deletion.\n\nNaive string-prefix checks are wrong:\n\n```text\nallowed:   file:///work/notes\nattacker:  file:///work/notes-evil/secret.md\ntraversal: file:///work/notes/%2e%2e/private.md\n```\n\nBoth hostile paths start with a misleading string. Normalize first, then compare path components. A production filesystem server must also defend against symbolic-link races and platform-specific path semantics.",
+    "keyPoints": [
+      "A `workspaceUri` or `directory` tool argument when scope varies per call.",
+      "A resource URI when the operation already targets a resource.",
+      "Server configuration when one deployment owns one fixed workspace.",
+      "A process sandbox or jailed filesystem when code must be technically unable to escape.",
+      "Authorization:",
+      "Containment:"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "allowed:   file:///work/notes\nattacker:  file:///work/notes-evil/secret.md\ntraversal: file:///work/notes/%2e%2e/private.md"
+      }
+    ]
+  },
+  {
+    "id": "elicitation-still-exists-but-delivery-changed",
+    "title": "Elicitation Still Exists, but Delivery Changed",
+    "bodyMarkdown": "Elicitation is the current client feature for collecting user input during `tools/call`, `prompts/get`, or `resources/read`. The method name remains `elicitation/create`. What changed is the direction of the wire flow.\n\nA 2026-07-28 server does not send a reverse JSON-RPC request. It returns an `InputRequiredResult`:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": {\n    \"resultType\": \"input_required\",\n    \"inputRequests\": {\n      \"delete_choice\": {\n        \"method\": \"elicitation/create\",\n        \"params\": {\n          \"mode\": \"form\",\n          \"message\": \"Choose one matching note and confirm deletion.\",\n          \"requestedSchema\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"note_id\": {\n                \"type\": \"string\",\n                \"enum\": [\"note-3\", \"note-7\", \"note-14\"]\n              },\n              \"confirm\": {\"type\": \"boolean\"}\n            },\n            \"required\": [\"note_id\", \"confirm\"]\n          }\n        }\n      }\n    },\n    \"requestState\": \"integrity-protected-delete-state\"\n  }\n}\n```\n\nThe host renders the form. The user can accept, explicitly decline, or dismiss it. The client then retries the original `tools/call` with a fresh id:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"notes_delete\",\n    \"arguments\": {\n      \"workspaceUri\": \"file:///Users/alice/Documents/Notes\",\n      \"title\": \"TPS report\"\n    },\n    \"inputResponses\": {\n      \"delete_choice\": {\n        \"action\": \"accept\",\n        \"content\": {\"note_id\": \"note-14\", \"confirm\": true}\n      }\n    },\n    \"requestState\": \"integrity-protected-delete-state\",\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {\n        \"elicitation\": {\"form\": {}}\n      }\n    }\n  }\n}\n```\n\nThere is no protocol session between the two calls. The server verifies the echoed state, validates the response against the expected schema, checks that the selected note was in the signed candidate set, re-authorizes the workspace, re-checks containment, and then deletes.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "capability-negotiation-is-per-request",
+    "title": "Capability Negotiation Is Per Request",
+    "bodyMarkdown": "A client that supports form-mode elicitation declares:\n\n```json\n{\n  \"io.modelcontextprotocol/clientCapabilities\": {\n    \"elicitation\": {\"form\": {}}\n  }\n}\n```\n\nAn empty elicitation capability, `\"elicitation\": {}`, remains equivalent to form-only support for compatibility. Explicit `\"elicitation\": {\"form\": {}}` also supports form mode. A URL-only declaration, `\"elicitation\": {\"url\": {}}`, does not. The server must not embed a mode absent from the current request's capabilities, even if an earlier request advertised it.\n\nEvery request also carries `io.modelcontextprotocol/protocolVersion`. A missing or non-string version returns `-32602`. An unsupported string returns `-32022` with exact `supported` and `requested` data. Missing or URL-only elicitation support returns `-32021` with `data.requiredCapabilities` set to `{\"elicitation\":{\"form\":{}}}`.\n\nAn envelope without a JSON-RPC `id` is a notification. Process it without emitting a JSON-RPC success or error response. On Streamable HTTP, an accepted notification receives `202 Accepted` with no body.\n\n`clientInfo` should be included for diagnostics, but it is self-reported and cannot identify the user for authorization.\n\nThe server implements `server/discover` and returns `supportedVersions`, capabilities, `ttlMs`, and `cacheScope` with `resultType: \"complete\"`. It does not advertise Roots for this modern design. Because it advertises tools, it also implements mandatory `tools/list`. That result returns the deterministic `notes_delete` descriptor, a valid object `inputSchema`, server identity metadata, and public cache hints.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "form-mode",
+    "title": "Form Mode",
+    "bodyMarkdown": "Form mode uses a restricted JSON Schema designed for usable dialogs. The root is an object and its properties are flat primitive fields or supported enum arrays. Deeply nested objects and general-purpose document schemas do not belong in a confirmation dialog.\n\nUse form mode for:\n\n- choosing one of several candidates;\n- confirming a destructive operation;\n- collecting non-sensitive preferences;\n- gathering a small number of values the user, not the model, must decide.\n\nDo not use form mode for passwords, API keys, access tokens, or payment credentials. Those secrets would pass through the MCP client and could reach logs or model context.\n\nThe server validates the returned content again. Client-side form validation improves UX but does not create trust.",
+    "keyPoints": [
+      "choosing one of several candidates;",
+      "confirming a destructive operation;",
+      "collecting non-sensitive preferences;",
+      "gathering a small number of values the user, not the model, must decide."
+    ],
+    "commands": []
+  },
+  {
+    "id": "url-mode",
+    "title": "URL Mode",
+    "bodyMarkdown": "URL mode sends a secure web URL for an out-of-band interaction:\n\n```json\n{\n  \"method\": \"elicitation/create\",\n  \"params\": {\n    \"mode\": \"url\",\n    \"message\": \"Connect the report service to continue.\",\n    \"url\": \"https://mcp.example.com/connect/report-service\"\n  }\n}\n```\n\nUse it when sensitive information must go directly to a server-controlled web flow, such as third-party authorization. The client shows the full destination and obtains consent before opening it. It must not prefetch the URL.\n\nAn `accept` response means the user agreed to open the URL. It does not prove the external flow completed. On retry, the server checks its own state and either completes or returns another `input_required` result.\n\nURL elicitation is not a replacement for authorization between the MCP client and MCP server. It is for an external interaction the MCP server needs to perform on the user's behalf. The server must bind the browser user to the same authenticated principal that began the MCP operation.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "response-branches",
+    "title": "Response Branches",
+    "bodyMarkdown": "Treat the actions as product decisions, not aliases:\n\n| Action | Meaning | Safe server behavior |\n|--------|---------|----------------------|\n| `accept` | User submitted the interaction | Validate content and continue |\n| `decline` | User explicitly refused | Return a complete, non-error refusal outcome |\n| `cancel` | User dismissed or could not finish | Stop safely and allow a later retry |\n\nNever interpret missing content as consent. Never convert decline into a repeated prompt loop.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "protecting-destructive-mrtr-state",
+    "title": "Protecting Destructive MRTR State",
+    "bodyMarkdown": "The candidate list cannot live only in a prompt or unsigned Base64 value. A client controls everything it sends back.\n\nThe lesson signs a state payload containing:\n\n- authenticated principal;\n- originating method;\n- digest of `workspaceUri` and `title`;\n- allowed note ids shown in the form;\n- operation phase;\n- short expiry.\n\nBefore mutation, the server also checks the live note record. This catches deletion races and a target moved outside the workspace after the form was shown.\n\nFor a one-time financial or irreversible action, HMAC alone does not prevent a valid state from being replayed within its expiry. Store and consume a nonce exactly once in a replay store shared by every handler instance. The lesson injects a bounded, TTL-pruned store and holds its atomic claim while performing the in-memory deletion. A production database should couple the nonce claim and mutation in one transaction or equivalent conditional-write boundary.\n\nValidate the interaction before claiming the nonce. A malformed response or `cancel` performs no mutation and leaves the state retryable until expiry. An explicit `decline` is terminal, so the lesson consumes the nonce without deleting anything.\n\n```figure\nt3-roots-boundary\n```",
+    "keyPoints": [
+      "authenticated principal;",
+      "originating method;",
+      "digest of `workspaceUri` and `title`;",
+      "allowed note ids shown in the form;",
+      "operation phase;",
+      "short expiry."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` demonstrates a modern `notes_delete` tool:\n\n- `tools/list` returns a deterministic, cacheable descriptor with the required workspace and title schema.\n- Scope is an explicit `workspaceUri` argument.\n- Server configuration authorizes that workspace for the lesson principal.\n- URI normalization rejects prefix confusion and encoded traversal.\n- Every destructive deletion requires form-mode elicitation.\n- The elicitation travels inside `resultType: \"input_required\"`.\n- Signed `requestState` binds the exact candidate list and original arguments.\n- An injected replay store rejects the same accepted or declined state across server instances.\n- The retry uses a fresh request id and returns `resultType: \"complete\"`.\n\nThe data store is in memory so the protocol behavior is easy to inspect. The security rules remain the same with a database.",
+    "keyPoints": [
+      "`tools/list` returns a deterministic, cacheable descriptor with the required workspace and title schema.",
+      "Scope is an explicit `workspaceUri` argument.",
+      "Server configuration authorizes that workspace for the lesson principal.",
+      "URI normalization rejects prefix confusion and encoded traversal.",
+      "Every destructive deletion requires form-mode elicitation.",
+      "The elicitation travels inside `resultType: \"input_required\"`."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "From the repository root:\n\n```bash\ncd phases/13-tools-and-protocols/12-mcp-roots-and-elicitation/code\npython3 main.py\npython3 -m unittest discover tests -v\n```\n\nExpected checkpoints:\n\n- Discovery advertises tools without Roots.\n- Tool discovery returns `notes_delete` with `resultType`, server identity, and cache hints.\n- Request id `1` returns the form in `inputRequests.delete_choice`.\n- Request id `2` echoes the signed state and completes the deletion.\n- A prefix path and an encoded traversal path both fail containment.\n- A changed title cannot reuse the original confirmation state.\n- A decline leaves the note unchanged.\n- Two server objects sharing note and replay state cannot both execute one confirmation.\n- Empty and explicit form declarations work, while URL-only support returns exact `-32021` form requirements.\n- Unsupported version failures use the exact `-32022` data shape.\n- An id-less notification produces no JSON-RPC response.",
+    "keyPoints": [
+      "Discovery advertises tools without Roots.",
+      "Tool discovery returns `notes_delete` with `resultType`, server identity, and cache hints.",
+      "Request id `1` returns the form in `inputRequests.delete_choice`.",
+      "Request id `2` echoes the signed state and completes the deletion.",
+      "A prefix path and an encoded traversal path both fail containment.",
+      "A changed title cannot reuse the original confirmation state."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/12-mcp-roots-and-elicitation/code\npython3 main.py\npython3 -m unittest discover tests -v"
+      }
+    ]
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "`outputs/skill-elicitation-form-designer.md` designs the explicit scope, authorization checks, MRTR form, response branches, and state binding. It refuses to treat deprecated Roots as a sandbox or to collect secrets through form mode.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Replace the in-memory replay store with SQLite. Use one transaction to claim the nonce and delete the note, then prove two processes cannot both commit.\n2. Add `url` capability negotiation and an out-of-band setup flow. Keep third-party credentials out of `inputResponses`.\n3. Replace the in-memory note map with a temporary SQLite database. Re-check authorization and containment inside the mutation transaction.\n4. Add a symbolic-link policy for a real filesystem implementation. Explain why URI lexical containment alone cannot stop a symlink escape.\n5. Design a 2025-11-25 adapter that maps modern MRTR handler output to legacy server-initiated elicitation. Keep it isolated from the current handler.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | Meaning in 2026-07-28 |\n|------|------------------------|\n| Roots | Deprecated informational workspace hints, not authorization or sandboxing |\n| Explicit scope | Workspace, directory, or resource handle visible in request arguments |\n| Containment | Normalized path-component check that keeps a target inside a boundary |\n| Elicitation | Client feature for obtaining user input during an MCP operation |\n| Form mode | In-band structured user input using a restricted flat schema |\n| URL mode | Out-of-band interaction for sensitive or external workflows |\n| MRTR | Stateless input-required result followed by a fresh retry |\n| `requestState` | Opaque state echoed exactly and integrity-checked by the server |\n| Decline | Explicit user refusal |\n| Cancel | Dismissal or incomplete interaction without approval |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "legacy-compatibility",
+    "title": "Legacy Compatibility",
+    "bodyMarkdown": "For a peer pinned to 2025-11-25, `roots/list`, `notifications/roots/list_changed`, and live server-initiated `elicitation/create` may still exist. Label that adapter legacy. Do not allow a legacy Root list to bypass server authorization, and do not carry protocol-session assumptions into the modern handler.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [MCP 2026-07-28 Elicitation](https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation)\n- [MCP 2026-07-28 Multi Round-Trip Requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)\n- [MCP 2026-07-28 Roots deprecation](https://modelcontextprotocol.io/specification/2026-07-28/client/roots)\n- [MCP 2026-07-28 server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)",
+    "keyPoints": [
+      "[MCP 2026-07-28 Elicitation](https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation)",
+      "[MCP 2026-07-28 Multi Round-Trip Requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)",
+      "[MCP 2026-07-28 Roots deprecation](https://modelcontextprotocol.io/specification/2026-07-28/client/roots)",
+      "[MCP 2026-07-28 server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)"
+    ],
+    "commands": []
+  }
+]

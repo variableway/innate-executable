@@ -1,0 +1,72 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# GPU 与云端\n\n> 用 CPU 学习没问题。真正训练，需要 GPU。\n\n**类型:** Build\n**语言:** Python\n**先修:** 阶段 0、第 01 课\n**时长:** ~45 分钟",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "学习目标",
+    "title": "学习目标",
+    "bodyMarkdown": "- 用 `nvidia-smi` 和 PyTorch 的 CUDA API 验证本地 GPU 是否可用\n- 配置 Google Colab 的 T4 GPU，免费做云端实验\n- 对比 CPU 与 GPU 的矩阵乘法性能，测出加速比\n- 用 fp16 经验法则估算显存能装下的最大模型",
+    "keyPoints": [
+      "用 `nvidia-smi` 和 PyTorch 的 CUDA API 验证本地 GPU 是否可用",
+      "配置 Google Colab 的 T4 GPU，免费做云端实验",
+      "对比 CPU 与 GPU 的矩阵乘法性能，测出加速比",
+      "用 fp16 经验法则估算显存能装下的最大模型"
+    ],
+    "commands": []
+  },
+  {
+    "id": "问题",
+    "title": "问题",
+    "bodyMarkdown": "阶段 1–3 的大多数课程在 CPU 上就能跑。但一旦开始训练 CNN、Transformer 或 LLM（阶段 4 之后），就需要 GPU 加速。CPU 上跑 8 小时的训练，GPU 上 10 分钟就能完成。\n\n你有三个选择：本地 GPU、云 GPU，或 Google Colab（免费）。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "概念",
+    "title": "概念",
+    "bodyMarkdown": "```\n你的选择：\n\n1. 本地 NVIDIA GPU\n   费用：$0（你已经有了）\n   安装：安装 CUDA + cuDNN\n   适合：日常使用、大数据集\n\n2. Google Colab（免费层）\n   费用：$0\n   安装：无需\n   适合：快速实验、家里没有 GPU\n\n3. 云 GPU（Lambda、RunPod、Vast.ai）\n   费用：$0.20-2.00/hr\n   安装：SSH + 安装\n   适合：认真训练、大模型\n```\n\n```figure\ns0-gpu-dispatch\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "动手做",
+    "title": "动手做",
+    "bodyMarkdown": "### 选项 1：本地 NVIDIA GPU\n\n先看你有没有：\n\n```bash\nnvidia-smi\n```\n\n安装带 CUDA 的 PyTorch：\n\n```python\nimport torch\n\nprint(f\"CUDA available: {torch.cuda.is_available()}\")\nprint(f\"CUDA version: {torch.version.cuda}\")\nif torch.cuda.is_available():\n    print(f\"GPU: {torch.cuda.get_device_name(0)}\")\n    print(f\"Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB\")\n```\n\n### 选项 2：Google Colab\n\n1. 打开 [colab.research.google.com](https://colab.research.google.com)\n2. Runtime > Change runtime type > T4 GPU\n3. 运行 `!nvidia-smi` 验证\n\n可以把本课程的 notebook 直接上传到 Colab。\n\n### 选项 3：云 GPU\n\n以 Lambda Labs、RunPod 或 Vast.ai 为例：\n\n```bash\nssh user@your-gpu-instance\n\npip install torch torchvision torchaudio\npython -c \"import torch; print(torch.cuda.get_device_name(0))\"\n```\n\n### 没有 GPU？没关系。\n\n大多数课程在 CPU 上也能跑。需要 GPU 的课程会明确说明，并附上 Colab 链接。\n\n```python\ndevice = torch.device(\"cuda\" if torch.cuda.is_available() else \"cpu\")\nprint(f\"Using: {device}\")\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "nvidia-smi"
+      },
+      {
+        "lang": "bash",
+        "code": "ssh user@your-gpu-instance\n\npip install torch torchvision torchaudio\npython -c \"import torch; print(torch.cuda.get_device_name(0))\""
+      }
+    ]
+  },
+  {
+    "id": "动手做：GPU 与 CPU 基准测试",
+    "title": "动手做：GPU 与 CPU 基准测试",
+    "bodyMarkdown": "```python\nimport torch\nimport time\n\nsize = 5000\n\na_cpu = torch.randn(size, size)\nb_cpu = torch.randn(size, size)\n\nstart = time.time()\nc_cpu = a_cpu @ b_cpu\ncpu_time = time.time() - start\nprint(f\"CPU: {cpu_time:.3f}s\")\n\nif torch.cuda.is_available():\n    a_gpu = a_cpu.to(\"cuda\")\n    b_gpu = b_cpu.to(\"cuda\")\n\n    torch.cuda.synchronize()\n    start = time.time()\n    c_gpu = a_gpu @ b_gpu\n    torch.cuda.synchronize()\n    gpu_time = time.time() - start\n    print(f\"GPU: {gpu_time:.3f}s\")\n    print(f\"Speedup: {cpu_time / gpu_time:.0f}x\")\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "练习",
+    "title": "练习",
+    "bodyMarkdown": "1. 运行上面的基准测试，比较 CPU 与 GPU 的耗时\n2. 如果你没有 GPU，在 Google Colab 上跑一遍并对比\n3. 查看你的显存大小，估算能装下的最大模型（经验法则：fp16 每个参数 2 字节）",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "关键术语",
+    "title": "关键术语",
+    "bodyMarkdown": "| 术语 | 人们常说 | 实际含义 |\n|------|----------------|----------------------|\n| CUDA | “GPU 编程” | NVIDIA 的并行计算平台，让你在 GPU 上跑代码 |\n| VRAM | “显存” | GPU 上的显存，与系统内存分开。决定模型大小上限 |\n| fp16 | “半精度” | 16 位浮点数，内存占用是 fp32 的一半，精度损失极小 |\n| Tensor Core | “快速矩阵硬件” | 专用的 GPU 矩阵乘法核心，比普通核心快 4–8 倍 |",
+    "keyPoints": [],
+    "commands": []
+  }
+]

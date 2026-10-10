@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/46-turn-feedback-into-system",
+  "slug": "46-turn-feedback-into-system",
+  "phase": "14-agent-engineering",
+  "order": 46,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Turn Every Agent Correction into a System Improvement",
+    "zh": ""
+  },
+  "hook": "A correction that lives only in chat fixes one run. A correction promoted into a test, boundary, example, or tool improves every later run.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lessons 37 to 41"
+  ],
+  "timeMinutes": 65,
+  "needsTranslation": true
+}

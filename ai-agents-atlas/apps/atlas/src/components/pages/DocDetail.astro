@@ -1,0 +1,129 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { Badge } from '@atlas/ui/components/ui/badge';
+import { Card } from '@atlas/ui/components/ui/card';
+import sidebar from '@/content/docs/_meta.json';
+import type { SidebarConfig, SidebarNode } from '@/lib/docs-types';
+import { localePath } from '@/i18n/utils';
+import { useTranslations, type Locale } from '@/i18n/ui';
+
+/**
+ * Render any doc page for a given locale. The right rail lists every
+ * other doc so readers can navigate the whole set without going
+ * through the index. Shared by both locale shells; `getStaticPaths`
+ * lives in the shell (via `localizedStaticPaths`).
+ */
+
+interface Props {
+  locale: Locale;
+  entry: CollectionEntry<'docs'>;
+  /** Clean slug (no locale prefix), from `Astro.params.slug`. */
+  slug: string;
+}
+
+const { locale, entry, slug } = Astro.props;
+const t = useTranslations(locale);
+const { Content } = await render(entry);
+const meta = entry.data;
+
+interface NavEntry {
+  slug: string;
+  title: string;
+  href: string;
+}
+
+function flatten(nodes: SidebarNode[], prefix = ''): NavEntry[] {
+  const out: NavEntry[] = [];
+  for (const node of nodes) {
+    if (typeof node === 'string') {
+      out.push({ slug: node, title: node, href: `/docs/${prefix}${node}` });
+    } else if ('pages' in node && Array.isArray(node.pages)) {
+      const nextPrefix = `${prefix}${node.path ?? ''}/`;
+      out.push(...flatten(node.pages, nextPrefix));
+    }
+  }
+  return out;
+}
+
+const allPages = flatten((sidebar as SidebarConfig).pages);
+
+const titles: Record<string, string> = {
+  'getting-started': 'Getting started',
+  architecture: 'Architecture',
+  'six-layer-model': 'The six-layer model',
+  authoring: 'Authoring content',
+  'frontmatter-schema': 'Frontmatter schema reference',
+  'interactive-widgets': 'Interactive widgets',
+  publishing: 'Publishing & deployment',
+  feedback: 'Feedback & governance',
+  troubleshooting: 'Troubleshooting',
+  '0001-astro-over-next': 'ADR-0001',
+  '0002-use-cases-camelcase': 'ADR-0002',
+  '0003-sitemap-3-2-1': 'ADR-0003',
+  '0004-pagefind-runtime-detection': 'ADR-0004',
+  '0005-zustand-persist': 'ADR-0005',
+};
+
+const nav: NavEntry[] = allPages.map((p) => {
+  const tail = p.slug.split('/').pop() ?? p.slug;
+  return { ...p, title: titles[tail] ?? tail };
+});
+
+const dateLocale = locale === 'zh' ? 'zh-CN' : 'en-US';
+---
+
+<BaseLayout title={meta.title} description={meta.description}>
+  <div class="mx-auto max-w-4xl">
+  <div class="grid gap-10 md:grid-cols-[1fr_220px]">
+    <article class="prose prose-lg prose-zinc max-w-none dark:prose-invert prose-headings:tracking-tight prose-a:text-primary">
+      <header class="not-prose mb-6 space-y-2">
+        <div class="flex flex-wrap items-center gap-2">
+          {meta.status && <Badge variant="outline">{meta.status}</Badge>}
+          {meta.date && (
+            <span class="text-xs text-muted-foreground">
+              {meta.date.toLocaleDateString(dateLocale, { year: 'numeric', month: 'short', day: 'numeric' })}
+            </span>
+          )}
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight">{meta.title}</h1>
+        {meta.description && (
+          <p class="text-lg text-muted-foreground">{meta.description}</p>
+        )}
+      </header>
+      <Content />
+    </article>
+
+    <aside class="hidden text-sm md:block">
+      <div class="sticky top-20">
+        <Card className="p-4">
+          <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('docs.rail.all')}
+          </h3>
+          <ul class="space-y-1.5">
+            {nav.map((n) => {
+              const isActive = n.slug === slug;
+              return (
+                <li>
+                  <a
+                    href={localePath(locale, n.href)}
+                    aria-current={isActive ? 'page' : undefined}
+                    class:list={[
+                      'block rounded-md px-2 py-1 transition-colors',
+                      isActive
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                    ]}
+                  >
+                    {n.title}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      </div>
+    </aside>
+  </div>
+  </div>
+</BaseLayout>

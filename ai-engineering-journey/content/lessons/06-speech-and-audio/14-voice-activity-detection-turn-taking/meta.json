@@ -1,0 +1,22 @@
+{
+  "id": "06-speech-and-audio/14-voice-activity-detection-turn-taking",
+  "slug": "14-voice-activity-detection-turn-taking",
+  "phase": "06-speech-and-audio",
+  "order": 14,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Voice Activity Detection & Turn-Taking — Silero, Cobra, and the Flush Trick",
+    "zh": ""
+  },
+  "hook": "Every voice agent lives or dies on two decisions: is the user speaking now, and are they done? VAD answers the first. Turn-detection (VAD + silence-hangover + semantic endpoint model) answers the second. Get either wrong and your assistant either cuts users off or never shuts up.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 11 (Real-Time Audio)",
+    "Phase 6 · 12 (Voice Assistant)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

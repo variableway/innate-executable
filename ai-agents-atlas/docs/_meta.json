@@ -1,0 +1,25 @@
+{
+  "title": "Atlas docs",
+  "pages": [
+    "getting-started",
+    "architecture",
+    "six-layer-model",
+    "authoring",
+    "frontmatter-schema",
+    "interactive-widgets",
+    "publishing",
+    "feedback",
+    "troubleshooting",
+    {
+      "title": "Decisions",
+      "path": "decisions",
+      "pages": [
+        "0001-astro-over-next",
+        "0002-use-cases-camelcase",
+        "0003-sitemap-3-2-1",
+        "0004-pagefind-runtime-detection",
+        "0005-zustand-persist"
+      ]
+    }
+  ]
+}

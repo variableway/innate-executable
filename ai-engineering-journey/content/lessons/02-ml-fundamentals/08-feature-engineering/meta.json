@@ -1,0 +1,23 @@
+{
+  "id": "02-ml-fundamentals/08-feature-engineering",
+  "slug": "08-feature-engineering",
+  "phase": "02-ml-fundamentals",
+  "order": 8,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Feature Engineering & Selection",
+    "zh": ""
+  },
+  "hook": "A good feature is worth a thousand data points.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 (Statistics for ML",
+    "Linear Algebra)",
+    "Phase 2 Lessons 1-7"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

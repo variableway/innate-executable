@@ -1,0 +1,23 @@
+{
+  "id": "09-reinforcement-learning/04-q-learning-sarsa",
+  "slug": "04-q-learning-sarsa",
+  "phase": "09-reinforcement-learning",
+  "order": 4,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Temporal Difference — Q-Learning & SARSA",
+    "zh": ""
+  },
+  "hook": "Monte Carlo waits until the episode ends. TD updates after every step by bootstrapping the next value estimate. Q-learning is off-policy and optimistic; SARSA is on-policy and cautious. Both are one line of code. Both underpin every deep-RL method in this phase.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 01 (MDPs)",
+    "Phase 9 · 02 (Dynamic Programming)",
+    "Phase 9 · 03 (Monte Carlo)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

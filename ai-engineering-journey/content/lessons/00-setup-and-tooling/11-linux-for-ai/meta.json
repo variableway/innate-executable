@@ -1,0 +1,22 @@
+{
+  "id": "00-setup-and-tooling/11-linux-for-ai",
+  "slug": "11-linux-for-ai",
+  "phase": "00-setup-and-tooling",
+  "order": 11,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Linux for AI",
+    "zh": "AI 用 Linux"
+  },
+  "hook": "Most AI runs on Linux. You need to know enough to not be stuck.",
+  "type": "Learn",
+  "languages": [
+    "--"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 30,
+  "needsTranslation": false
+}

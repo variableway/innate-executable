@@ -1,0 +1,22 @@
+{
+  "id": "07-transformers-deep-dive/13-scaling-laws",
+  "slug": "13-scaling-laws",
+  "phase": "07-transformers-deep-dive",
+  "order": 13,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Scaling Laws",
+    "zh": ""
+  },
+  "hook": "The 2020 Kaplan paper said: bigger model, lower loss. The 2022 Hoffmann paper said: you were under-training. Compute goes into two buckets — parameters and tokens — and the split is not obvious.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 05 (Full Transformer)",
+    "Phase 7 · 07 (GPT)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

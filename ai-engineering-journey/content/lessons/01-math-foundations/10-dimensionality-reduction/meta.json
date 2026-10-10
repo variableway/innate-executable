@@ -1,0 +1,24 @@
+{
+  "id": "01-math-foundations/10-dimensionality-reduction",
+  "slug": "10-dimensionality-reduction",
+  "phase": "01-math-foundations",
+  "order": 10,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Dimensionality Reduction",
+    "zh": "降维"
+  },
+  "hook": "High-dimensional data has structure. You find it by looking from the right angle.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01 (Linear Algebra Intuition)",
+    "02 (Vectors",
+    "Matrices & Operations)",
+    "03 (Eigenvalues & Eigenvectors)",
+    "06 (Probability & Distributions)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": false
+}

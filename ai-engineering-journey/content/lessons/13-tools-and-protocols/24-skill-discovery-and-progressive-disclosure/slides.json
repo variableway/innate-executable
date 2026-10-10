@@ -1,0 +1,116 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Skill Discovery and Progressive Disclosure\n\n> A skill becomes useful before its body is loaded. Its name and description earn a place in the catalog; its deeper files earn context only when the task reaches them.\n\n**Type:** Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 13 · 22 (Agent Skills: Portable Contract and Runtime Boundary)\n**Time:** ~105 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Build a filesystem discovery pipeline that separates scope, validation, collision policy, and catalog publication.\n- Explain the three disclosure levels: catalog metadata, active instructions, and task-specific resources.\n- Design references so an agent can reach required detail directly without loading the entire package.\n- Budget catalog space independently from active-skill context.\n- Reject path traversal and symlink escape when a skill reads its own resources.",
+    "keyPoints": [
+      "Build a filesystem discovery pipeline that separates scope, validation, collision policy, and catalog publication.",
+      "Explain the three disclosure levels: catalog metadata, active instructions, and task-specific resources.",
+      "Design references so an agent can reach required detail directly without loading the entire package.",
+      "Budget catalog space independently from active-skill context.",
+      "Reject path traversal and symlink escape when a skill reads its own resources."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Your agent has 200 installed skills. Loading every `SKILL.md`, reference file, script, and template at session start would bury the current task in unrelated procedure. Loading nothing would force the user to remember exact filesystem paths.\n\nThe usual compromise is a catalog: show the model a compact identity and routing description for each eligible skill, then load the full body only after selection. That creates two new engineering problems.\n\nFirst, discovery is not just recursive file search. Skills can exist at project, user, administrator, plugin, or built-in scopes. Two packages can share a name. A symlink can point outside the trusted root. A malformed package can consume catalog space or become impossible to invoke.\n\nSecond, progressive disclosure can become progressive confusion. If `SKILL.md` says \"read the relevant guide\" and the package contains twelve guides, the model must guess. If every guide points to three more files, loading becomes an unbounded graph walk.\n\nA good runtime makes discovery deterministic and disclosure intentional.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Discovery is a compiler pipeline\n\nTreat the filesystem as source input. Do not publish raw paths directly to the model.\n\n```figure\nskill-discovery-pipeline\n```\n\nEach stage should produce structured data and structured failures. A discovery log should answer:\n\n- Which roots were searched?\n- Which candidates were found?\n- Which candidates were rejected, and why?\n- Which package won a collision?\n- Which catalog entries were shortened or omitted because of budget?\n\nWithout that evidence, \"the model did not use my skill\" is almost impossible to diagnose.\n\n### Scope is runtime policy\n\nThe portable specification defines a skill package, not one universal installation path or precedence order. The host decides where it searches.\n\nA generic runtime might use these scopes:\n\n| Scope | Example root | Intended ownership |\n|---|---|---|\n| Workspace | `<repo>/.agents/skills/` | Project maintainers |\n| User | `<user-data>/skills/` | One developer |\n| Administrator | `<system>/skills/` | Machine or organization policy |\n| Plugin | A signed plugin bundle | Plugin publisher and installer |\n| Built-in | Runtime package | Runtime vendor |\n\nAs of August 2026, Codex documents project discovery from `$CWD/.agents/skills` through ancestor directories up to the repository root, plus user, administrator, and built-in locations. It supports symlinked skill directories. Duplicate names may both appear rather than being merged. Those are Codex behaviors, not requirements of `SKILL.md`; verify the current [Codex skill documentation](https://learn.chatgpt.com/docs/build-skills) when writing an adapter.\n\nNever invent precedence from directory names. Declare it as policy and test it. The lesson lab uses an explicit integer rank for each `Scope` so the same candidate set always resolves the same way.\n\n### Collisions need identity beyond `name`\n\nTwo packages named `release-readiness` can be legitimate. One may be a workspace override and one a user default. A catalog entry therefore needs at least:\n\n```json\n{\n  \"name\": \"release-readiness\",\n  \"description\": \"Inspect a release candidate for this repository.\",\n  \"scope\": \"workspace\",\n  \"source\": \"/repo/.agents/skills/release-readiness\",\n  \"selected\": true\n}\n```\n\nCommon collision policies include:\n\n| Policy | Benefit | Risk |\n|---|---|---|\n| Keep every candidate | Nothing is hidden | The model sees ambiguous names |\n| Highest-precedence scope wins | Simple invocation | A local package can shadow a trusted one |\n| Reject duplicates | No silent shadowing | Legitimate overrides stop working |\n| Qualify names by source | Explicit identity | User-facing names become longer |\n\nChoose one policy for the host. Preserve the rejected or shadowed candidates in diagnostics even when they are absent from the model catalog.\n\n### Three disclosure levels\n\nThe Agent Skills specification describes staged loading. The key is that each level has a different purpose.\n\n```figure\nskill-disclosure-levels\n```\n\n#### Level 1: catalog metadata\n\nThe model needs enough information to distinguish the skill from neighbors. The specification estimates roughly 100 tokens per catalog entry, but actual serialization and tokenization belong to the host.\n\nA useful description has two clauses:\n\n```yaml\ndescription: Validate a release candidate and produce a readiness report. Use when the user asks whether a version, tag, or package is ready to publish.\n```\n\nThe first clause states the capability. The second states the trigger boundary. Lesson 25 evaluates this boundary with positive and near-miss prompts.\n\n#### Level 2: active instructions\n\nAfter activation, the body should function as a map and a procedure. The specification recommends keeping `SKILL.md` under 500 lines. That is a design signal, not a target to fill.\n\nThe body should contain:\n\n- the task boundary;\n- the default workflow;\n- branch conditions;\n- direct references to deeper files;\n- tool and script contracts;\n- failure and stopping behavior;\n- the expected output and its verification.\n\nDo not move the central workflow into a reference merely to make the entry file short. Activation must give the model enough context to begin correctly.\n\n#### Level 3: supporting resources\n\nReferences supply prose or data. Scripts provide deterministic computation. Assets are copied, filled, or transformed into deliverables rather than treated as instructions.\n\n| Directory | Model reads it? | Model executes it? | Typical content |\n|---|:---:|:---:|---|\n| `references/` | Yes, when needed | No | schemas, policies, domain guides |\n| `scripts/` | May inspect it | Through a permitted tool | validators, converters, collectors |\n| `assets/` | Only if useful | No | templates, fixtures, images, starter files |\n\nThese names are conventions, not magic capabilities. The host still needs file access and an execution tool.\n\n### Branch-specific references beat topic dumps\n\nWrite the entry file as a decision map:\n\n```markdown\n## Choose the path\n\n- For a Python package, read `references/python-release.md`.\n- For a container image, read `references/container-release.md`.\n- For a documentation-only release, read `references/docs-release.md`.\n- If the release combines artifact types, read only the guides for those artifacts.\n```\n\nThis gives every reference an observable load condition. \"Read `references/` for more\" does not.\n\nKeep the reference graph shallow. The official guidance recommends direct links from `SKILL.md` and avoiding deep chains. One hop makes reachability testable and reduces the chance that a needed constraint never enters context.\n\n```figure\nskill-reference-map\n```\n\n### Catalog budget and active context are different budgets\n\nLet `c_i` be the serialized catalog cost of skill `i`, `B_c` the catalog budget, `b_j` the active body cost, and `r_k` the resources actually loaded.\n\n```text\ncatalog_cost = sum(c_i for every published skill)\nactive_cost = sum(b_j for every activated skill) + sum(r_k for every disclosed resource)\n```\n\nReducing one budget does not automatically reduce the other. Short descriptions can save catalog space while an activated 900-line body still overwhelms the task. Splitting the body into references can reduce active cost only when the runtime and instructions actually avoid loading irrelevant branches.\n\nCodex currently budgets the initial skill list at 2 percent of the context\nwindow when the context-window size is known. The 8,000-character value is a\nfallback only when that size is unknown; it is not a second cap combined with\nthe 2 percent rule. When the catalog exceeds the applicable budget,\ndescriptions may be shortened or omitted. Treat those figures as current\nCodex policy, not a property of the Agent Skills standard.\n\n### Resource paths are a trust boundary\n\nA skill should read only files inside its package. Literal string-prefix checks are not enough:\n\n```text\nreferences/../../../../.ssh/config\nreferences/external-link -> /private/company-secrets\n```\n\nResolve the package root and candidate with filesystem semantics, reject absolute inputs, and verify that the resolved candidate remains under the resolved root. Decide whether symlinks are allowed before discovery. If allowed, check the resolved target every time.\n\n```figure\nskill-resource-containment\n```\n\nPath containment does not establish content trust. A valid in-package reference can still contain malicious instructions. Lesson 26 handles that threat.\n\n### Loading must be observable\n\nRecord disclosure events without logging secrets:\n\n```json\n{\n  \"event\": \"skill.resource.loaded\",\n  \"skill\": \"release-readiness\",\n  \"resource\": \"references/python-release.md\",\n  \"reason\": \"candidate contains pyproject.toml\",\n  \"bytes\": 2840\n}\n```\n\nThe reason turns a context choice into reviewable evidence. It also helps identify instructions that cause the agent to load every file \"just in case.\"",
+    "keyPoints": [
+      "Which roots were searched?",
+      "Which candidates were found?",
+      "Which candidates were rejected, and why?",
+      "Which package won a collision?",
+      "Which catalog entries were shortened or omitted because of budget?",
+      "the task boundary;"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "catalog_cost = sum(c_i for every published skill)\nactive_cost = sum(b_j for every activated skill) + sum(r_k for every disclosed resource)"
+      },
+      {
+        "lang": "text",
+        "code": "references/../../../../.ssh/config\nreferences/external-link -> /private/company-secrets"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` builds a deterministic discovery and disclosure engine.\n\nThe discovery surface includes:\n\n- `Scope` for source and precedence metadata;\n- `SkillCandidate` for an unvalidated filesystem candidate;\n- `discover_scope(scope)` to enumerate immediate skill directories;\n- `resolve_collisions(candidates, precedence)` to apply one declared policy;\n- `CatalogEntry` and `build_catalog(...)` to publish bounded metadata;\n- `CatalogBudget` to account for serialized entries without pretending characters are universal tokens.\n\nThe disclosure surface includes:\n\n- `load_skill_body(entry, ...)` for Level 2 activation;\n- `validate_reference(skill_dir, reference)` for path containment;\n- `load_reference(...)` for bounded Level 3 reads.\n\nRun the lab:\n\n```bash\ncd \"$(git rev-parse --show-toplevel)\"\ncd phases/13-tools-and-protocols/24-skill-discovery-and-progressive-disclosure\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v\n```\n\nThis block requires a local clone and resolves the repository root from any\nworking directory inside that clone.\n\nThe demo creates temporary project and user scopes, inserts a collision, builds a catalog under a deliberately small budget, activates one skill, and attempts both a valid reference read and a traversal escape. No permanent files are installed.\n\n### Why discovery is shallow\n\n`discover_scope` checks immediate child directories for `SKILL.md`. It does not recursively treat every nested `SKILL.md` as a separate package. This preserves the package boundary and avoids accidentally publishing examples or fixtures inside an installed skill.\n\n### Why the lab does not parse arbitrary YAML\n\nThe lab supports the scalar frontmatter needed for its catalog. A production runtime should use a safe YAML parser with an explicit schema, size limits, and disabled custom object construction. \"Stdlib-only\" is a teaching constraint, not permission to invent a partial YAML dialect silently.",
+    "keyPoints": [
+      "`Scope` for source and precedence metadata;",
+      "`SkillCandidate` for an unvalidated filesystem candidate;",
+      "`discover_scope(scope)` to enumerate immediate skill directories;",
+      "`resolve_collisions(candidates, precedence)` to apply one declared policy;",
+      "`CatalogEntry` and `build_catalog(...)` to publish bounded metadata;",
+      "`CatalogBudget` to account for serialized entries without pretending characters are universal tokens."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd \"$(git rev-parse --show-toplevel)\"\ncd phases/13-tools-and-protocols/24-skill-discovery-and-progressive-disclosure\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Apply this checklist to any discovery adapter:\n\n1. List every configured root and who can write to it.\n2. State whether symlinked packages are allowed.\n3. Validate package name, directory name, required metadata, and entry-body size.\n4. Preserve source and scope in the internal identity.\n5. Declare and test duplicate-name behavior.\n6. Measure the exact serialized catalog sent to the model.\n7. Record why a body or resource was loaded.\n8. Keep resource reads inside the resolved package root.\n9. Fail clearly when a referenced file is missing.\n10. Rebuild the catalog when installations or policies change.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces the `skill-catalog-builder` bundle. It scans explicitly ordered roots, rejects symlinked entry files and name-directory mismatches, resolves cross-scope collisions, rejects equal-precedence duplicates, and fits selected metadata into declared entry, description, and serialized-character budgets.\n\nIts JSON report contains selected entries, shadowed candidates, omitted entries, validation errors, precedence, and budget use. Body and reference loading remain separate runtime operations, so the catalog builder does not execute scripts or admit the whole package into context.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add a plugin scope and place it between user and built-in precedence. Prove the collision result with a test.\n2. Change the collision policy from highest precedence to qualified names. Preserve both entries in the catalog.\n3. Add a byte-size limit to `load_reference`. Test a file exactly at the limit and one byte above it.\n4. Create two descriptions that sound nearly identical. Rewrite them so the trigger boundaries do not overlap.\n5. Add a manifest containing hashes for every reference and script. Detect a modified resource before loading it.\n6. Instrument the demo to report Level 1, Level 2, and Level 3 byte counts separately.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|---|---|---|\n| Skill discovery | \"Find every SKILL.md\" | Search configured scopes, validate packages, attach provenance, and apply policy |\n| Skill catalog | \"The list of installed skills\" | Compact model-visible routing metadata for eligible packages |\n| Collision policy | \"Which duplicate wins\" | A declared rule for same-name candidates from different sources |\n| Progressive disclosure | \"Lazy loading\" | Staged context admission from catalog to body to branch-specific resources |\n| Reference graph | \"Files linked by the skill\" | The reachable resource structure and its load conditions |\n| Path containment | \"Stay in the folder\" | Verify resolved resource targets remain inside the resolved package root |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Agent Skills specification](https://agentskills.io/specification) for package shape and progressive disclosure levels.\n- [Optimizing skill descriptions](https://agentskills.io/skill-creation/optimizing-descriptions) for catalog routing metadata.\n- [Agent Skills best practices](https://agentskills.io/skill-creation/best-practices) for direct references and entry-file size.\n- [OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills) for current Codex discovery scopes and catalog limits.",
+    "keyPoints": [
+      "[Agent Skills specification](https://agentskills.io/specification) for package shape and progressive disclosure levels.",
+      "[Optimizing skill descriptions](https://agentskills.io/skill-creation/optimizing-descriptions) for catalog routing metadata.",
+      "[Agent Skills best practices](https://agentskills.io/skill-creation/best-practices) for direct references and entry-file size.",
+      "[OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills) for current Codex discovery scopes and catalog limits."
+    ],
+    "commands": []
+  }
+]

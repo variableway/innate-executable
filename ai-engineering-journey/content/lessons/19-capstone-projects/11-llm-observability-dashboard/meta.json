@@ -1,0 +1,26 @@
+{
+  "id": "19-capstone-projects/11-llm-observability-dashboard",
+  "slug": "11-llm-observability-dashboard",
+  "phase": "19-capstone-projects",
+  "order": 11,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 11 — LLM Observability & Eval Dashboard",
+    "zh": ""
+  },
+  "hook": "Langfuse went open-core. Arize Phoenix published the 2026 GenAI semconv mappings. Helicone and Braintrust both doubled down on per-user cost attribution. Traceloop's OpenLLMetry became the de-facto SDK instrumentation. The production shape is ClickHouse for traces, Postgres for metadata, Next.js for UI, and a small army of eval jobs (DeepEval, RAGAS, LLM-judge) running over sampled traces. Build one self-hosted, ingest from at least four SDK families, and demonstrate catching an injected regression in under five minutes.",
+  "type": "Capstone",
+  "languages": [
+    "TypeScript (UI)",
+    "Python / TypeScript (ingest + evals)",
+    "SQL (ClickHouse)"
+  ],
+  "prerequisites": [
+    "Phase 11 (LLM engineering)",
+    "Phase 13 (tools)",
+    "Phase 17 (infrastructure)",
+    "Phase 18 (safety)"
+  ],
+  "timeMinutes": 25,
+  "needsTranslation": true
+}

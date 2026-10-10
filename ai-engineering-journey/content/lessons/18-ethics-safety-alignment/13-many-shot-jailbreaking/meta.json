@@ -1,0 +1,23 @@
+{
+  "id": "18-ethics-safety-alignment/13-many-shot-jailbreaking",
+  "slug": "13-many-shot-jailbreaking",
+  "phase": "18-ethics-safety-alignment",
+  "order": 13,
+  "phaseOrder": 18,
+  "title": {
+    "en": "Many-Shot Jailbreaking",
+    "zh": ""
+  },
+  "hook": "Anil, Durmus, Panickssery, Sharma, et al. (Anthropic, NeurIPS 2024). Many-shot jailbreaking (MSJ) exploits long context windows: stuff hundreds of faux user-assistant turns where the assistant complies with harmful requests, then append the target query. Attack success follows a power law in the number of shots; fails at 5 shots, reliable at 256 shots on violent and deceitful content. The phenomenon follows the same power law as benign in-context learning — the attack and ICL share an underlying mechanism, which is why defenses that preserve ICL are hard to design. Classifier-based prompt modification reduces attack success from 61% to 2% on tested settings.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "in-context learning vs MSJ simulator)"
+  ],
+  "prerequisites": [
+    "Phase 18 · 12 (PAIR)",
+    "Phase 10 · 04 (in-context learning)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

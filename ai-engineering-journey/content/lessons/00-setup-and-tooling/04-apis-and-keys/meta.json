@@ -1,0 +1,23 @@
+{
+  "id": "00-setup-and-tooling/04-apis-and-keys",
+  "slug": "04-apis-and-keys",
+  "phase": "00-setup-and-tooling",
+  "order": 4,
+  "phaseOrder": 0,
+  "title": {
+    "en": "APIs & Keys",
+    "zh": "API 与密钥"
+  },
+  "hook": "Every AI API works the same way: send a request, get a response. The details change, the pattern doesn't.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "TypeScript"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 30,
+  "needsTranslation": false
+}

@@ -1,0 +1,23 @@
+{
+  "id": "06-speech-and-audio/13-neural-audio-codecs",
+  "slug": "13-neural-audio-codecs",
+  "phase": "06-speech-and-audio",
+  "order": 13,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Neural Audio Codecs — EnCodec, SNAC, Mimi, DAC and the Semantic-Acoustic Split",
+    "zh": ""
+  },
+  "hook": "2026 audio generation is almost all tokens. EnCodec, SNAC, Mimi, and DAC turn continuous waveforms into discrete sequences that a transformer can predict. The semantic-vs-acoustic token split — first-codebook as semantic, rest as acoustic — is the most important architectural shift since the Transformer for audio.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 02 (Spectrograms)",
+    "Phase 10 · 11 (Quantization)",
+    "Phase 5 · 19 (Subword Tokenization)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

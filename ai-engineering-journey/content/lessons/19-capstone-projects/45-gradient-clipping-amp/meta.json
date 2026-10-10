@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/45-gradient-clipping-amp",
+  "slug": "45-gradient-clipping-amp",
+  "phase": "19-capstone-projects",
+  "order": 45,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Gradient Clipping and Mixed Precision",
+    "zh": ""
+  },
+  "hook": "The optimizer and schedule from the previous lesson assume gradients are sane. They usually are not. A single bad batch can spike the gradient norm by three orders of magnitude. Mixed-precision training amplifies this by introducing FP16 overflow on the loss side. This lesson builds the two safety belts that production training cannot ship without: gradient clipping to a configured global L2 norm, and a mixed-precision loop with autocast and GradScaler that detects NaN and Inf, skips the step cleanly, and logs the scaling factor for forensics.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

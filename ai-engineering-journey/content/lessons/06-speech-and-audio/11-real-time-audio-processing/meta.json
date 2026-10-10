@@ -1,0 +1,23 @@
+{
+  "id": "06-speech-and-audio/11-real-time-audio-processing",
+  "slug": "11-real-time-audio-processing",
+  "phase": "06-speech-and-audio",
+  "order": 11,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Real-Time Audio Processing",
+    "zh": ""
+  },
+  "hook": "Batch pipelines process a file. Real-time pipelines process the next 20 milliseconds before the next 20 arrive. Every conversational AI, broadcast studio, and telephony bot lives and dies by this latency budget.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 02 (Spectrograms)",
+    "Phase 6 · 04 (ASR)",
+    "Phase 6 · 07 (TTS)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

@@ -1,0 +1,50 @@
+---
+title: "Web Research Agent"
+description: "A LangGraph agent that searches the web for any topic and synthesises a structured research report."
+framework: "langgraph"
+llm: "gpt-4o-mini"
+industry: "Research"
+difficulty: "intermediate"
+tags: ["research", "web-search", "rag", "langgraph", "tavily"]
+language: "Python"
+entrypoint: "agent.py"
+requirements: "requirements.txt"
+githubPath: "agents/01-web-research-agent"
+publishedAt: 2024-09-15
+order: 1
+objectives:
+  - "Take a free-form research query"
+  - "Search the web using Tavily (5 results)"
+  - "Synthesise findings into Summary / Key Findings / Sources"
+---
+
+A LangGraph agent that searches the web for any topic and synthesizes a structured research report.
+
+## Quick start
+
+```bash
+cd agents/01-web-research-agent
+pip install -r requirements.txt
+cp .env.example .env   # add OpenAI + Tavily keys
+python agent.py --query "latest advances in AI agents 2024"
+```
+
+Free API keys:
+- OpenAI: [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- Tavily: [https://app.tavily.com](https://app.tavily.com) (free tier available)
+
+## Architecture
+
+```
+User Query → [Search Node] → Tavily Web Search → [Synthesize Node] → GPT-4o → Report
+```
+
+Two nodes, one entry point, no cycles. State is typed `ResearchState` so each node operates on a small surface.
+
+## Files
+
+- `agent.py` — LangGraph definition + CLI entry point
+- `requirements.txt` — pinned deps
+- `.env.example` — `OPENAI_API_KEY`, `TAVILY_API_KEY`
+- `metadata.yaml` — frontmatter mirror
+- `README.md` — full upstream notes

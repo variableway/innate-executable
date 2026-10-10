@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/55-critic-loop",
+  "slug": "55-critic-loop",
+  "phase": "19-capstone-projects",
+  "order": 55,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Critic Loop",
+    "zh": ""
+  },
+  "hook": "A critic that returns \"looks good\" the first time is broken. A critic that always returns \"needs work\" is broken. The interesting critic is the one that converges, and you have to engineer convergence.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 50-53"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

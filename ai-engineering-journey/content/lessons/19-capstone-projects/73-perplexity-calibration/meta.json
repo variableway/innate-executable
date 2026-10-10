@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/73-perplexity-calibration",
+  "slug": "73-perplexity-calibration",
+  "phase": "19-capstone-projects",
+  "order": 73,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Perplexity and Calibration",
+    "zh": ""
+  },
+  "hook": "If your model says 90 percent confident on a thousand answers and gets six hundred right, it is not well calibrated. Calibration is half of trustworthy eval. The other half is perplexity, which tells you whether the model thinks the held-out text is plausible at all.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track B foundations",
+    "lessons 70 and 71"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

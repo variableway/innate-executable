@@ -1,0 +1,23 @@
+{
+  "id": "15-autonomous-systems/06-automated-alignment-research",
+  "slug": "06-automated-alignment-research",
+  "phase": "15-autonomous-systems",
+  "order": 6,
+  "phaseOrder": 15,
+  "title": {
+    "en": "Automated Alignment Research (Anthropic AAR)",
+    "zh": ""
+  },
+  "hook": "Anthropic ran parallel teams of Claude Opus 4.6 Autonomous Alignment Researchers in independent sandboxes, coordinating via a shared forum whose logs live outside any sandbox (so agents cannot delete their own records). On the weak-to-strong training problem, the AARs outperformed human researchers. Anthropic's own summary flags that prescribed workflows often constrain AAR flexibility and degrade performance. Automating alignment research is the compression step that compresses the timeline to the exact misalignment risks the RSP is meant to detect.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "parallel-research-forum simulator)"
+  ],
+  "prerequisites": [
+    "Phase 15 · 05 (AI Scientist v2)",
+    "Phase 15 · 04 (DGM)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

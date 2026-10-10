@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/24-sam3-open-vocab-segmentation",
+  "slug": "24-sam3-open-vocab-segmentation",
+  "phase": "04-computer-vision",
+  "order": 24,
+  "phaseOrder": 4,
+  "title": {
+    "en": "SAM 3 & Open-Vocabulary Segmentation",
+    "zh": ""
+  },
+  "hook": "Give a model a text prompt and an image and get masks for every matching object. SAM 3 made that a single forward pass.",
+  "type": "Use + Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 07 (U-Net)",
+    "Phase 4 Lesson 08 (Mask R-CNN)",
+    "Phase 4 Lesson 18 (CLIP)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

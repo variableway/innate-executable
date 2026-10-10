@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/48-discover-the-real-workflow",
+  "slug": "48-discover-the-real-workflow",
+  "phase": "14-agent-engineering",
+  "order": 48,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Discover the Workflow People Actually Perform",
+    "zh": ""
+  },
+  "hook": "Requirements are not waiting in a meeting to be collected. They are scattered across actions, workarounds, records, and disagreements.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lesson 47"
+  ],
+  "timeMinutes": 70,
+  "needsTranslation": true
+}

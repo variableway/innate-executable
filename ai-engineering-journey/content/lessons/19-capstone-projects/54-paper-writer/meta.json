@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/54-paper-writer",
+  "slug": "54-paper-writer",
+  "phase": "19-capstone-projects",
+  "order": 54,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Paper Writer",
+    "zh": ""
+  },
+  "hook": "A LaTeX skeleton is a contract between the researcher and the typesetter. If the contract is broken the document does not compile, and the failure is loud. Build the skeleton first, then fill it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 50-53"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

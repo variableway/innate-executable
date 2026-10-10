@@ -1,0 +1,23 @@
+{
+  "id": "10-llms-from-scratch/12-inference-optimization",
+  "slug": "12-inference-optimization",
+  "phase": "10-llms-from-scratch",
+  "order": 12,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Inference Optimization",
+    "zh": ""
+  },
+  "hook": "Two phases define LLM inference. Prefill processes your prompt in parallel -- compute-bound. Decode generates tokens one at a time -- memory-bound. Every optimization targets one or both.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lessons 01-08 (Transformer architecture",
+    "attention)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "03-deep-learning-core/06-optimizers",
+  "slug": "06-optimizers",
+  "phase": "03-deep-learning-core",
+  "order": 6,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Optimizers",
+    "zh": ""
+  },
+  "hook": "Gradient descent tells you which direction to move. It says nothing about how far or how fast. SGD is a compass. Adam is GPS with traffic data.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.05 (Loss Functions)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

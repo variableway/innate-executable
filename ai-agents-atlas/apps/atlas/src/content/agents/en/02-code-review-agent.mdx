@@ -1,0 +1,49 @@
+---
+title: "Code Review Agent"
+description: "Reviews code changes, surfaces issues, and suggests fixes using a LangChain-based agent."
+framework: "cross"
+llm: "gpt-4o"
+industry: "Software Dev"
+difficulty: "intermediate"
+tags: ["code-review", "static-analysis", "langchain"]
+language: "Python"
+entrypoint: "agent.py"
+requirements: "requirements.txt"
+githubPath: "agents/02-code-review-agent"
+publishedAt: 2024-10-02
+order: 2
+objectives:
+  - "Read a directory of source files"
+  - "Identify bugs, smells, and style issues"
+  - "Produce a prioritised review report"
+---
+
+A LangChain agent that reviews a directory of source files and produces a prioritised review report.
+
+## Quick start
+
+```bash
+cd agents/02-code-review-agent
+pip install -r requirements.txt
+cp .env.example .env
+python agent.py --path ../some-repo
+```
+
+## What it does
+
+1. Walks the source tree, skipping binaries and `node_modules`/`__pycache__`.
+2. Sends each file to the model with a structured prompt asking for bugs, smells, and style issues.
+3. Aggregates results into a Markdown review with severity levels.
+
+## Sample output
+
+```
+## High severity
+- [src/api/users.py:42] Possible N+1 query in `list_users()`
+
+## Medium severity
+- [src/lib/auth.py:18] Hardcoded JWT secret fallback
+
+## Suggestions
+- Add type hints to `process_payment()`
+```

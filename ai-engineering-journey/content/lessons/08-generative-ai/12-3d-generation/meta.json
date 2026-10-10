@@ -1,0 +1,22 @@
+{
+  "id": "08-generative-ai/12-3d-generation",
+  "slug": "12-3d-generation",
+  "phase": "08-generative-ai",
+  "order": 12,
+  "phaseOrder": 8,
+  "title": {
+    "en": "3D Generation",
+    "zh": ""
+  },
+  "hook": "3D is the modality where 2D-to-3D leverage is strongest. The 2023 breakthrough was 3D Gaussian Splatting. The 2024-2026 generative push layers multi-view diffusion + 3D reconstruction on top to produce objects and scenes from a single prompt or photo.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 (Vision)",
+    "Phase 8 · 07 (Latent Diffusion)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

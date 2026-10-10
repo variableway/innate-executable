@@ -1,0 +1,121 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Weight Initialization and Training Stability\n\n> Initialize wrong and training never starts. Initialize right and 50 layers train as smoothly as 3.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Lesson 03.04 (Activation Functions), Lesson 03.07 (Regularization)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement zero, random, Xavier/Glorot, and Kaiming/He initialization strategies and measure their effect on activation magnitudes through 50 layers\n- Derive why Xavier init uses Var(w) = 2/(fan_in + fan_out) and Kaiming uses Var(w) = 2/fan_in\n- Demonstrate the symmetry problem with zero initialization and explain why random scale alone is insufficient\n- Match the correct initialization strategy to the activation function: Xavier for sigmoid/tanh, Kaiming for ReLU/GELU",
+    "keyPoints": [
+      "Implement zero, random, Xavier/Glorot, and Kaiming/He initialization strategies and measure their effect on activation magnitudes through 50 layers",
+      "Derive why Xavier init uses Var(w) = 2/(fan_in + fan_out) and Kaiming uses Var(w) = 2/fan_in",
+      "Demonstrate the symmetry problem with zero initialization and explain why random scale alone is insufficient",
+      "Match the correct initialization strategy to the activation function: Xavier for sigmoid/tanh, Kaiming for ReLU/GELU"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Initialize all weights to zero. Nothing learns. Every neuron computes the same function, receives the same gradient, and updates identically. After 10,000 epochs, your 512-neuron hidden layer is still 512 copies of the same neuron. You paid for 512 parameters and got 1.\n\nInitialize them too large. Activations explode through the network. By layer 10, values hit 1e15. By layer 20, they overflow to infinity. Gradients follow the same trajectory in reverse.\n\nInitialize them randomly from a standard normal distribution. Works for 3 layers. At 50 layers, the signal collapses to zero or detonates to infinity depending on whether the random scale was slightly too small or slightly too large. The boundary between \"works\" and \"broken\" is razor-thin.\n\nWeight initialization is the most underrated decision in deep learning. Architecture gets papers. Optimizers get blog posts. Initialization gets a footnote. But get it wrong and nothing else matters -- your network is dead before training begins.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### The Symmetry Problem\n\nEvery neuron in a layer has the same structure: multiply inputs by weights, add bias, apply activation. If all weights start at the same value (zero is the extreme case), every neuron computes the same output. During backpropagation, every neuron receives the same gradient. During the update step, every neuron changes by the same amount.\n\nYou're stuck. The network has hundreds of parameters, but they all move in lockstep. This is called symmetry, and random initialization is the brute-force way to break it. Each neuron starts at a different point in weight space, so each learns a different feature.\n\nBut \"random\" is not enough. The *scale* of the randomness determines whether the network trains.\n\n### Variance Propagation Through Layers\n\nConsider a single layer with fan_in inputs:\n\n```\nz = w1*x1 + w2*x2 + ... + w_n*x_n\n```\n\nIf each weight wi is drawn from a distribution with variance Var(w) and each input xi has variance Var(x), the output variance is:\n\n```\nVar(z) = fan_in * Var(w) * Var(x)\n```\n\nIf Var(w) = 1 and fan_in = 512, the output variance is 512x the input variance. After 10 layers: 512^10 = 1.2e27. Your signal has exploded.\n\nIf Var(w) = 0.001, the output variance shrinks by 0.001 * 512 = 0.512 per layer. After 10 layers: 0.512^10 = 0.00013. Your signal has vanished.\n\nThe goal: choose Var(w) so that Var(z) = Var(x). Signal magnitude stays constant across layers.\n\n### Xavier/Glorot Initialization\n\nGlorot and Bengio (2010) derived the solution for sigmoid and tanh activations. To keep variance constant in both the forward and backward pass:\n\n```\nVar(w) = 2 / (fan_in + fan_out)\n```\n\nIn practice, weights are drawn from:\n\n```\nw ~ Uniform(-limit, limit)  where limit = sqrt(6 / (fan_in + fan_out))\n```\n\nor:\n\n```\nw ~ Normal(0, sqrt(2 / (fan_in + fan_out)))\n```\n\nThis works because sigmoid and tanh are roughly linear near zero, where properly initialized activations live. The variance stays stable through dozens of layers.\n\n### Kaiming/He Initialization\n\nReLU kills half the outputs (everything negative becomes zero). The effective fan_in is halved because on average half the inputs are zeroed. Xavier init doesn't account for this -- it underestimates the variance needed.\n\nHe et al. (2015) adjusted the formula:\n\n```\nVar(w) = 2 / fan_in\n```\n\nWeights are drawn from:\n\n```\nw ~ Normal(0, sqrt(2 / fan_in))\n```\n\nThe factor of 2 compensates for ReLU zeroing half the activations. Without it, the signal shrinks by ~0.5x per layer. With 50 layers: 0.5^50 = 8.8e-16. Kaiming init prevents this.\n\n### Transformer Initialization\n\nGPT-2 introduced a different pattern. Residual connections add the output of each sub-layer to its input:\n\n```\nx = x + sublayer(x)\n```\n\nEach addition increases variance. With N residual layers, variance grows proportionally to N. GPT-2 scales the weights of residual layers by 1/sqrt(2N), where N is the number of layers. This keeps the accumulated signal magnitude stable.\n\nLlama 3 (405B parameters, 126 layers) uses a similar scheme. Without this scaling, the residual stream would grow unbounded through 126 layers of attention and feedforward blocks.\n\n```mermaid\nflowchart TD\n    subgraph \"Zero Init\"\n        Z1[\"Layer 1<br/>All weights = 0\"] --> Z2[\"Layer 2<br/>All neurons identical\"]\n        Z2 --> Z3[\"Layer 3<br/>Still identical\"]\n        Z3 --> ZR[\"Result: 1 effective neuron<br/>regardless of width\"]\n    end\n\n    subgraph \"Xavier Init\"\n        X1[\"Layer 1<br/>Var = 2/(fan_in+fan_out)\"] --> X2[\"Layer 2<br/>Signal stable\"]\n        X2 --> X3[\"Layer 50<br/>Signal stable\"]\n        X3 --> XR[\"Result: Trains with<br/>sigmoid/tanh\"]\n    end\n\n    subgraph \"Kaiming Init\"\n        K1[\"Layer 1<br/>Var = 2/fan_in\"] --> K2[\"Layer 2<br/>Signal stable\"]\n        K2 --> K3[\"Layer 50<br/>Signal stable\"]\n        K3 --> KR[\"Result: Trains with<br/>ReLU/GELU\"]\n    end\n```\n\n### Activation Magnitude Through 50 Layers\n\n```mermaid\ngraph LR\n    subgraph \"Mean Activation Magnitude\"\n        direction LR\n        L1[\"Layer 1\"] --> L10[\"Layer 10\"] --> L25[\"Layer 25\"] --> L50[\"Layer 50\"]\n    end\n\n    subgraph \"Results\"\n        R1[\"Random N(0,1): EXPLODES by layer 5\"]\n        R2[\"Random N(0,0.01): Vanishes by layer 10\"]\n        R3[\"Xavier + Sigmoid: ~1.0 at layer 50\"]\n        R4[\"Kaiming + ReLU: ~1.0 at layer 50\"]\n    end\n```\n\n### Choosing the Right Init\n\n```mermaid\nflowchart TD\n    Start[\"What activation?\"] --> Act{\"Activation type?\"}\n\n    Act -->|\"Sigmoid / Tanh\"| Xavier[\"Xavier/Glorot<br/>Var = 2/(fan_in + fan_out)\"]\n    Act -->|\"ReLU / Leaky ReLU\"| Kaiming[\"Kaiming/He<br/>Var = 2/fan_in\"]\n    Act -->|\"GELU / Swish\"| Kaiming2[\"Kaiming/He<br/>(same as ReLU)\"]\n    Act -->|\"Transformer residual\"| GPT[\"Scale by 1/sqrt(2N)<br/>N = num layers\"]\n\n    Xavier --> Check[\"Verify: activation magnitudes<br/>stay between 0.5 and 2.0<br/>through all layers\"]\n    Kaiming --> Check\n    Kaiming2 --> Check\n    GPT --> Check\n```\n\n```figure\nweight-init-variance\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "z = w1*x1 + w2*x2 + ... + w_n*x_n"
+      },
+      {
+        "lang": "text",
+        "code": "Var(z) = fan_in * Var(w) * Var(x)"
+      },
+      {
+        "lang": "text",
+        "code": "Var(w) = 2 / (fan_in + fan_out)"
+      },
+      {
+        "lang": "text",
+        "code": "w ~ Uniform(-limit, limit)  where limit = sqrt(6 / (fan_in + fan_out))"
+      },
+      {
+        "lang": "text",
+        "code": "w ~ Normal(0, sqrt(2 / (fan_in + fan_out)))"
+      },
+      {
+        "lang": "text",
+        "code": "Var(w) = 2 / fan_in"
+      },
+      {
+        "lang": "text",
+        "code": "w ~ Normal(0, sqrt(2 / fan_in))"
+      },
+      {
+        "lang": "text",
+        "code": "x = x + sublayer(x)"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: Initialization Strategies\n\nFour ways to initialize a weight matrix. Each returns a list of lists (a 2D matrix) with fan_in columns and fan_out rows.\n\n```python\nimport math\nimport random\n\n\ndef zero_init(fan_in, fan_out):\n    return [[0.0 for _ in range(fan_in)] for _ in range(fan_out)]\n\n\ndef random_init(fan_in, fan_out, scale=1.0):\n    return [[random.gauss(0, scale) for _ in range(fan_in)] for _ in range(fan_out)]\n\n\ndef xavier_init(fan_in, fan_out):\n    std = math.sqrt(2.0 / (fan_in + fan_out))\n    return [[random.gauss(0, std) for _ in range(fan_in)] for _ in range(fan_out)]\n\n\ndef kaiming_init(fan_in, fan_out):\n    std = math.sqrt(2.0 / fan_in)\n    return [[random.gauss(0, std) for _ in range(fan_in)] for _ in range(fan_out)]\n```\n\n### Step 2: Activation Functions\n\nWe need sigmoid, tanh, and ReLU to test each init strategy with its intended activation.\n\n```python\ndef sigmoid(x):\n    x = max(-500, min(500, x))\n    return 1.0 / (1.0 + math.exp(-x))\n\n\ndef tanh_act(x):\n    return math.tanh(x)\n\n\ndef relu(x):\n    return max(0.0, x)\n```\n\n### Step 3: Forward Pass Through 50 Layers\n\nPass random data through a deep network and measure mean activation magnitude at each layer.\n\n```python\ndef forward_deep(init_fn, activation_fn, n_layers=50, width=64, n_samples=100):\n    random.seed(42)\n    layer_magnitudes = []\n\n    inputs = [[random.gauss(0, 1) for _ in range(width)] for _ in range(n_samples)]\n\n    for layer_idx in range(n_layers):\n        weights = init_fn(width, width)\n        biases = [0.0] * width\n\n        new_inputs = []\n        for sample in inputs:\n            output = []\n            for neuron_idx in range(width):\n                z = sum(weights[neuron_idx][j] * sample[j] for j in range(width)) + biases[neuron_idx]\n                output.append(activation_fn(z))\n            new_inputs.append(output)\n        inputs = new_inputs\n\n        magnitudes = []\n        for sample in inputs:\n            magnitudes.append(sum(abs(v) for v in sample) / width)\n        mean_mag = sum(magnitudes) / len(magnitudes)\n        layer_magnitudes.append(mean_mag)\n\n    return layer_magnitudes\n```\n\n### Step 4: The Experiment\n\nRun all combinations: zero init, random N(0,1), random N(0,0.01), Xavier with sigmoid, Xavier with tanh, Kaiming with ReLU. Print the magnitude at key layers.\n\n```python\ndef run_experiment():\n    configs = [\n        (\"Zero init + Sigmoid\", lambda fi, fo: zero_init(fi, fo), sigmoid),\n        (\"Random N(0,1) + ReLU\", lambda fi, fo: random_init(fi, fo, 1.0), relu),\n        (\"Random N(0,0.01) + ReLU\", lambda fi, fo: random_init(fi, fo, 0.01), relu),\n        (\"Xavier + Sigmoid\", xavier_init, sigmoid),\n        (\"Xavier + Tanh\", xavier_init, tanh_act),\n        (\"Kaiming + ReLU\", kaiming_init, relu),\n    ]\n\n    print(f\"{'Strategy':<30} {'L1':>10} {'L5':>10} {'L10':>10} {'L25':>10} {'L50':>10}\")\n    print(\"-\" * 80)\n\n    for name, init_fn, act_fn in configs:\n        mags = forward_deep(init_fn, act_fn)\n        row = f\"{name:<30}\"\n        for idx in [0, 4, 9, 24, 49]:\n            val = mags[idx]\n            if val > 1e6:\n                row += f\" {'EXPLODED':>10}\"\n            elif val < 1e-6:\n                row += f\" {'VANISHED':>10}\"\n            else:\n                row += f\" {val:>10.4f}\"\n        print(row)\n```\n\n### Step 5: Symmetry Demonstration\n\nShow that zero init produces identical neurons.\n\n```python\ndef symmetry_demo():\n    random.seed(42)\n    weights = zero_init(2, 4)\n    biases = [0.0] * 4\n\n    inputs = [0.5, -0.3]\n    outputs = []\n    for neuron_idx in range(4):\n        z = sum(weights[neuron_idx][j] * inputs[j] for j in range(2)) + biases[neuron_idx]\n        outputs.append(sigmoid(z))\n\n    print(\"\\nSymmetry Demo (4 neurons, zero init):\")\n    for i, out in enumerate(outputs):\n        print(f\"  Neuron {i}: output = {out:.6f}\")\n    all_same = all(abs(outputs[i] - outputs[0]) < 1e-10 for i in range(len(outputs)))\n    print(f\"  All identical: {all_same}\")\n    print(f\"  Effective parameters: 1 (not {len(weights) * len(weights[0])})\")\n```\n\n### Step 6: Layer-by-Layer Magnitude Report\n\nPrint a visual bar chart of activation magnitudes through 50 layers.\n\n```python\ndef magnitude_report(name, magnitudes):\n    print(f\"\\n{name}:\")\n    for i, mag in enumerate(magnitudes):\n        if i % 5 == 0 or i == len(magnitudes) - 1:\n            if mag > 1e6:\n                bar = \"X\" * 50 + \" EXPLODED\"\n            elif mag < 1e-6:\n                bar = \".\" + \" VANISHED\"\n            else:\n                bar_len = min(50, max(1, int(mag * 10)))\n                bar = \"#\" * bar_len\n            print(f\"  Layer {i+1:3d}: {bar} ({mag:.6f})\")\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "PyTorch provides these as built-in functions:\n\n```python\nimport torch\nimport torch.nn as nn\n\nlayer = nn.Linear(512, 256)\n\nnn.init.xavier_uniform_(layer.weight)\nnn.init.xavier_normal_(layer.weight)\n\nnn.init.kaiming_uniform_(layer.weight, nonlinearity='relu')\nnn.init.kaiming_normal_(layer.weight, nonlinearity='relu')\n\nnn.init.zeros_(layer.bias)\n```\n\nWhen you call `nn.Linear(512, 256)`, PyTorch defaults to Kaiming uniform initialization. That's why most simple networks \"just work\" -- PyTorch already made the right choice. But when you build custom architectures or go deeper than 20 layers, you need to understand what's happening and potentially override the default.\n\nFor transformers, HuggingFace models typically handle initialization in their `_init_weights` method. GPT-2's implementation scales residual projections by 1/sqrt(N). If you're building a transformer from scratch, you need to add this yourself.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces:\n- `outputs/prompt-init-strategy.md` -- a prompt that diagnoses weight initialization problems and recommends the right strategy",
+    "keyPoints": [
+      "`outputs/prompt-init-strategy.md` -- a prompt that diagnoses weight initialization problems and recommends the right strategy"
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add LeCun initialization (Var = 1/fan_in, designed for SELU activation). Run the 50-layer experiment with LeCun init + tanh and compare to Xavier + tanh.\n\n2. Implement the GPT-2 residual scaling: multiply the output of each layer by 1/sqrt(2*N) before adding to the residual stream. Run 50 layers with and without scaling, measure how fast the residual magnitude grows.\n\n3. Create an \"init health check\" function that takes a network's layer dimensions and activation type, then recommends the correct initialization and warns if the current init will cause problems.\n\n4. Run the experiment with fan_in = 16 vs fan_in = 1024. Xavier and Kaiming adapt to fan_in, but random init doesn't. Show how the gap between \"works\" and \"breaks\" widens with larger layers.\n\n5. Implement orthogonal initialization (generate a random matrix, compute its SVD, use the orthogonal matrix U). Compare to Kaiming for ReLU networks at 50 layers.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|----------------------|\n| Weight initialization | \"Set starting weights randomly\" | The strategy for choosing initial weight values that determines whether a network can train at all |\n| Symmetry breaking | \"Make neurons different\" | Using random initialization to ensure neurons learn distinct features instead of computing identical functions |\n| Fan-in | \"Number of inputs to a neuron\" | The number of incoming connections, which determines how input variance accumulates in the weighted sum |\n| Fan-out | \"Number of outputs from a neuron\" | The number of outgoing connections, relevant for maintaining gradient variance during backpropagation |\n| Xavier/Glorot init | \"The sigmoid initialization\" | Var(w) = 2/(fan_in + fan_out), designed to preserve variance through sigmoid and tanh activations |\n| Kaiming/He init | \"The ReLU initialization\" | Var(w) = 2/fan_in, accounts for ReLU zeroing half the activations |\n| Variance propagation | \"How signals grow or shrink through layers\" | The mathematical analysis of how activation variance changes layer by layer based on weight scale |\n| Residual scaling | \"GPT-2's init trick\" | Scaling residual connection weights by 1/sqrt(2N) to prevent variance growth through N transformer layers |\n| Dead network | \"Nothing trains\" | A network where poor initialization causes all gradients to be zero or all activations to saturate |\n| Exploding activations | \"Values go to infinity\" | When weight variance is too high, causing activation magnitudes to grow exponentially through layers |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- Glorot & Bengio, \"Understanding the difficulty of training deep feedforward neural networks\" (2010) -- the original Xavier initialization paper with variance analysis\n- He et al., \"Delving Deep into Rectifiers\" (2015) -- introduced Kaiming initialization for ReLU networks\n- Radford et al., \"Language Models are Unsupervised Multitask Learners\" (2019) -- GPT-2 paper with residual scaling initialization\n- Mishkin & Matas, \"All You Need is a Good Init\" (2016) -- layer-sequential unit-variance initialization, an empirical alternative to analytical formulas",
+    "keyPoints": [
+      "He et al., \"Delving Deep into Rectifiers\" (2015) -- introduced Kaiming initialization for ReLU networks",
+      "Radford et al., \"Language Models are Unsupervised Multitask Learners\" (2019) -- GPT-2 paper with residual scaling initialization",
+      "Mishkin & Matas, \"All You Need is a Good Init\" (2016) -- layer-sequential unit-variance initialization, an empirical alternative to analytical formulas"
+    ],
+    "commands": []
+  }
+]

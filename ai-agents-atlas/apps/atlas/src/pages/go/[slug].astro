@@ -1,0 +1,11 @@
+---
+import { localizedStaticPaths } from '@/i18n/content';
+import GoRedirect from '@/components/pages/GoRedirect.astro';
+
+export const getStaticPaths = () =>
+  localizedStaticPaths('useCases', 'zh', ({ data }) => Boolean(data.url));
+
+const { entry } = Astro.props;
+---
+
+<GoRedirect locale="zh" entry={entry} />

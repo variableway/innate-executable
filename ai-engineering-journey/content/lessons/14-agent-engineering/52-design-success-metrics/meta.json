@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/52-design-success-metrics",
+  "slug": "52-design-success-metrics",
+  "phase": "14-agent-engineering",
+  "order": 52,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Design Success Metrics Before the Result Exists",
+    "zh": ""
+  },
+  "hook": "Measurement should answer a decision, not decorate a dashboard. Start with the goal, derive questions, then choose the smallest metrics that answer them.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lessons 47 and 51"
+  ],
+  "timeMinutes": 70,
+  "needsTranslation": true
+}

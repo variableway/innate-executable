@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/08-optimization",
+  "slug": "08-optimization",
+  "phase": "01-math-foundations",
+  "order": 8,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Optimization",
+    "zh": "优化"
+  },
+  "hook": "Training a neural network is nothing more than finding the bottom of a valley.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 04-05 (Derivatives",
+    "Gradients)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": false
+}

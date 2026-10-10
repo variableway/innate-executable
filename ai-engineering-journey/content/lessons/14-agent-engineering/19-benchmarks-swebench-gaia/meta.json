@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/19-benchmarks-swebench-gaia",
+  "slug": "19-benchmarks-swebench-gaia",
+  "phase": "14-agent-engineering",
+  "order": 19,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Benchmarks: SWE-bench, GAIA, AgentBench",
+    "zh": ""
+  },
+  "hook": "Three benchmarks anchor agent evaluation in 2026. SWE-bench tests code patching. GAIA tests generalist tool use. AgentBench tests multi-environment reasoning. Know their composition, their contamination story, and what they do not measure.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 06 (Tool Use)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,232 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# MCP Reliability, Cancellation, and Flow Control\n\n> A request ID correlates a message. It does not make a side effect safe, stop a worker, or protect a stream from a slow consumer.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13, Lessons 09 and 13\n**Time:** ~120 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement the correct cancellation signal for stdio and Streamable HTTP.\n- Resolve completion and cancellation races without sending messages after cancellation.\n- Separate request cancellation from durable `tasks/cancel` semantics.\n- Build retry decisions from side effects and explicit idempotency keys.\n- Bound progress queues while preserving final responses.\n- Recover streams through reconnect, refetch, and jittered backoff.",
+    "keyPoints": [
+      "Implement the correct cancellation signal for stdio and Streamable HTTP.",
+      "Resolve completion and cancellation races without sending messages after cancellation.",
+      "Separate request cancellation from durable `tasks/cancel` semantics.",
+      "Build retry decisions from side effects and explicit idempotency keys.",
+      "Bound progress queues while preserving final responses.",
+      "Recover streams through reconnect, refetch, and jittered backoff."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "The happy path hides the most expensive distributed-systems bugs.\n\nA client calls a tool. The server starts work. Progress arrives. A proxy buffers the stream. The client reaches its timeout and disconnects. The server finishes one millisecond later. The client retries with a new JSON-RPC id. The mutation runs twice.\n\nEvery component behaved locally. The system failed globally.\n\nMCP defines message and transport behavior, but your application still owns:\n\n- time budgets;\n- business idempotency;\n- bounded queues;\n- retry classification;\n- durable task state;\n- reconnect and refetch policy.\n\nThis lesson builds those decisions into a deterministic simulator. There are\nno sleeps, sockets, or random failures. You control cancellation event order\ndirectly. One synchronized thread test forces two ledger clients to compete\nfor the same idempotency key.",
+    "keyPoints": [
+      "time budgets;",
+      "business idempotency;",
+      "bounded queues;",
+      "retry classification;",
+      "durable task state;",
+      "reconnect and refetch policy."
+    ],
+    "commands": []
+  },
+  {
+    "id": "request-cancellation-is-transport-specific",
+    "title": "Request Cancellation Is Transport-Specific",
+    "bodyMarkdown": "The intent is the same on every transport: the client no longer needs an in-flight result. The wire signal is different.\n\n### stdio\n\nstdio uses one shared bidirectional channel. A client sends a notification:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"method\": \"notifications/cancelled\",\n  \"params\": {\n    \"requestId\": 41,\n    \"reason\": \"User closed the operation\"\n  }\n}\n```\n\nThe notification is fire-and-forget. The server emits no JSON-RPC response to it.\n\nThe server should stop work, free resources, and avoid sending a response for the cancelled request. It may ignore cancellation when the request is unknown, already finished, or cannot be stopped safely.\n\nMalformed, unknown, and already completed cancellation notifications are ignored. Turning those races into new errors would create more races.\n\n### Streamable HTTP\n\nModern Streamable HTTP gives each request its own HTTP response or SSE response stream. The client cancels by closing that request's response stream.\n\nDo not POST `notifications/cancelled` for an ordinary HTTP request. Stream closure is the cancellation signal.\n\nOnce the server observes the disconnect, it should stop work and must not send more messages for that request.\n\n### Server-sent cancellation is narrow\n\nA server does not use `notifications/cancelled` to cancel arbitrary client calls. On stdio, server-sent cancellation is reserved for terminating a `subscriptions/listen` request. Keep that path separate from ordinary client-request cancellation.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "cancellation-is-a-race",
+    "title": "Cancellation Is a Race",
+    "bodyMarkdown": "Two event orders are both valid.\n\n### Cancellation wins\n\n```text\nrequest starts\nclient sends cancellation signal\nserver marks request cancelled\nworker reaches completion\nserver suppresses the response\n```\n\n### Completion wins\n\n```text\nrequest starts\nworker commits the result\nserver sends the response\ncancellation arrives late\nserver ignores the late notification\n```\n\nThe client must also ignore a late response for a request it already abandoned. Network latency means neither side can prove which event the other side observed first.\n\n```figure\nmcp-reliability-race\n```\n\nThe lesson's `RequestCoordinator` stores one terminal state. `complete()` returns no response after cancellation. A late cancellation cannot change a completed record.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "request starts\nclient sends cancellation signal\nserver marks request cancelled\nworker reaches completion\nserver suppresses the response"
+      },
+      {
+        "lang": "text",
+        "code": "request starts\nworker commits the result\nserver sends the response\ncancellation arrives late\nserver ignores the late notification"
+      }
+    ]
+  },
+  {
+    "id": "timeouts-need-two-clocks",
+    "title": "Timeouts Need Two Clocks",
+    "bodyMarkdown": "A single inactivity timer is not enough.\n\nUse two limits:\n\n1. **Idle timeout.** How long the request may produce no useful activity.\n2. **Maximum timeout.** The absolute wall-clock budget from request start.\n\nProgress may reset the idle clock. It must never remove the maximum deadline.\n\n```text\nstart: 0 ms\nprogress: 400 ms\nprogress: 800 ms\nprogress: 1200 ms\nidle timeout: 500 ms\nmaximum timeout: 2000 ms\n```\n\nAt 1500 ms, the request is still active because the latest progress is only 300 ms old. At 2000 ms, the maximum deadline cancels it even if another progress event arrived at 1999 ms.\n\nProgress is optional. A server can accept a progress token and emit no updates. Never turn the presence of a token into an infinite timeout.\n\nMCP progress values must increase. Notifications stop after completion or cancellation. Rate-limit progress so a fast worker cannot flood the transport.",
+    "keyPoints": [
+      "Idle timeout.",
+      "Maximum timeout."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "start: 0 ms\nprogress: 400 ms\nprogress: 800 ms\nprogress: 1200 ms\nidle timeout: 500 ms\nmaximum timeout: 2000 ms"
+      }
+    ]
+  },
+  {
+    "id": "request-cancellation-is-not-tasks-cancel",
+    "title": "Request Cancellation Is Not `tasks/cancel`",
+    "bodyMarkdown": "These mechanisms solve different lifetimes.\n\n| Mechanism | Target | Signal | What success means |\n|-----------|--------|--------|--------------------|\n| Request cancellation on stdio | One in-flight RPC | `notifications/cancelled` | Client abandoned the request; server should stop if practical |\n| Request cancellation on HTTP | One in-flight response stream | Close the stream | Client abandoned the request; server should stop if practical |\n| `tasks/cancel` | One durable Task | Ordinary MCP request | Server acknowledged cancellation intent |\n\nA successful `tasks/cancel` result does not prove the worker stopped. The task may remain `working` until a worker checkpoint observes the flag. Work may complete before that checkpoint.\n\nDo not erase durable task state when the HTTP connection closes. The reason to create a Task is that its lifecycle outlives one request and one connection.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "a-new-json-rpc-id-is-not-idempotency",
+    "title": "A New JSON-RPC ID Is Not Idempotency",
+    "bodyMarkdown": "JSON-RPC ids correlate requests and responses. They do not identify a business operation.\n\nSuppose a client submits a charge with id `41`, loses the response, and retries with id `42`. The server sees two different messages. Without an application key, it cannot know they represent one checkout.\n\nAn idempotency key identifies the business intent:\n\n```json\n{\n  \"name\": \"charge_account\",\n  \"arguments\": {\n    \"account\": \"acct-7\",\n    \"cents\": 1200,\n    \"idempotencyKey\": \"checkout-7\"\n  }\n}\n```\n\nThe server stores:\n\n- the key;\n- a fingerprint of operation arguments;\n- the committed result.\n\nThe same key and same arguments return the stored result. The same key with different arguments is rejected. This prevents accidental key reuse from mutating a different business operation.\n\n### The ledger boundary must be atomic and durable\n\nThis sequence is unsafe:\n\n```text\ncheck key\nrun mutation\nstore result\n```\n\nTwo workers can both observe a missing key and both run the mutation. A crash\nafter the effect but before the store creates the same ambiguity on retry.\n\nThe lesson uses a file-backed SQLite ledger. `BEGIN IMMEDIATE` serializes the\nkey check, simulated business effect, execution counter, and stored result into\none transaction. Two independent ledger connections racing with the same key\ntherefore observe one committed result and one execution. Closing and reopening\nthe ledger keeps that record.\n\nEvery return value is reconstructed from stored JSON. The caller never receives\nthe mutable object held by the ledger, so changing a returned dictionary cannot\ncorrupt later replay results.\n\nThe simulator's business effect is the receipt and execution counter inside the\nsame SQLite transaction. A real payment, deployment, or external API call is\nnot made atomic merely by writing a local table. Production needs a durable\nshared database transaction, a transactional outbox, or an upstream provider\nthat enforces the same idempotency key. A process lock alone does not protect\nmultiple replicas or survive a restart.\n\n### Retry matrix\n\nClassify retries before implementing them.\n\n| Class | Example | Retry rule |\n|------|---------|------------|\n| Safe | Deterministic read with no side effect | Retry with a new JSON-RPC id after the failure boundary is understood |\n| Conditional | Mutation with a durable idempotency key | Retry with the same key and identical arguments |\n| Unsafe | Mutation without business deduplication | Do not retry automatically; reconcile first |\n\nTool annotations such as `readOnlyHint` and `idempotentHint` remain untrusted hints. The application contract and server implementation decide retry safety.",
+    "keyPoints": [
+      "a fingerprint of operation arguments;",
+      "the committed result."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "check key\nrun mutation\nstore result"
+      }
+    ]
+  },
+  {
+    "id": "backpressure-is-part-of-correctness",
+    "title": "Backpressure Is Part of Correctness",
+    "bodyMarkdown": "An SSE producer can generate progress faster than a client, proxy, or network can consume it. An unbounded queue converts slowness into memory exhaustion.\n\nUse a bounded queue and define what can be lost.\n\nProgress is replaceable. A later progress value supersedes an earlier one for the same token. A final JSON-RPC response is not replaceable.\n\nThe lesson buffer applies this policy:\n\n1. Coalesce adjacent progress for the same token.\n2. Drop the oldest progress when capacity is reached.\n3. Mark the stream as needing authoritative refetch.\n4. Preserve the final response.\n5. Refuse a state where preserving the final response would require dropping another final response.\n\nThis is bounded loss with explicit recovery. Silent loss is not a strategy.\n\n### Proxy buffering\n\nA server can stream correctly while a reverse proxy holds events in a buffer.\n\nFor an SSE response, send:\n\n```http\nContent-Type: text/event-stream\nCache-Control: no-cache\nX-Accel-Buffering: no\n```\n\nThe 2026 Streamable HTTP specification recommends `X-Accel-Buffering: no` so compatible proxies deliver events immediately.\n\nFor quiet long-lived streams, periodically emit an SSE comment:\n\n```text\n:\n```\n\nThe client ignores comment lines. Intermediaries see traffic and are less likely to close an idle connection.\n\nKeepalive is not progress. Do not reset an operation's semantic idle timeout merely because a transport comment arrived.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": ":"
+      }
+    ]
+  },
+  {
+    "id": "reconnect-means-refetch",
+    "title": "Reconnect Means Refetch",
+    "bodyMarkdown": "Modern Streamable HTTP does not support resumable SSE through `Last-Event-ID`.\n\nAfter a `subscriptions/listen` stream drops:\n\n1. Open a new listen request with a new JSON-RPC id.\n2. Restore the desired subscription filter.\n3. Refetch affected tools, resources, prompts, or Tasks from authoritative methods.\n4. Deduplicate application state by stable identifiers.\n5. Do not replay an unsafe mutation just because its response was lost.\n\nThe sample recovery plan explicitly sets `sendLastEventId` to false and lists resources to refetch.\n\n### Prevent a reconnect herd\n\nIf 10,000 clients reconnect at exactly one second, the recovering server fails again.\n\nUse exponential backoff with jitter and a cap. The lesson computes deterministic jitter from client id and attempt number so tests remain reproducible:\n\n```text\nattempt 0: up to 250 ms\nattempt 1: up to 500 ms\nattempt 2: up to 1000 ms\n...\ncap: 8000 ms\n```\n\nProduction can use cryptographically secure or runtime randomness. The invariant is distribution, not a specific formula.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "attempt 0: up to 250 ms\nattempt 1: up to 500 ms\nattempt 2: up to 1000 ms\n...\ncap: 8000 ms"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` builds five small reliability components.\n\n### `RequestCoordinator`\n\n- starts an in-flight request with idle and maximum deadlines;\n- emits monotonic progress notifications;\n- produces the correct stdio or HTTP cancellation signal;\n- ignores invalid cancellation notifications;\n- makes cancellation and completion terminal races explicit;\n- reserves server-sent cancellation for stdio subscriptions.\n\n### `MutationLedger`\n\n- proves that two JSON-RPC ids execute twice without a business key;\n- uses a file-backed SQLite transaction for the key check, simulated effect,\n  execution counter, and result commit;\n- deduplicates matching arguments under one idempotency key across independent\n  ledger connections;\n- rejects one key reused with different arguments;\n- returns defensive copies and preserves committed records across reopen.\n\n### `DurableTaskService`\n\n- acknowledges a cancellation request;\n- keeps the task `working` until a worker checkpoint;\n- demonstrates why acknowledgement is not final status.\n\n### `BoundedSseBuffer`\n\n- coalesces or drops progress under pressure;\n- records that authoritative refetch is required;\n- never drops the final response.\n\n### Recovery helpers\n\n- return proxy-safe SSE headers and keepalive comments;\n- create a reconnect and refetch plan;\n- spread retries with deterministic exponential backoff and jitter.",
+    "keyPoints": [
+      "starts an in-flight request with idle and maximum deadlines;",
+      "emits monotonic progress notifications;",
+      "produces the correct stdio or HTTP cancellation signal;",
+      "ignores invalid cancellation notifications;",
+      "makes cancellation and completion terminal races explicit;",
+      "reserves server-sent cancellation for stdio subscriptions."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "From the repository root:\n\n```bash\ncd phases/13-tools-and-protocols/29-mcp-reliability-cancellation-and-flow-control/code\npython3 main.py\npython3 -m unittest discover tests -v\n```\n\nThe demo runs both sides of the central race, executes a transactionally\ndeduplicated mutation in a temporary file-backed ledger, overloads a bounded\nprogress buffer, and shows a durable Task moving from acknowledged cancellation\nto worker-observed cancellation.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/29-mcp-reliability-cancellation-and-flow-control/code\npython3 main.py\npython3 -m unittest discover tests -v"
+      }
+    ]
+  },
+  {
+    "id": "interactive-lab",
+    "title": "Interactive Lab",
+    "bodyMarkdown": "Run four event orderings without adding sleeps.\n\n1. Start request `A`, cancel it, then call `complete()`.\n2. Start request `B`, complete it, then deliver cancellation.\n3. Start request `C`, emit progress before every idle deadline, then cross the maximum deadline.\n4. Start request `D` over Streamable HTTP and close its response stream.\n\nRecord for each scenario:\n\n- the terminal request state;\n- whether a final response exists;\n- the cancellation signal placed on the wire;\n- which event the client should ignore.\n\nThen change `D` to stdio. The operation is identical, but the cancellation signal must change.",
+    "keyPoints": [
+      "the terminal request state;",
+      "whether a final response exists;",
+      "the cancellation signal placed on the wire;",
+      "which event the client should ignore."
+    ],
+    "commands": []
+  },
+  {
+    "id": "practice-lab",
+    "title": "Practice Lab",
+    "bodyMarkdown": "Add a `reserve_inventory` mutation to `MutationLedger`.\n\nRequirements:\n\n1. The key binds SKU, quantity, tenant, and operation name.\n2. A retry with the same key and same arguments returns the first reservation.\n3. A retry with changed quantity fails without another reservation.\n4. An execution that committed but lost its response can be reconciled by key.\n5. The result records no secret or payment data.\n6. Automatic retry is disabled when the client did not provide a key.\n7. Add a simulated subscription drop and refetch the inventory record before deciding what to do next.\n8. Start two ledger connections at a barrier and submit the same key\n   concurrently. Assert one reservation was committed.\n9. Mutate the first returned reservation object. Replay the key and prove the\n   stored result did not change.\n10. Close and reopen the ledger file, then reconcile the reservation by key.\n\nKeep the lab honest: if inventory lives in another service, explain whether\nthat service accepts the same idempotency key or whether a transactional outbox\nbridges the local commit to the remote effect.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "shipped-artifact",
+    "title": "Shipped Artifact",
+    "bodyMarkdown": "`outputs/skill-mcp-reliability-reviewer.md` is a flat reliability review skill. Give it an MCP operation, transport, timeout policy, retry behavior, queue policy, and recovery plan. It returns a race table, retry classification, idempotency boundary, flow-control checks, and failure fixtures.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "verify-it",
+    "title": "Verify It",
+    "bodyMarkdown": "The lesson is complete when these statements are true:\n\n- stdio cancellation sends `notifications/cancelled` and receives no response.\n- Streamable HTTP cancellation closes the request stream and sends no cancellation POST.\n- Cancel-before-complete suppresses the final response.\n- Complete-before-cancel preserves the response and ignores the late cancellation.\n- Progress can reset idle timeout but never maximum timeout.\n- A new JSON-RPC id alone executes the mutation again.\n- One idempotency key and identical arguments execute once under a concurrent\n  two-connection race.\n- A committed record survives reopen and replay returns a defensive copy.\n- Mutating one returned result cannot alter the stored result.\n- The bounded buffer stays within capacity and preserves the final response.\n- Reconnect uses a new request, does not send `Last-Event-ID`, and refetches affected state.\n- `tasks/cancel` acknowledgement leaves the task non-terminal until the worker observes it.",
+    "keyPoints": [
+      "stdio cancellation sends `notifications/cancelled` and receives no response.",
+      "Streamable HTTP cancellation closes the request stream and sends no cancellation POST.",
+      "Cancel-before-complete suppresses the final response.",
+      "Complete-before-cancel preserves the response and ignores the late cancellation.",
+      "Progress can reset idle timeout but never maximum timeout.",
+      "A new JSON-RPC id alone executes the mutation again."
+    ],
+    "commands": []
+  },
+  {
+    "id": "production-failure-modes",
+    "title": "Production Failure Modes",
+    "bodyMarkdown": "| Failure | Observable symptom | Correct response |\n|---------|--------------------|------------------|\n| HTTP client POSTs cancellation notification | Server and client disagree about request lifetime | Close the request's SSE response stream |\n| Server responds after accepted cancellation | Client receives an unusable late result | Stop work and suppress further messages when cancellation wins |\n| Progress resets every deadline | Hung work survives forever | Keep a separate absolute maximum timeout |\n| New RPC id treated as deduplication | Charge, deployment, or deletion runs twice | Add a durable application idempotency key |\n| Key check and effect are separate | Concurrent workers both observe a missing key | Commit key claim, effect record, and result atomically |\n| In-memory ledger used across replicas | Restart or another worker forgets prior commits | Use shared durable storage or upstream idempotency |\n| Stored mutable result returned directly | Caller mutation corrupts later replays | Serialize committed results and return defensive copies |\n| Key reused with changed arguments | One key aliases two business intents | Store and compare an argument fingerprint |\n| Unbounded progress queue | Memory rises with a slow consumer | Coalesce and drop replaceable progress within a bound |\n| Final response dropped under pressure | Client cannot know the request outcome | Reserve capacity or evict progress, never the final response |\n| Proxy buffers SSE | Progress arrives in bursts or after timeout | Disable buffering and configure compatible proxy timeouts |\n| `Last-Event-ID` assumed | Client resumes from state the server does not support | Reconnect with a new request and refetch |\n| Every client reconnects immediately | Recovery creates another outage | Use capped exponential backoff with jitter |\n| Task ack treated as final cancellation | Worker keeps running after UI says stopped | Poll the Task until a terminal status |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "capstone-connection",
+    "title": "Capstone Connection",
+    "bodyMarkdown": "The tool-ecosystem capstone should treat reliability as executable evidence, not a paragraph in an architecture diagram.\n\nRequire these artifacts:\n\n- one cancellation race transcript for each transport;\n- a retry table for every exposed mutation;\n- an idempotency-key record and mismatch fixture;\n- a concurrent same-key transcript, a reopen check, and a mutation-alias check;\n- a bounded-buffer overload result;\n- reverse-proxy SSE headers and idle policy;\n- a reconnect plan that names authoritative refetch methods;\n- a durable Task cancellation trace when the capstone uses Tasks.\n\nA green request in a local process proves only the happy path. The capstone is production-ready when lost responses, late cancellation, slow consumers, and reconnect herds have deterministic outcomes.",
+    "keyPoints": [
+      "one cancellation race transcript for each transport;",
+      "a retry table for every exposed mutation;",
+      "an idempotency-key record and mismatch fixture;",
+      "a concurrent same-key transcript, a reopen check, and a mutation-alias check;",
+      "a bounded-buffer overload result;",
+      "reverse-proxy SSE headers and idle policy;"
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | Meaning |\n|------|---------|\n| Request cancellation | Abandonment of one in-flight MCP request |\n| Cancellation race | Competition between terminal completion and cancellation events |\n| Idle timeout | Limit since the last useful request activity |\n| Maximum timeout | Absolute limit from request start, unaffected by progress |\n| Idempotency key | Application identifier that deduplicates one business intent |\n| Atomic ledger | Durable boundary that commits the key claim, effect record, and result as one unit |\n| Backpressure | Control applied when producers outpace consumers |\n| Progress coalescing | Replacing older progress with a newer authoritative value |\n| Refetch | Reading current state again after a stream gap |\n| Jitter | Deliberate variation that spreads retries across time |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [MCP Cancellation](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/cancellation)\n- [MCP Progress](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/progress)\n- [MCP Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)\n- [MCP Tasks Extension](https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks)",
+    "keyPoints": [
+      "[MCP Cancellation](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/cancellation)",
+      "[MCP Progress](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/progress)",
+      "[MCP Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)",
+      "[MCP Tasks Extension](https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks)"
+    ],
+    "commands": []
+  }
+]

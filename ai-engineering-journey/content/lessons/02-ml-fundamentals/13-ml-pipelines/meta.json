@@ -1,0 +1,20 @@
+{
+  "id": "02-ml-fundamentals/13-ml-pipelines",
+  "slug": "13-ml-pipelines",
+  "phase": "02-ml-fundamentals",
+  "order": 13,
+  "phaseOrder": 2,
+  "title": {
+    "en": "ML Pipelines",
+    "zh": ""
+  },
+  "hook": "A model is not a product. A pipeline is. The pipeline is everything from raw data to deployed prediction, and every step must be reproducible.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lesson 12 (Hyperparameter Tuning)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

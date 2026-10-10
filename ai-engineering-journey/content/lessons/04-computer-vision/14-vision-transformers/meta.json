@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/14-vision-transformers",
+  "slug": "14-vision-transformers",
+  "phase": "04-computer-vision",
+  "order": 14,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Vision Transformers (ViT)",
+    "zh": ""
+  },
+  "hook": "Cut the image into patches, treat each patch as a word, run a standard transformer. Don't look back.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 Lesson 02 (Self-Attention)",
+    "Phase 4 Lesson 04 (Image Classification)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

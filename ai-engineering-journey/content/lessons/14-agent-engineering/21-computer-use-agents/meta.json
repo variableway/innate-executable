@@ -1,0 +1,23 @@
+{
+  "id": "14-agent-engineering/21-computer-use-agents",
+  "slug": "21-computer-use-agents",
+  "phase": "14-agent-engineering",
+  "order": 21,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Computer Use: Claude, OpenAI CUA, Gemini",
+    "zh": ""
+  },
+  "hook": "Three production computer-use models in 2026. All three are vision-based. All three treat screenshots, DOM text, and tool outputs as untrusted input. Only direct user instructions count as permission. Per-step safety services are the norm.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 20 (WebArena",
+    "OSWorld)",
+    "Phase 14 · 27 (Prompt Injection)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/26-failure-modes-agentic",
+  "slug": "26-failure-modes-agentic",
+  "phase": "14-agent-engineering",
+  "order": 26,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Failure Modes: Why Agents Break",
+    "zh": ""
+  },
+  "hook": "MASFT (Berkeley, 2025) catalogs 14 multi-agent failure modes in 3 categories. Microsoft's Taxonomy documents how existing AI failures amplify in agentic settings. Industry field data converges on five recurring modes: hallucinated actions, scope creep, cascading errors, context loss, tool misuse.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 05 (Self-Refine and CRITIC)",
+    "Phase 14 · 24 (Observability)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

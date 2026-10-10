@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/57-end-to-end-research-demo",
+  "slug": "57-end-to-end-research-demo",
+  "phase": "19-capstone-projects",
+  "order": 57,
+  "phaseOrder": 19,
+  "title": {
+    "en": "End-to-End Research Demo",
+    "zh": ""
+  },
+  "hook": "A demo is the place where every contract you wrote earlier has to compose. If any one of them leaks, the demo is the lesson that catches it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 50-53"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

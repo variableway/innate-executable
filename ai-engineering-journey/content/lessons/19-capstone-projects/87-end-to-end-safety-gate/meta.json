@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/87-end-to-end-safety-gate",
+  "slug": "87-end-to-end-safety-gate",
+  "phase": "19-capstone-projects",
+  "order": 87,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 87 — End-to-End Safety Gate",
+    "zh": ""
+  },
+  "hook": "Pre-gen, during-gen, post-gen. Three checkpoints, one verdict, an audit trail per request.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 18 safety lessons",
+    "Phase 19 Track A lessons 25-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

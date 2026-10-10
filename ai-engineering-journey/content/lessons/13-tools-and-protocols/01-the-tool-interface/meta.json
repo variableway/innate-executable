@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/01-the-tool-interface",
+  "slug": "01-the-tool-interface",
+  "phase": "13-tools-and-protocols",
+  "order": 1,
+  "phaseOrder": 13,
+  "title": {
+    "en": "The Tool Interface — Why Agents Need Structured I/O",
+    "zh": ""
+  },
+  "hook": "A language model produces tokens. A program takes actions. The gap between those two is the tool interface: a contract that lets the model request an action and the host execute it. Every 2026 stack — function calling on OpenAI, Anthropic, and Gemini; MCP's `tools/call`; A2A's task parts — is a different encoding of the same four-step loop. This lesson names the loop and shows the minimum machinery to run it.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "no LLM)"
+  ],
+  "prerequisites": [
+    "Phase 11 (LLM completion APIs)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/62-vision-language-pretraining",
+  "slug": "62-vision-language-pretraining",
+  "phase": "19-capstone-projects",
+  "order": 62,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Vision-Language Pretraining",
+    "zh": ""
+  },
+  "hook": "The encoder, projection, and decoder are wired. Now train them together. Two objectives drive learning: a contrastive image-text loss (InfoNCE) that pulls matching pairs together in the joint embedding space, and a language modeling loss that asks the decoder to caption each image. Combined, they teach the network both to find the right image for a caption and to write a caption for the image.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30-37 (Track B foundations)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

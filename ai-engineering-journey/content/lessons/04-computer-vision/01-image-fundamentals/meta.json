@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/01-image-fundamentals",
+  "slug": "01-image-fundamentals",
+  "phase": "04-computer-vision",
+  "order": 1,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Image Fundamentals — Pixels, Channels, Color Spaces",
+    "zh": ""
+  },
+  "hook": "An image is a tensor of light samples. Every vision model you will ever use starts from this one fact.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 1 Lesson 12 (Tensor Operations)",
+    "Phase 3 Lesson 11 (Intro to PyTorch)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

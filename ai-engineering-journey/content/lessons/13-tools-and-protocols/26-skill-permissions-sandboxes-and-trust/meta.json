@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/26-skill-permissions-sandboxes-and-trust",
+  "slug": "26-skill-permissions-sandboxes-and-trust",
+  "phase": "13-tools-and-protocols",
+  "order": 26,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Skill Permissions, Sandboxes, and Trust",
+    "zh": ""
+  },
+  "hook": "A skill can suggest an action. Only the host can authorize it, only an isolation boundary can contain it, and only verification can tell you whether it worked.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 25 (Skill Invocation and Routing)",
+    "Phase 13 · 15 (MCP Security I)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

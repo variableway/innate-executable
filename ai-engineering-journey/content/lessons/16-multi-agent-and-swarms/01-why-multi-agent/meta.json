@@ -1,0 +1,21 @@
+{
+  "id": "16-multi-agent-and-swarms/01-why-multi-agent",
+  "slug": "01-why-multi-agent",
+  "phase": "16-multi-agent-and-swarms",
+  "order": 1,
+  "phaseOrder": 16,
+  "title": {
+    "en": "Why Multi-Agent?",
+    "zh": ""
+  },
+  "hook": "One agent hits a wall. The smart move is not a bigger agent - it is more agents.",
+  "type": "Learn",
+  "languages": [
+    "TypeScript"
+  ],
+  "prerequisites": [
+    "Phase 14 (Agent Engineering)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

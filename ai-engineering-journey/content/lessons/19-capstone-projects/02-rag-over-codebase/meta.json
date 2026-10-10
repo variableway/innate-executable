@@ -1,0 +1,26 @@
+{
+  "id": "19-capstone-projects/02-rag-over-codebase",
+  "slug": "02-rag-over-codebase",
+  "phase": "19-capstone-projects",
+  "order": 2,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 02 — RAG over Codebase (Cross-Repo Semantic Search)",
+    "zh": ""
+  },
+  "hook": "Every serious engineering org in 2026 runs an internal code search that understands meaning, not just strings. Sourcegraph Amp, Cursor's codebase answers, Augment's enterprise graph, Aider's repomap, Pinterest's internal MCP — same shape. Ingest many repos, parse with tree-sitter, embed function- and class-level chunks, hybrid-search, re-rank, answer with citations. This capstone asks you to build one that handles 2M lines of code across 10 repos and survives incremental re-indexing on every git push.",
+  "type": "Capstone",
+  "languages": [
+    "Python (ingestion)",
+    "TypeScript (API + UI)"
+  ],
+  "prerequisites": [
+    "Phase 5 (NLP foundations)",
+    "Phase 7 (transformers)",
+    "Phase 11 (LLM engineering)",
+    "Phase 13 (tools)",
+    "Phase 17 (infrastructure)"
+  ],
+  "timeMinutes": 30,
+  "needsTranslation": true
+}

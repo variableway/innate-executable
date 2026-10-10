@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/82-jailbreak-taxonomy",
+  "slug": "82-jailbreak-taxonomy",
+  "phase": "19-capstone-projects",
+  "order": 82,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Capstone 82 — Jailbreak Taxonomy",
+    "zh": ""
+  },
+  "hook": "A safety harness without a taxonomy is a coin flip. Name the attack before you defend it.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 18 safety lessons",
+    "Phase 19 Track A lessons 25-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/79-pipeline-parallel",
+  "slug": "79-pipeline-parallel",
+  "phase": "19-capstone-projects",
+  "order": 79,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Pipeline Parallel and Bubble Analysis",
+    "zh": ""
+  },
+  "hook": "Tensor parallelism splits the matrix multiply across ranks. Pipeline parallelism splits the model across ranks, one stage per rank. Microbatches flow through the pipeline. The empty time at the start and end is the bubble; minimising it is the whole craft.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track C lessons 42-49"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

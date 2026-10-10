@@ -1,0 +1,23 @@
+{
+  "id": "06-speech-and-audio/15-streaming-speech-to-speech-moshi-hibiki",
+  "slug": "15-streaming-speech-to-speech-moshi-hibiki",
+  "phase": "06-speech-and-audio",
+  "order": 15,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Streaming Speech-to-Speech — Moshi, Hibiki, and Full-Duplex Dialogue",
+    "zh": ""
+  },
+  "hook": "2024-2026 redefined voice AI. Moshi ships a single model that listens and speaks simultaneously at 200 ms latency. Hibiki does speech-to-speech translation chunk-by-chunk. Both abandon the ASR → LLM → TTS pipeline for a unified full-duplex architecture over Mimi codec tokens. This is the new reference design.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 13 (Neural Audio Codecs)",
+    "Phase 6 · 11 (Real-Time Audio)",
+    "Phase 7 · 05 (Full Transformer)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

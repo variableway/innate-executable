@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/51-literature-retrieval",
+  "slug": "51-literature-retrieval",
+  "phase": "19-capstone-projects",
+  "order": 51,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Literature Retrieval",
+    "zh": ""
+  },
+  "hook": "A hypothesis is cheap. Knowing whether someone already proved it is the expensive part. Build the retrieval layer that answers that question before the runner spins up a sandbox.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track A lessons 20-29"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

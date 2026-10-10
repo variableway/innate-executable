@@ -1,0 +1,202 @@
+[
+  {
+    "id": "00-setup-and-tooling",
+    "order": 0,
+    "title": {
+      "en": "Setup And Tooling",
+      "zh": ""
+    },
+    "blurb": "Get your environment ready for everything that follows.",
+    "lessonCount": 12
+  },
+  {
+    "id": "01-math-foundations",
+    "order": 1,
+    "title": {
+      "en": "Math Foundations",
+      "zh": ""
+    },
+    "blurb": "The intuition behind every AI algorithm, through code, not textbooks.",
+    "lessonCount": 22
+  },
+  {
+    "id": "02-ml-fundamentals",
+    "order": 2,
+    "title": {
+      "en": "Ml Fundamentals",
+      "zh": ""
+    },
+    "blurb": "Classical machine learning is still the backbone of most production AI.",
+    "lessonCount": 18
+  },
+  {
+    "id": "03-deep-learning-core",
+    "order": 3,
+    "title": {
+      "en": "Deep Learning Core",
+      "zh": ""
+    },
+    "blurb": "Neural networks from first principles. No frameworks until you build one yourself.",
+    "lessonCount": 13
+  },
+  {
+    "id": "04-computer-vision",
+    "order": 4,
+    "title": {
+      "en": "Computer Vision",
+      "zh": ""
+    },
+    "blurb": "From pixels to understanding across image, video, and 3D.",
+    "lessonCount": 28
+  },
+  {
+    "id": "05-nlp-foundations-to-advanced",
+    "order": 5,
+    "title": {
+      "en": "Nlp Foundations To Advanced",
+      "zh": ""
+    },
+    "blurb": "Language is the interface to intelligence. Master every layer.",
+    "lessonCount": 29
+  },
+  {
+    "id": "06-speech-and-audio",
+    "order": 6,
+    "title": {
+      "en": "Speech And Audio",
+      "zh": ""
+    },
+    "blurb": "The other half of human communication. Hear, understand, speak.",
+    "lessonCount": 17
+  },
+  {
+    "id": "07-transformers-deep-dive",
+    "order": 7,
+    "title": {
+      "en": "Transformers Deep Dive",
+      "zh": ""
+    },
+    "blurb": "The architecture that changed everything. Understand every layer.",
+    "lessonCount": 16
+  },
+  {
+    "id": "08-generative-ai",
+    "order": 8,
+    "title": {
+      "en": "Generative Ai",
+      "zh": ""
+    },
+    "blurb": "Create images, video, audio, 3D, and more.",
+    "lessonCount": 15
+  },
+  {
+    "id": "09-reinforcement-learning",
+    "order": 9,
+    "title": {
+      "en": "Reinforcement Learning",
+      "zh": ""
+    },
+    "blurb": "Agents that learn by doing. The foundation of RLHF.",
+    "lessonCount": 12
+  },
+  {
+    "id": "10-llms-from-scratch",
+    "order": 10,
+    "title": {
+      "en": "Llms From Scratch",
+      "zh": ""
+    },
+    "blurb": "Build, train, and understand large language models.",
+    "lessonCount": 24
+  },
+  {
+    "id": "11-llm-engineering",
+    "order": 11,
+    "title": {
+      "en": "Llm Engineering",
+      "zh": ""
+    },
+    "blurb": "Put LLMs to work in production applications.",
+    "lessonCount": 17
+  },
+  {
+    "id": "12-multimodal-ai",
+    "order": 12,
+    "title": {
+      "en": "Multimodal Ai",
+      "zh": ""
+    },
+    "blurb": "Models that see, hear, read, and reason across modalities.",
+    "lessonCount": 25
+  },
+  {
+    "id": "13-tools-and-protocols",
+    "order": 13,
+    "title": {
+      "en": "Tools And Protocols",
+      "zh": ""
+    },
+    "blurb": "The interfaces between AI and the real world.",
+    "lessonCount": 31
+  },
+  {
+    "id": "14-agent-engineering",
+    "order": 14,
+    "title": {
+      "en": "Agent Engineering",
+      "zh": ""
+    },
+    "blurb": "The core of modern AI engineering. Build agents from first principles.",
+    "lessonCount": 54
+  },
+  {
+    "id": "15-autonomous-systems",
+    "order": 15,
+    "title": {
+      "en": "Autonomous Systems",
+      "zh": ""
+    },
+    "blurb": "Agents that run without human intervention, safely.",
+    "lessonCount": 22
+  },
+  {
+    "id": "16-multi-agent-and-swarms",
+    "order": 16,
+    "title": {
+      "en": "Multi Agent And Swarms",
+      "zh": ""
+    },
+    "blurb": "Coordination, emergence, and collective intelligence.",
+    "lessonCount": 25
+  },
+  {
+    "id": "17-infrastructure-and-production",
+    "order": 17,
+    "title": {
+      "en": "Infrastructure And Production",
+      "zh": ""
+    },
+    "blurb": "Ship AI to the real world. Scale, monitor, optimize.",
+    "lessonCount": 28
+  },
+  {
+    "id": "18-ethics-safety-alignment",
+    "order": 18,
+    "title": {
+      "en": "Ethics Safety Alignment",
+      "zh": ""
+    },
+    "blurb": "Build AI that helps humanity. Not optional.",
+    "lessonCount": 30
+  },
+  {
+    "id": "19-capstone-projects",
+    "order": 19,
+    "title": {
+      "en": "Capstone Projects",
+      "zh": ""
+    },
+    "blurb": "Prove everything you learned. Build portfolio-grade systems.",
+    "lessonCount": 85
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/10-audio-transformers-whisper",
+  "slug": "10-audio-transformers-whisper",
+  "phase": "07-transformers-deep-dive",
+  "order": 10,
+  "phaseOrder": 7,
+  "title": {
+    "en": "Audio Transformers — Whisper Architecture",
+    "zh": ""
+  },
+  "hook": "Audio is an image of frequency over time. Whisper is a ViT that eats mel spectrograms and speaks back.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 05 (Full Transformer)",
+    "Phase 7 · 08 (Encoder-Decoder)",
+    "Phase 7 · 09 (ViT)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

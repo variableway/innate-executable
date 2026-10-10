@@ -1,0 +1,91 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import LessonLayout from '@/layouts/LessonLayout.astro';
+import { LessonActions } from '@/components/atlas/lesson-actions';
+import { NotesEditor } from '@/components/atlas/notes-editor';
+import { Comments } from '@/components/atlas/comments';
+import { useTranslations, type Locale } from '@/i18n/ui';
+
+interface Props {
+  locale: Locale;
+  entry: CollectionEntry<'lessons'>;
+  slug: string;
+}
+
+const { locale, entry, slug } = Astro.props;
+const t = useTranslations(locale);
+const { Content, remarkPluginFrontmatter } = await render(entry);
+const meta = entry.data;
+const bodyText = entry.body ?? '';
+const headings = ((remarkPluginFrontmatter as { headings?: { depth: number; slug: string; text: string }[] } | undefined)?.headings) ?? [];
+
+const giscusRepo = import.meta.env.PUBLIC_GISCUS_REPO;
+const giscusRepoId = import.meta.env.PUBLIC_GISCUS_REPO_ID;
+const giscusCategory = import.meta.env.PUBLIC_GISCUS_CATEGORY ?? 'General';
+const giscusCategoryId = import.meta.env.PUBLIC_GISCUS_CATEGORY_ID;
+
+const actionLabels = {
+  complete: t('lessons.action.complete'),
+  completed: t('lessons.action.completed'),
+  save: t('lessons.action.save'),
+  saved: t('lessons.action.saved'),
+  toastCompleted: t('lessons.action.toastCompleted'),
+  toastUnmarked: t('lessons.action.toastUnmarked'),
+  toastSaved: t('lessons.action.toastSaved'),
+  toastRemoved: t('lessons.action.toastRemoved'),
+};
+
+const noteLabels = {
+  saved: t('notes.saved'),
+  saving: t('notes.saving'),
+  placeholder: t('notes.placeholder'),
+  loading: t('notes.loading'),
+  toastSaved: t('notes.toastSaved'),
+  hint: t('notes.hint'),
+};
+---
+
+<LessonLayout
+  meta={{
+    title: meta.title,
+    description: meta.description,
+    author: meta.author,
+    publishedAt: meta.publishedAt,
+    updatedAt: meta.updatedAt,
+    level: meta.level,
+    framework: meta.framework,
+    industry: meta.industry,
+    tags: meta.tags,
+    duration: meta.duration,
+    prerequisites: meta.prerequisites,
+    objectives: meta.objectives,
+  }}
+  slug={slug}
+  bodyText={bodyText}
+  toc={headings}
+>
+  <div class="mb-6">
+    <LessonActions client:load slug={slug} title={meta.title} labels={actionLabels} />
+  </div>
+  <Content />
+  <div class="mt-10">
+    <NotesEditor
+      client:load
+      kind="lesson"
+      slug={slug}
+      label={t('lessons.notes')}
+      labels={noteLabels}
+    />
+  </div>
+  {giscusRepo && giscusRepoId && giscusCategoryId && (
+    <div class="mt-10">
+      <Comments
+        client:visible
+        repo={giscusRepo}
+        repoId={giscusRepoId}
+        category={giscusCategory}
+        categoryId={giscusCategoryId}
+      />
+    </div>
+  )}
+</LessonLayout>

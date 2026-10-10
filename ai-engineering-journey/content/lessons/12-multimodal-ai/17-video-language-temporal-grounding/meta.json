@@ -1,0 +1,22 @@
+{
+  "id": "12-multimodal-ai/17-video-language-temporal-grounding",
+  "slug": "17-video-language-temporal-grounding",
+  "phase": "12-multimodal-ai",
+  "order": 17,
+  "phaseOrder": 12,
+  "title": {
+    "en": "Video-Language Models: Temporal Tokens and Grounding",
+    "zh": ""
+  },
+  "hook": "Video is not a stack of photos. A 5-second clip has causal ordering, action verbs, and event timing that an image model cannot represent. Video-LLaMA (Zhang et al., June 2023) shipped the first open video-LLM with audio-visual grounding. VideoChat and Video-LLaVA scaled the pattern. By 2025 Qwen2.5-VL's TMRoPE closed the gap with frontier proprietary models. Each system solved temporal tokens differently — Q-former per clip, concat-pool per frame, TMRoPE per token. This lesson reads the patterns, builds a uniform-vs-dynamic frame sampler, and evaluates on temporal grounding tasks.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib",
+    "frame sampler + temporal-grounding evaluator)"
+  ],
+  "prerequisites": [
+    "Phase 12 · 08 (LLaVA-OneVision)"
+  ],
+  "timeMinutes": 180,
+  "needsTranslation": true
+}

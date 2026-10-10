@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/27-multi-object-tracking",
+  "slug": "27-multi-object-tracking",
+  "phase": "04-computer-vision",
+  "order": 27,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Multi-Object Tracking & Video Memory",
+    "zh": ""
+  },
+  "hook": "Tracking is detection plus association. Detect every frame. Match this frame's detections to last frame's tracks by ID.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 06 (YOLO Detection)",
+    "Phase 4 Lesson 08 (Mask R-CNN)",
+    "Phase 4 Lesson 24 (SAM 3)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/22-3d-gaussian-splatting",
+  "slug": "22-3d-gaussian-splatting",
+  "phase": "04-computer-vision",
+  "order": 22,
+  "phaseOrder": 4,
+  "title": {
+    "en": "3D Gaussian Splatting from Scratch",
+    "zh": ""
+  },
+  "hook": "A scene is a cloud of millions of 3D Gaussians. Each one has a position, orientation, scale, opacity, and a colour that depends on viewing direction. Rasterise them, backprop through the rasterisation, done.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 13 (3D Vision & NeRF)",
+    "Phase 1 Lesson 12 (Tensor Operations)",
+    "Phase 4 Lesson 10 (Diffusion basics optional)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

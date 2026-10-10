@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/17-mcp-gateways-and-registries",
+  "slug": "17-mcp-gateways-and-registries",
+  "phase": "13-tools-and-protocols",
+  "order": 17,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Stateless MCP Gateways and Registry Admission",
+    "zh": ""
+  },
+  "hook": "A gateway should make every route explicit. The 2026-07-28 protocol gives it method, name, version, capability, identity, cache, and trace boundaries without a transport session.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 · 15 (security)",
+    "Phase 13 · 16 (authorization)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

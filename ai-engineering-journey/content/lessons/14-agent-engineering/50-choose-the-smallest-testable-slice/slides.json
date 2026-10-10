@@ -1,0 +1,103 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Choose the Smallest Slice That Can Change the Decision\n\n> Small is useful only when it proves something important. A tiny build that cannot change the next decision is merely incomplete.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lesson 49\n**Time:** ~65 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Define a slice by the assumptions it proves.\n- Balance outcome value, uncertainty reduction, effort, and consequence.\n- Prefer reversible evidence over premature production commitment.\n- Reject slices that omit the risky part of the workflow.",
+    "keyPoints": [
+      "Define a slice by the assumptions it proves.",
+      "Balance outcome value, uncertainty reduction, effort, and consequence.",
+      "Prefer reversible evidence over premature production commitment.",
+      "Reject slices that omit the risky part of the workflow."
+    ],
+    "commands": []
+  },
+  {
+    "id": "vertical-means-evidence-end-to-end",
+    "title": "Vertical Means Evidence End to End",
+    "bodyMarkdown": "A useful slice crosses the minimum real workflow needed to observe an outcome. It can be narrow in users, data, duration, and capability. It should not be narrow by removing the exact uncertainty you need to test.\n\nExamples:\n\n- A read-only replay across ten real incidents tests service identification and operator trust.\n- A polished dashboard on synthetic data may test comprehension but not data feasibility.\n- A production auto-remediator tests everything at once with unacceptable consequence.",
+    "keyPoints": [
+      "A read-only replay across ten real incidents tests service identification and operator trust.",
+      "A polished dashboard on synthetic data may test comprehension but not data feasibility.",
+      "A production auto-remediator tests everything at once with unacceptable consequence."
+    ],
+    "commands": []
+  },
+  {
+    "id": "define-required-proof-first",
+    "title": "Define Required Proof First",
+    "bodyMarkdown": "Take the highest-risk open assumptions and turn them into a required proof set. A candidate slice is eligible only if it covers that set.\n\nThen compare eligible slices on:\n\n| Dimension | Direction |\n|---|---|\n| Outcome value | More is better |\n| Uncertainty reduced | More is better |\n| Effort | Less is better |\n| Consequence | Less is better |\n| Reversibility | More is better |\n\nThe lab’s score is intentionally simple. The eligibility gate matters more than the arithmetic.\n\n```mermaid\nflowchart TD\n  R[Required proof] --> C1[Candidate slice 1]\n  R --> C2[Candidate slice 2]\n  R --> C3[Candidate slice 3]\n  C1 --> G{Covers all proof?}\n  C2 --> G\n  C3 --> G\n  G -->|No| X[Reject]\n  G -->|Yes| S[Compare evidence per effort and risk]\n  S --> B[Build one slice]\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "common-false-minimums",
+    "title": "Common False Minimums",
+    "bodyMarkdown": "- **The UI-only minimum:** removes the data and operational uncertainty.\n- **The infrastructure-only minimum:** proves technical possibility without user value.\n- **The happy-path minimum:** omits the exception that creates most risk.\n- **The demo minimum:** produces a persuasive artifact but no repeatable measurement.\n- **The platform minimum:** builds reusable machinery before one workflow earns it.",
+    "keyPoints": [
+      "The UI-only minimum:: removes the data and operational uncertainty.",
+      "The infrastructure-only minimum:: proves technical possibility without user value.",
+      "The happy-path minimum:: omits the exception that creates most risk.",
+      "The demo minimum:: produces a persuasive artifact but no repeatable measurement.",
+      "The platform minimum:: builds reusable machinery before one workflow earns it."
+    ],
+    "commands": []
+  },
+  {
+    "id": "add-a-stop-rule",
+    "title": "Add a Stop Rule",
+    "bodyMarkdown": "Before implementation, write what happens if the slice fails:\n\n- abandon the outcome;\n- change the target user or situation;\n- test a different mechanism;\n- collect better evidence;\n- narrow authority further.\n\nIf every result leads to “keep building,” the slice is not an experiment.",
+    "keyPoints": [
+      "abandon the outcome;",
+      "change the target user or situation;",
+      "test a different mechanism;",
+      "collect better evidence;",
+      "narrow authority further."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab filters candidates by required proof, scores eligible slices, and writes `outputs/slice-decision.json`.\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nAdd a cheaper candidate that proves only one required assumption. It should remain ineligible even if its numerical score is high.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Design three slices for the same outcome at different consequence levels.\n2. State the required proof set before scoring them.\n3. Remove one capability while preserving the decisive evidence.\n4. Add a stop rule for a failed pilot.\n5. Identify a reusable platform component that should wait until after the slice.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Barry Boehm, A Spiral Model of Software Development and Enhancement](https://dl.acm.org/doi/10.1145/12944.12948), for matching each development cycle to the risks it must resolve.\n- [Lenarduzzi and Taibi, MVP Explained: A Systematic Mapping Study on the Definitions of Minimal Viable Product](https://arxiv.org/abs/1609.07592), for the ambiguity around “minimum” and “viable” in software product practice.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/slice-decision.json`. It records why this slice is the smallest one that can change the decision.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

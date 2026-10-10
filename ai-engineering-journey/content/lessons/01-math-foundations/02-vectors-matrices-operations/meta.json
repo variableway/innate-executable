@@ -1,0 +1,23 @@
+{
+  "id": "01-math-foundations/02-vectors-matrices-operations",
+  "slug": "02-vectors-matrices-operations",
+  "phase": "01-math-foundations",
+  "order": 2,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Vectors, Matrices & Operations",
+    "zh": "向量与矩阵运算"
+  },
+  "hook": "Every neural network is just matrix multiplication with extra steps.",
+  "type": "Build",
+  "languages": [
+    "Python",
+    "Julia"
+  ],
+  "prerequisites": [
+    "Phase 1",
+    "Lesson 01 (Linear Algebra Intuition)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": false
+}

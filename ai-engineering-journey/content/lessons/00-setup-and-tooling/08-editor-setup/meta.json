@@ -1,0 +1,22 @@
+{
+  "id": "00-setup-and-tooling/08-editor-setup",
+  "slug": "08-editor-setup",
+  "phase": "00-setup-and-tooling",
+  "order": 8,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Editor Setup",
+    "zh": "编辑器配置"
+  },
+  "hook": "Your editor is your co-pilot. Configure it once so it stays out of your way and starts pulling its weight.",
+  "type": "Build",
+  "languages": [
+    "--"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 20,
+  "needsTranslation": false
+}

@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/21-tool-registry-schema-validation",
+  "slug": "21-tool-registry-schema-validation",
+  "phase": "19-capstone-projects",
+  "order": 21,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Tool Registry with Schema Validation",
+    "zh": ""
+  },
+  "hook": "A tool the agent cannot validate is a tool the agent cannot call. Build the registry and the schema checker before you build the tools.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 lessons 01-07",
+    "Phase 14 lesson 01"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/72-code-exec-metric",
+  "slug": "72-code-exec-metric",
+  "phase": "19-capstone-projects",
+  "order": 72,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Code Exec Metric",
+    "zh": ""
+  },
+  "hook": "Generated code is right when it passes the tests. The eval harness has to extract code, run it without crashing the host, and tally pass-rates honestly. This lesson builds that surface.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track B foundations",
+    "lessons 70 and 71"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,103 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Real-Time Audio Processing\n\n> Batch pipelines process a file. Real-time pipelines process the next 20 milliseconds before the next 20 arrive. Every conversational AI, broadcast studio, and telephony bot lives and dies by this latency budget.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 6 · 02 (Spectrograms), Phase 6 · 04 (ASR), Phase 6 · 07 (TTS)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You want a voice assistant that feels alive. Human conversational turn-taking latency is ~230 ms (silence-to-response). Anything above 500 ms feels robotic; above 1500 ms feels broken. The budget for a full **hear → understand → respond → speak** loop in 2026 is:\n\n| Stage | Budget |\n|-------|--------|\n| Mic → buffer | 20 ms |\n| VAD | 10 ms |\n| ASR (streaming) | 150 ms |\n| LLM (first token) | 100 ms |\n| TTS (first chunk) | 100 ms |\n| Render → speaker | 20 ms |\n| **Total** | **~400 ms** |\n\nMoshi (Kyutai, 2024) clocked 200 ms full-duplex. GPT-4o-realtime (2024) clocks ~320 ms. Cascaded pipelines in 2022 shipped at 2500 ms. The 10× improvement came from three techniques: (1) streaming everywhere, (2) asynchronous pipelining with partial results, (3) interruptible generation.",
+    "keyPoints": [
+      "Total",
+      "~400 ms"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Streaming audio pipeline with ring buffer, VAD gate, interruption](../assets/real-time.svg)\n\n**Frame / chunk / window.** Real-time audio flows as fixed-size blocks. Common choice: 20 ms (320 samples at 16 kHz). Everything downstream must keep up with this cadence.\n\n**Ring buffer.** Fixed-size circular buffer. Producer thread writes new frames, consumer thread reads. Prevents allocations in the hot path. Size ≈ maximum-latency × sample-rate; a 2-second 16 kHz ring = 32,000 samples.\n\n**VAD (Voice Activity Detection).** Gates downstream work when nobody is speaking. Silero VAD 4.0 (2024) runs <1 ms per 30 ms frame on CPU. `webrtcvad` is the older alternative.\n\n**Streaming ASR.** Models that emit partial transcripts as audio arrives. Parakeet-CTC-0.6B in streaming mode (NeMo, 2024) does 2–5% WER at 320 ms latency. Whisper-Streaming (Macháček et al., 2023) chunks Whisper for near-streaming at ~2 s latency.\n\n**Interruption.** When the user speaks while the assistant is talking, you must (a) detect the barge-in, (b) stop the TTS, (c) discard the remaining LLM output. All within 100 ms, or the user perceives deaf assistant.\n\n**WebRTC Opus transport.** 20 ms frames, 48 kHz, adaptive bitrate 8–128 kbps. Standard for browser and mobile. LiveKit, Daily.co, Pion are the 2026 stacks for building voice apps.\n\n**Jitter buffer.** Network packets arrive out of order / late. The jitter buffer reorders and smooths; too small → audible gaps, too large → latency. 60–80 ms typical.\n\n### Common gotchas\n\n- **Thread contention.** Python's GIL + heavy models can starve the audio thread. Use a C-callback audio library (sounddevice, PortAudio) and keep Python off the hot path.\n- **Sample-rate conversion latency.** Resampling inside the pipeline adds 5–20 ms. Either resample upfront or use a zero-latency resampler (PolyPhase, `soxr_hq`).\n- **TTS priming.** Even fast TTS like Kokoro has a 100–200 ms warm-up on first request. Cache model + warm it with a dummy run before the first real turn.\n- **Echo cancellation.** Without AEC, TTS output re-enters the mic and triggers ASR on the bot's own voice. WebRTC AEC3 is the open-source default.\n\n```figure\nnyquist-aliasing\n```",
+    "keyPoints": [
+      "Frame / chunk / window.",
+      "VAD (Voice Activity Detection).",
+      "WebRTC Opus transport.",
+      "Jitter buffer.",
+      "Thread contention.: Python's GIL + heavy models can starve the audio thread. Use a C-callback audio library (sounddevice, PortAudio) and keep Python off the hot path.",
+      "Sample-rate conversion latency.: Resampling inside the pipeline adds 5–20 ms. Either resample upfront or use a zero-latency resampler (PolyPhase, `soxr_hq`)."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: ring buffer\n\n```python\nimport collections\n\nclass RingBuffer:\n    def __init__(self, capacity):\n        self.buf = collections.deque(maxlen=capacity)\n    def write(self, frame):\n        self.buf.extend(frame)\n    def read(self, n):\n        return [self.buf.popleft() for _ in range(min(n, len(self.buf)))]\n    def level(self):\n        return len(self.buf)\n```\n\nCapacity determines max buffering latency. 32,000 samples at 16 kHz = 2 s.\n\n### Step 2: VAD gate\n\n```python\ndef simple_energy_vad(frame, threshold=0.01):\n    return sum(x * x for x in frame) / len(frame) > threshold ** 2\n```\n\nReplace with Silero VAD in production:\n\n```python\nimport torch\nvad, _ = torch.hub.load(\"snakers4/silero-vad\", \"silero_vad\")\nis_speech = vad(torch.tensor(frame), 16000).item() > 0.5\n```\n\n### Step 3: streaming ASR\n\n```python\n# Parakeet-CTC-0.6B streaming via NeMo\nfrom nemo.collections.asr.models import EncDecCTCModelBPE\nasr = EncDecCTCModelBPE.from_pretrained(\"nvidia/parakeet-ctc-0.6b\")\n# chunk_ms=320 ms, look_ahead_ms=80 ms\nfor chunk in audio_stream():\n    partial_text = asr.transcribe_streaming(chunk)\n    print(partial_text, end=\"\\r\")\n```\n\n### Step 4: interruption handler\n\n```python\nclass Dialog:\n    def __init__(self):\n        self.tts_task = None\n\n    def on_user_speech(self, frame):\n        if self.tts_task and not self.tts_task.done():\n            self.tts_task.cancel()   # barge-in\n        # then feed to streaming ASR\n\n    def on_final_user_utterance(self, text):\n        self.tts_task = asyncio.create_task(self.reply(text))\n\n    async def reply(self, text):\n        async for tts_chunk in llm_then_tts(text):\n            speaker.write(tts_chunk)\n```\n\nHinges on async I/O and cancellable TTS streaming. WebRTC peerconnection.stop() on the audio track is the canonical way.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "The 2026 stack:\n\n| Layer | Pick |\n|-------|------|\n| Transport | LiveKit (WebRTC) or Pion (Go) |\n| VAD | Silero VAD 4.0 |\n| Streaming ASR | Parakeet-CTC-0.6B or Whisper-Streaming |\n| LLM first-token | Groq, Cerebras, vLLM-streaming |\n| Streaming TTS | Kokoro or ElevenLabs Turbo v2.5 |\n| Echo cancel | WebRTC AEC3 |\n| End-to-end native | OpenAI Realtime API or Moshi |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "pitfalls",
+    "title": "Pitfalls",
+    "bodyMarkdown": "- **Buffering 500 ms to be safe.** The buffer *is* your latency floor. Shrink it.\n- **Not pinning threads.** Audio callback on a priority-lower-than-UI thread = glitches under load.\n- **TTS chunks too small.** Sub-200 ms chunks make vocoder artifacts audible. 320 ms chunks are the sweet spot.\n- **No jitter buffer.** Real networks are jittery; without smoothing you get pops.\n- **Single-shot error handling.** Audio pipelines must be crash-proof. One exception kills the session.",
+    "keyPoints": [
+      "Buffering 500 ms to be safe.: The buffer *is* your latency floor. Shrink it.",
+      "Not pinning threads.: Audio callback on a priority-lower-than-UI thread = glitches under load.",
+      "TTS chunks too small.: Sub-200 ms chunks make vocoder artifacts audible. 320 ms chunks are the sweet spot.",
+      "No jitter buffer.: Real networks are jittery; without smoothing you get pops.",
+      "Single-shot error handling.: Audio pipelines must be crash-proof. One exception kills the session."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Save as `outputs/skill-realtime-designer.md`. Design a real-time audio pipeline with concrete latency budgets per stage.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Run `code/main.py`. Simulates a ring buffer + energy VAD; prints stage latencies for a fake 10-second stream.\n2. **Medium.** Using `sounddevice`, build a passthrough loop that processes your mic in 20 ms frames and prints VAD state at each frame.\n3. **Hard.** Build a full duplex echo test with `aiortc`: browser → WebRTC → Python → WebRTC → browser. Measure glass-to-glass latency with a 1 kHz pulse.",
+    "keyPoints": [
+      "Easy.",
+      "Medium.",
+      "Hard."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| Ring buffer | The circular queue | Fixed-size, lock-free (or SPSC-locked) FIFO for audio frames. |\n| VAD | Silence gate | Model or heuristic marking speech vs non-speech. |\n| Streaming ASR | Real-time STT | Emits partial text as audio arrives; bounded lookahead. |\n| Jitter buffer | Network smoother | Queue reordering out-of-order packets; 60–80 ms typical. |\n| AEC | Echo cancellation | Subtracts speaker-to-mic feedback path. |\n| Barge-in | User interrupt | System detects user speech mid-TTS; must cancel playback. |\n| Full duplex | Simultaneous both ways | User and bot can talk at the same time; Moshi is full duplex. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Macháček et al. (2023). Whisper-Streaming](https://arxiv.org/abs/2307.14743) — chunked near-streaming Whisper.\n- [Kyutai (2024). Moshi](https://kyutai.org/Moshi.pdf) — full-duplex 200 ms latency.\n- [LiveKit Agents framework (2024)](https://docs.livekit.io/agents/) — production audio agent orchestration.\n- [Silero VAD repo](https://github.com/snakers4/silero-vad) — sub-1 ms VAD, Apache 2.0.\n- [WebRTC AEC3 paper](https://webrtc.googlesource.com/src/+/main/modules/audio_processing/aec3/) — echo cancellation under open source.",
+    "keyPoints": [
+      "[Macháček et al. (2023). Whisper-Streaming](https://arxiv.org/abs/2307.14743) — chunked near-streaming Whisper.",
+      "[Kyutai (2024). Moshi](https://kyutai.org/Moshi.pdf) — full-duplex 200 ms latency.",
+      "[LiveKit Agents framework (2024)](https://docs.livekit.io/agents/) — production audio agent orchestration.",
+      "[Silero VAD repo](https://github.com/snakers4/silero-vad) — sub-1 ms VAD, Apache 2.0.",
+      "[WebRTC AEC3 paper](https://webrtc.googlesource.com/src/+/main/modules/audio_processing/aec3/) — echo cancellation under open source."
+    ],
+    "commands": []
+  }
+]

@@ -1,0 +1,138 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# RAG Evaluation: Precision, Recall, MRR, nDCG, Faithfulness, Answer Relevance\n\n> If you cannot grade your retrieval and your answer at the same time, you cannot ship the system. The two are not the same metric and the same prompt fails on different axes.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 11 lessons 06 (RAG), 10 (evaluation); Phase 19 Track B foundations (lessons 20-29); Phase 19 lessons 64, 65, 66, 67\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Compute four retrieval metrics from gold qrels: precision@k, recall@k, MRR (mean reciprocal rank), and nDCG@k.\n- Compute two answer-grade metrics: faithfulness (every claim grounded in retrieved context) and answer relevance (the answer addresses the question).\n- Build a fixture qrels file (queries, gold doc ids, gold answer text) that the eval reads end to end.\n- Read the metric values to diagnose where a pipeline is failing: retrieval, ranking, generation, or grounding.",
+    "keyPoints": [
+      "Compute four retrieval metrics from gold qrels: precision@k, recall@k, MRR (mean reciprocal rank), and nDCG@k.",
+      "Compute two answer-grade metrics: faithfulness (every claim grounded in retrieved context) and answer relevance (the answer addresses the question).",
+      "Build a fixture qrels file (queries, gold doc ids, gold answer text) that the eval reads end to end.",
+      "Read the metric values to diagnose where a pipeline is failing: retrieval, ranking, generation, or grounding."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "A RAG system has at least four moving parts: chunker, retriever, reranker, generator. Any of them can be the cause of a wrong answer. Without per-stage metrics you are flying blind.\n\nA user reports a wrong answer. Is it because the chunker cut the answer span? Is it because the retriever did not include the chunk in top-k? Is it because the reranker pushed the right chunk past position one? Is it because the generator ignored the chunk and made something up? You cannot tell from the answer alone. You need:\n\n- Retrieval metrics to grade what came out of the retriever.\n- Ranking metrics to grade where the right chunk sat in the order.\n- Faithfulness to grade whether the generator stayed inside the retrieved context.\n- Answer relevance to grade whether the answer addresses the question at all.\n\nThis lesson builds all six on top of a fixture qrels file. The eval is offline and deterministic; in production you swap the mock LLM-as-judge for a real one.",
+    "keyPoints": [
+      "Retrieval metrics to grade what came out of the retriever.",
+      "Ranking metrics to grade where the right chunk sat in the order.",
+      "Faithfulness to grade whether the generator stayed inside the retrieved context.",
+      "Answer relevance to grade whether the answer addresses the question at all."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "```mermaid\nflowchart LR\n  Qrels[Qrels: query + gold docs + gold answer] --> Retriever[Retriever]\n  Retriever --> Top[Top-K Docs]\n  Top --> Retrieval[Precision/Recall/MRR/nDCG]\n  Qrels --> Gen[Answer Generator]\n  Top --> Gen\n  Gen --> Answer[Generated Answer]\n  Answer --> Faithful[Faithfulness]\n  Top --> Faithful\n  Answer --> Relevant[Answer Relevance]\n  Qrels --> Relevant\n```\n\n### Precision@k\n\nOf the top-k documents the retriever returned, what fraction are in the gold set? If gold has three documents and the top-3 returns two of them and one wrong one, precision@3 is 2 / 3. Use precision when the cost of an irrelevant retrieved chunk is high (the generator wastes tokens on it, or the chunk poisons the answer).\n\n### Recall@k\n\nOf the gold documents, what fraction are in the top-k? If gold has three documents and the top-5 contains all three, recall@5 is 1.0. Use recall when the cost of a missed answer is high (you would rather see one extra wrong chunk than miss the answer chunk entirely).\n\nIn production RAG the metric people usually quote is recall@k. Generation can drop irrelevant chunks easily; it cannot invent an answer from a chunk it never saw.\n\n### MRR (Mean Reciprocal Rank)\n\nFor each query, find the position of the first relevant document in the ranked list. The reciprocal rank is 1 / position. Mean across the query set. MRR is a single-number summary of how well the retriever puts the best answer at the top.\n\nMRR weights position-1 heavily. A query where the gold doc is at rank 1 contributes 1.0. Rank 2 contributes 0.5. Rank 10 contributes 0.1. The metric is dominated by the top of the list.\n\n### nDCG@k\n\nNormalized Discounted Cumulative Gain. The full formula assigns a gain to each retrieved document (often 1 for relevant, 0 for not), discounts by the log of the position, sums, and divides by the ideal DCG (the DCG you would have if you ranked perfectly). Range 0 to 1.\n\nnDCG accommodates graded relevance: the gold can say \"doc A is 3, doc B is 2, doc C is 1\". MRR and recall@k flatten everything to binary. Use nDCG when the corpus has multiple partially-relevant documents per query.\n\n### Faithfulness\n\nFor each claim in the generated answer, check whether the claim is supported by the retrieved context. The standard implementation uses an LLM-as-judge prompt that takes (claim, context) and returns yes or no. The metric is the fraction of claims that pass.\n\nFaithfulness catches the generator failure mode where the model invents content. Even if the retriever returned the right chunks, a generator that hallucinates is broken. Faithfulness is also called groundedness, support, attribution.\n\nThis lesson implements faithfulness with a deterministic mock judge that checks whether each claim's tokens overlap the retrieved context by a threshold. In production you swap to a real model call. The shape of the metric is the same.\n\n### Answer relevance\n\nDoes the answer actually address the question? Faithfulness asks \"is the answer grounded in the context?\". Answer relevance asks \"is the answer grounded in the question?\". A faithful but off-topic answer scores high on faithfulness and low on relevance. A short, on-topic answer that ignores the context scores high on relevance and low on faithfulness.\n\nThe standard implementation also uses LLM-as-judge: take (question, answer) and ask whether the answer addresses the question. This lesson implements a token-overlap-plus-judge stand-in.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-fixture-qrels",
+    "title": "The fixture qrels",
+    "bodyMarkdown": "```python\n{\n  \"qid\": \"q1\",\n  \"query\": \"what is the abort threshold for multipart uploads\",\n  \"gold_doc_ids\": [\"d1\", \"d3\"],\n  \"gold_answer_substring\": \"three failed parts\",\n  \"graded_relevance\": {\"d1\": 3, \"d3\": 2},\n}\n```\n\nEach query carries:\n- the query string,\n- a set of gold doc ids (for precision / recall / MRR),\n- a graded relevance dict (for nDCG),\n- the gold answer substring (kept as reference metadata on each qrel; faithfulness in this lesson is computed by judging extracted claims against the retrieved context, not against this substring).\n\nIn production you label these. This lesson ships a hand-built fixture so the eval runs out of the box.\n\n```figure\nci-rag-metric-ladder\n```",
+    "keyPoints": [
+      "the query string,",
+      "a set of gold doc ids (for precision / recall / MRR),",
+      "a graded relevance dict (for nDCG),"
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements:\n\n- `precision_at_k(retrieved, gold, k)` - the literal definition.\n- `recall_at_k(retrieved, gold, k)` - the literal definition.\n- `mean_reciprocal_rank(retrieved_list_of_lists, gold_list)` - the mean over queries.\n- `ndcg_at_k(retrieved, graded_relevance, k)` - DCG / IDCG with binary or graded gains.\n- `extract_claims(answer)` - splits an answer into sentence-shaped claims.\n- `faithfulness(claims, context_texts, judge)` - fraction of claims judged supported.\n- `answer_relevance(question, answer, judge)` - judge on whether the answer addresses the question.\n- `MockJudge` - deterministic token-overlap judge so the eval runs offline.\n- `evaluate_pipeline(pipeline_fn, qrels, ks)` - the orchestrator that runs every metric.\n- A demo that runs three pipeline variants (chunker baseline, hybrid retrieval, hybrid + rerank) against the qrels and prints a metrics table.\n\nRun it:\n\n```bash\npython3 code/main.py\n```\n\nThe output shows precision@k, recall@k, MRR, nDCG@k, faithfulness, and answer relevance for each variant in a single metrics table. The hybrid retrieval row beats the chunker baseline on recall; the rerank row beats hybrid on MRR.",
+    "keyPoints": [
+      "`precision_at_k(retrieved, gold, k)` - the literal definition.",
+      "`recall_at_k(retrieved, gold, k)` - the literal definition.",
+      "`mean_reciprocal_rank(retrieved_list_of_lists, gold_list)` - the mean over queries.",
+      "`ndcg_at_k(retrieved, graded_relevance, k)` - DCG / IDCG with binary or graded gains.",
+      "`extract_claims(answer)` - splits an answer into sentence-shaped claims.",
+      "`faithfulness(claims, context_texts, judge)` - fraction of claims judged supported."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "reading-the-metrics-to-diagnose-failures",
+    "title": "Reading the metrics to diagnose failures",
+    "bodyMarkdown": "| Symptom | Likely cause | What to fix |\n|---------|-------------|-------------|\n| Low recall@k, low precision@k | Chunker cut the answer or retriever cannot find it | Chunker boundaries (lesson 64) or retriever modality (lesson 65) |\n| Decent recall@k, low MRR | Right chunk is in top-k but not at position 1 | Reranker (lesson 66) |\n| High MRR, low faithfulness | Generator invents content despite right context | Generation prompt; force-cite-or-refuse |\n| High faithfulness, low relevance | Answer is grounded but off-topic | Query rewriter (lesson 67) or generation prompt |\n| All four high, users still complain | Eval set is unrepresentative | Expand qrels with real user queries |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "failure-modes-the-demo-will-hide",
+    "title": "Failure modes the demo will hide",
+    "bodyMarkdown": "**LLM-as-judge bias.** A model judges its own outputs as more faithful than they are. Use a different model family for the judge than the generator, or hand-grade a sample.\n\n**Qrels rot.** The gold answers drift as the corpus changes. A doc that was gold for q1 in January 2024 is no longer the right answer in October 2024 because the team renamed the function. Schedule a quarterly qrels review.\n\n**Faithfulness micro-checks miss macro-claims.** Per-sentence faithfulness can pass while the overall answer's structure misleads. Add a sample-level qualitative review on top of the automated metric.\n\n**Recall@k masks per-query failures.** A 90% average recall can hide that one query class always misses. Slice the qrels by query class (literal, paraphrased, multi-topic) and report per-slice.",
+    "keyPoints": [
+      "LLM-as-judge bias.",
+      "Recall@k masks per-query failures."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Production patterns:\n\n- Run the eval on every retriever or generator change. Treat a recall@k regression like a test failure.\n- Persist the metric trace per query. When a user complains, look up the qrels entry that matches and see whether it would have been caught.\n- Tier the qrels: a smoke set of 20 queries that runs in CI; a regression set of 200 that runs nightly; a deep set of 2000 that runs weekly.",
+    "keyPoints": [
+      "Run the eval on every retriever or generator change. Treat a recall@k regression like a test failure.",
+      "Persist the metric trace per query. When a user complains, look up the qrels entry that matches and see whether it would have been caught.",
+      "Tier the qrels: a smoke set of 20 queries that runs in CI; a regression set of 200 that runs nightly; a deep set of 2000 that runs weekly."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Lesson 69 wires the entire pipeline (chunker, retriever, reranker, generator) and runs this eval against the end-to-end system.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add a fifth retrieval metric: hit-rate@k. Compare it against recall@k. Explain when they differ.\n2. Implement a graded faithfulness: 0 (unsupported), 1 (partially supported), 2 (fully supported). Update the metric accordingly.\n3. Replace the mock judge with a real model call. Measure the disagreement between the mock and the real judge on the fixture.\n4. Add a query-class slice (\"literal\", \"paraphrased\", \"multi-topic\"). Report per-slice metrics.\n5. Add an \"answer length\" metric and correlate it with faithfulness. Plot the curve.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|------------------------|\n| Precision@k | \"Hit rate over retrieved\" | Fraction of top-k that are gold |\n| Recall@k | \"Hit rate over gold\" | Fraction of gold in top-k |\n| MRR | \"First-hit position\" | Mean of 1 / rank of first relevant document |\n| nDCG@k | \"Graded ranking quality\" | DCG over the top-k divided by ideal DCG |\n| Faithfulness | \"Groundedness\" | Fraction of answer claims supported by retrieved context |\n| Answer relevance | \"Did it address the question?\" | Whether the answer matches the question's intent |\n| Qrels | \"Gold labels\" | The labeled set of queries and their gold documents and answers |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- Buckley, Voorhees, \"Evaluating Evaluation Measure Stability\", SIGIR 2000 - the canonical paper on ranking metrics\n- Jarvelin, Kekalainen, \"Cumulated Gain-based Evaluation of IR Techniques\" - the nDCG paper\n- [Ragas: Automated Evaluation of RAG Pipelines](https://docs.ragas.io)\n- [Anthropic, Evaluating RAG](https://www.anthropic.com/news/evaluating-rag)\n- Phase 11 lesson 10 - evaluation framework foundations\n- Phase 19 lessons 64-67 - components evaluated here\n- Phase 19 lesson 69 - the end-to-end pipeline this eval grades",
+    "keyPoints": [
+      "Buckley, Voorhees, \"Evaluating Evaluation Measure Stability\", SIGIR 2000 - the canonical paper on ranking metrics",
+      "Jarvelin, Kekalainen, \"Cumulated Gain-based Evaluation of IR Techniques\" - the nDCG paper",
+      "[Ragas: Automated Evaluation of RAG Pipelines](https://docs.ragas.io)",
+      "[Anthropic, Evaluating RAG](https://www.anthropic.com/news/evaluating-rag)",
+      "Phase 11 lesson 10 - evaluation framework foundations",
+      "Phase 19 lessons 64-67 - components evaluated here"
+    ],
+    "commands": []
+  }
+]

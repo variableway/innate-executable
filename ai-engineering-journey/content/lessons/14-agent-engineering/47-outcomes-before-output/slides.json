@@ -1,0 +1,110 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Define the Outcome Before You Choose the Output\n\n> Fast implementation increases the penalty for choosing the wrong problem. Shape the outcome first so speed points in the right direction.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** None\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Write an outcome frame without naming a solution.\n- Identify the user, situation, current behavior, and desired change.\n- Make constraints and non-goals explicit.\n- Detect solution leakage before it hardens into scope.",
+    "keyPoints": [
+      "Write an outcome frame without naming a solution.",
+      "Identify the user, situation, current behavior, and desired change.",
+      "Make constraints and non-goals explicit.",
+      "Detect solution leakage before it hardens into scope."
+    ],
+    "commands": []
+  },
+  {
+    "id": "output-is-not-outcome",
+    "title": "Output Is Not Outcome",
+    "bodyMarkdown": "“Build an incident assistant” names an output. It does not say who needs it, what becomes better, or what must remain safe.\n\nAn outcome frame says:\n\n> When a production alert arrives, the on-call engineer identifies the failing service and a safe next action within two minutes, while diagnosis remains read-only and auditable.\n\nThat sentence can be satisfied by software, a runbook, a data repair, or a smaller interface change. It keeps the team attached to the result rather than the first artifact someone imagined.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-six-part-frame",
+    "title": "The Six-Part Frame",
+    "bodyMarkdown": "| Part | Question |\n|---|---|\n| User | Who experiences the problem directly? |\n| Situation | When and where does it occur? |\n| Current behavior | What happens today, including workarounds? |\n| Desired outcome | What observable state should improve? |\n| Constraints | Which safety, policy, cost, or compatibility limits are fixed? |\n| Non-goals | What tempting adjacent work is excluded? |\n\n```mermaid\nflowchart LR\n  U[User and situation] --> C[Current behavior]\n  C --> O[Desired outcome]\n  O --> K[Constraints]\n  K --> N[Non-goals]\n  N --> E[Evidence question]\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "find-solution-leakage",
+    "title": "Find Solution Leakage",
+    "bodyMarkdown": "Outcome statements leak solutions when they contain a product form, interface, model choice, framework, or architecture that has not been earned by evidence.\n\n- “Users receive a weekly AI summary” leaks the summary and cadence.\n- “Users understand account changes before approval” states the result.\n- “Deploy a vector database” leaks infrastructure.\n- “Relevant policy evidence is available during review” states a capability.\n\nConstraints can name technology when compatibility truly fixes it. Record why it is fixed.",
+    "keyPoints": [
+      "“Users receive a weekly AI summary” leaks the summary and cadence.",
+      "“Users understand account changes before approval” states the result.",
+      "“Deploy a vector database” leaks infrastructure.",
+      "“Relevant policy evidence is available during review” states a capability."
+    ],
+    "commands": []
+  },
+  {
+    "id": "constraints-protect-the-outcome",
+    "title": "Constraints Protect the Outcome",
+    "bodyMarkdown": "Constraints are not implementation details. They are part of the real-world goal:\n\n- no production writes during diagnosis;\n- response within the incident time budget;\n- existing audit events remain authoritative;\n- no new runtime dependency;\n- accessibility behavior remains intact.\n\nA build that reaches the outcome by violating a constraint has not reached the outcome.",
+    "keyPoints": [
+      "no production writes during diagnosis;",
+      "response within the incident time budget;",
+      "existing audit events remain authoritative;",
+      "no new runtime dependency;",
+      "accessibility behavior remains intact."
+    ],
+    "commands": []
+  },
+  {
+    "id": "non-goals-create-a-boundary",
+    "title": "Non-Goals Create a Boundary",
+    "bodyMarkdown": "Non-goals prevent a useful slice from turning into a platform. Good non-goals are concrete enough to reject work:\n\n- no automatic remediation;\n- no new alert-routing system;\n- no replacement of the incident commander;\n- no historical analytics in this slice.",
+    "keyPoints": [
+      "no automatic remediation;",
+      "no new alert-routing system;",
+      "no replacement of the incident commander;",
+      "no historical analytics in this slice."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab validates an `OutcomeFrame` and writes `outputs/outcome-frame.json`.\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nReplace the desired outcome with “use the incident assistant.” The validator should flag that the proposed output leaked into the outcome.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Rewrite a feature request from your backlog as an outcome frame.\n2. Add one constraint that changes which solutions remain possible.\n3. Add two non-goals that keep the first slice small.\n4. Identify the earliest observation that would disprove the desired outcome.\n5. Write three different outputs that could satisfy the same outcome.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Nuseibeh and Easterbrook, Requirements Engineering: A Roadmap](https://www.cs.toronto.edu/~sme/papers/2000/ICSE2000.pdf), for treating real-world goals as the anchor for software work.\n- [Dardenne, van Lamsweerde, and Fickas, Goal-Directed Requirements Acquisition](https://doi.org/10.1016/0167-6423(93)90021-G), for refining high-level goals into constraints and operational requirements.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/outcome-frame.json`. The next lesson tests it against the workflow people actually perform.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

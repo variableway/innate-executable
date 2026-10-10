@@ -1,0 +1,111 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Production Runtimes: Queue, Event, Cron\n\n> Production agents run on six runtime shapes: request-response, streaming, durable execution, queue-based background, event-driven, and scheduled. Pick the shape before you pick the framework. Observability is load-bearing at every shape.\n\n**Type:** Learn\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 · 13 (LangGraph), Phase 14 · 22 (Voice)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Name the six production runtime shapes and match each to a framework / product pattern.\n- Explain why durable execution (LangGraph) matters for long-horizon tasks.\n- Describe the event-driven runtime and when Claude Managed Agents fits.\n- Explain the observability-as-load-bearing claim for multi-step agents.",
+    "keyPoints": [
+      "Name the six production runtime shapes and match each to a framework / product pattern.",
+      "Explain why durable execution (LangGraph) matters for long-horizon tasks.",
+      "Describe the event-driven runtime and when Claude Managed Agents fits.",
+      "Explain the observability-as-load-bearing claim for multi-step agents."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Production agents fail in ways a Jupyter notebook doesn't surface: network timeouts at step 37, user hangs up mid-voice call, cron job dies on machine reboot, background worker runs out of memory. The runtime shape determines which failures are survivable.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Request-response\n\n- Synchronous HTTP. User waits for completion.\n- Only viable for short tasks (<30s).\n- Stacks: Agno (Python + FastAPI), Mastra (TypeScript + Express/Hono/Fastify/Koa).\n- Observability: standard HTTP access logs + OTel spans.\n\n### Streaming\n\n- SSE or WebSocket for progressive output.\n- LiveKit extends this to WebRTC for voice/video (Lesson 22).\n- Stacks: any framework with streaming support + a frontend that handles SSE/WS.\n- Observability: per-chunk timing, first-token latency, tail latency.\n\n### Durable execution\n\n- State checkpointed after every step; auto-resumes on failure.\n- AutoGen v0.4 actor model isolates failures to one agent (Lesson 14).\n- LangGraph's core differentiator (Lesson 13).\n- Essential when step count is unknown and recovery cost is high.\n\n### Queue-based / background\n\n- Job enters a queue, workers pick up, results flow back via webhooks or pub/sub.\n- Essential for long-horizon agents (dozens-to-hundreds of steps per task, per Anthropic's computer use announcement).\n- Stacks: Celery (Python), BullMQ (Node), SQS + Lambda (AWS), custom.\n- Observability: queue depth, per-job latency distribution, DLQ size.\n\n### Event-driven\n\n- Agents subscribe to triggers: new email, PR opened, cron fire.\n- Claude Managed Agents covers this out of the box (Lesson 17).\n- CrewAI Flows (Lesson 15) structures event-driven deterministic workflows.\n- Observability: trigger source, event-to-start latency, agent latency.\n\n### Scheduled\n\n- Cron-shaped agents that run periodically.\n- Combine with durable execution so a failing nightly run resumes next tick.\n- Stacks: Kubernetes CronJob + a durable framework; hosted (Render cron, Vercel cron).\n\n### 2026 deployment patterns\n\n- **CrewAI Flows** for event-driven production.\n- **Agno** stateless FastAPI for Python microservices.\n- **Mastra** server adapters (Express, Hono, Fastify, Koa) for embedding.\n- **Pipecat Cloud / LiveKit Cloud** for managed voice (Lesson 22).\n- **Claude Managed Agents** for hosted long-running async.\n\n### Observability is load-bearing\n\nWithout OpenTelemetry GenAI spans (Lesson 23) plus a Langfuse/Phoenix/Opik backend (Lesson 24), you cannot debug a multi-step agent that failed at step 40. This is not optional for production. It's the difference between \"we debug fast\" and \"we replay from scratch with more logging.\"\n\n### Where production runtimes fail\n\n- **Wrong shape choice.** Picking request-response for a 5-minute task. Users hang up; workers pile up; retries compound.\n- **No DLQ.** Queue workers without dead-letter. Failed jobs vanish.\n- **Opaque background work.** Background agent runs without trace export. Failures are invisible until the user reports them.\n- **Skipping durable state.** Any run > 30 seconds where you can't afford to restart needs durable execution.\n\n```figure\nwb-runtime-shapes\n```",
+    "keyPoints": [
+      "Synchronous HTTP. User waits for completion.",
+      "Only viable for short tasks (<30s).",
+      "Stacks: Agno (Python + FastAPI), Mastra (TypeScript + Express/Hono/Fastify/Koa).",
+      "Observability: standard HTTP access logs + OTel spans.",
+      "SSE or WebSocket for progressive output.",
+      "LiveKit extends this to WebRTC for voice/video (Lesson 22)."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` is a stdlib multi-shape demo:\n\n- Request-response endpoint (plain function).\n- Streaming handler (generator).\n- Queue-based worker with DLQ.\n- Event trigger registry.\n- Cron-shaped scheduler.\n\nRun it:\n\n```bash\npython3 code/main.py\n```\n\nOutput: five traces showing each shape's behavior on the same task. Same agent logic, different outer shells. Durable execution (the sixth shape) is intentionally covered in Lesson 13 with LangGraph checkpointing.",
+    "keyPoints": [
+      "Request-response endpoint (plain function).",
+      "Streaming handler (generator).",
+      "Queue-based worker with DLQ.",
+      "Event trigger registry.",
+      "Cron-shaped scheduler."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "- **Request-response** for chat-style UX.\n- **Streaming** for progressive responses.\n- **Durable** for long-horizon tasks.\n- **Queue** for batch / async / long-running.\n- **Event** for agent reactivity.\n- **Cron** for housekeeping (memory consolidation, evals, cost reports).",
+    "keyPoints": [
+      "Request-response: for chat-style UX.",
+      "Streaming: for progressive responses.",
+      "Durable: for long-horizon tasks.",
+      "Queue: for batch / async / long-running.",
+      "Event: for agent reactivity.",
+      "Cron: for housekeeping (memory consolidation, evals, cost reports)."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "`outputs/skill-runtime-shape.md` picks a runtime shape for a task and wires the observability requirements.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Port your Lesson 01 ReAct loop to all six shapes in your stack. Which shape fits which product surface?\n2. Add a DLQ to the queue-based demo. Simulate 10% job failure; surface DLQ size.\n3. Write a cron-triggered eval agent that runs nightly against your top 20 traces from the day.\n4. Implement streaming with backpressure: if the client is slow, pause the agent. How does this interact with a turn budget?\n5. Read Claude Managed Agents docs. When would you move a self-hosted long-horizon agent to managed?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| Request-response | \"Synchronous\" | User waits; short tasks only |\n| Streaming | \"SSE / WS\" | Progressive output; better UX; latency observable per chunk |\n| Durable execution | \"Resume from failure\" | Checkpointed state; restart at last step |\n| Queue-based | \"Background jobs\" | Producer / worker pool / DLQ |\n| Event-driven | \"Trigger-based\" | Agent reacts to external events |\n| DLQ | \"Dead-letter queue\" | Parking lot for failed jobs |\n| Claude Managed Agents | \"Hosted harness\" | Anthropic-hosted long-running async with caching + compaction |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [LangGraph overview](https://docs.langchain.com/oss/python/langgraph/overview) — durable execution details\n- [Claude Managed Agents overview](https://platform.claude.com/docs/en/managed-agents/overview) — hosted long-running async\n- [Anthropic, Introducing computer use](https://www.anthropic.com/news/3-5-models-and-computer-use) — \"dozens-to-hundreds of steps per task\"\n- [AutoGen v0.4 (Microsoft Research)](https://www.microsoft.com/en-us/research/articles/autogen-v0-4-reimagining-the-foundation-of-agentic-ai-for-scale-extensibility-and-robustness/) — actor-model fault isolation",
+    "keyPoints": [
+      "[LangGraph overview](https://docs.langchain.com/oss/python/langgraph/overview) — durable execution details",
+      "[Claude Managed Agents overview](https://platform.claude.com/docs/en/managed-agents/overview) — hosted long-running async",
+      "[Anthropic, Introducing computer use](https://www.anthropic.com/news/3-5-models-and-computer-use) — \"dozens-to-hundreds of steps per task\""
+    ],
+    "commands": []
+  }
+]

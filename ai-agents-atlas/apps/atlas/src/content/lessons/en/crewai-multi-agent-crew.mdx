@@ -1,0 +1,112 @@
+---
+title: "Multi-agent research crew"
+description: "Split research, writing, and editing responsibilities into a sequential CrewAI workflow and pass context between agents."
+author: "Atlas Team"
+publishedAt: 2025-09-02
+level: "intermediate"
+framework: "crewai"
+industry: "general"
+tags: ["crewai", "multi-agent", "tools"]
+duration: 14
+order: 2
+prerequisites: ["crewai-first-agent"]
+related: []
+objectives:
+  - "Create multiple specialist agents with distinct roles"
+  - "Connect tasks into a sequential process"
+  - "Pass context from researcher → writer → editor"
+  - "Understand where tools fit into CrewAI"
+resources:
+  - { label: "agent.py", url: "https://github.com/ashishpatel26/500-AI-Agents-Projects/blob/main/crewai_mcp_course/lesson_02/agent.py", type: "github" }
+---
+
+## Why multi-agent?
+
+Single agents work for narrow tasks. The moment you need **research + composition + review**, a single prompt tries to do everything at once and the result is shallow. CrewAI's value proposition is making it ergonomic to compose specialists.
+
+The pattern in this lesson is the **assembly line**:
+
+```
+Researcher ──▶ Writer ──▶ Editor ──▶ Output
+```
+
+Each agent sees the prior agent's output via `context=[...]` on its task.
+
+## The three agents
+
+```python title="agent.py"
+from crewai import Agent, Crew, Process, Task
+from crewai.tools import BaseTool
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+
+# Tools defined as BaseTool subclasses.
+class WordCountTool(BaseTool):
+    name = "word_counter"
+    description = "Count words in a text string."
+    def _run(self, text: str) -> str:
+        return f"Word count: {len(text.split())}"
+
+class TextFormatterTool(BaseTool):
+    name = "text_formatter"
+    description = "Format text as a numbered list."
+    def _run(self, items: str) -> str:
+        return "\n".join(f"{i+1}. {x.strip()}" for i, x in enumerate(items.split(",")))
+
+researcher = Agent(role="Senior Researcher", goal="Research topics thoroughly", tools=[WordCountTool()], llm=llm)
+writer     = Agent(role="Technical Writer", goal="Transform research into clear content", tools=[TextFormatterTool()], llm=llm)
+editor     = Agent(role="Content Editor", goal="Review and polish content", llm=llm)
+```
+
+> Tools are **ordinary callables** wrapped in `BaseTool`. The agent reads the tool's `description` to decide when to invoke it — so make that one sentence crystal clear.
+
+## Three tasks, one shared context
+
+```python
+research_task = Task(description="Research the topic thoroughly...", agent=researcher)
+
+writing_task = Task(
+    description="Transform the research into an engaging article...",
+    agent=writer,
+    context=[research_task],   # ← sees researcher's output
+)
+
+editing_task = Task(
+    description="Review and polish the article...",
+    agent=editor,
+    context=[research_task, writing_task],  # ← sees both
+)
+```
+
+`context` is the contract that turns independent agents into a pipeline.
+
+## Run with a topic
+
+```python
+def run_crew(topic: str) -> str:
+    # Tasks need to be recreated per run because they bind to context.
+    research = Task(description=f"Research: {topic}. Use word_counter to stay under 250 words.", expected_output="...", agent=researcher)
+    writing  = Task(description=f"Write an article on: {topic}.", expected_output="...", agent=writer, context=[research])
+    editing  = Task(description="Edit the article.", expected_output="...", agent=editor, context=[research, writing])
+
+    crew = Crew(agents=[researcher, writer, editor], tasks=[research, writing, editing], process=Process.sequential)
+    return str(crew.kickoff())
+```
+
+## Common pitfalls
+
+- **Forgetting to recreate tasks** — once a `Task` is run it holds onto its previous `context`. Always rebuild tasks inside the function that gets called per topic.
+- **Tools without clear descriptions** — the agent won't invoke a tool whose `description` it doesn't understand.
+- **Overlapping roles** — if the writer also researches, the editor has nothing to polish. Sharpen the role boundaries.
+
+## Try it
+
+```bash
+python agent.py --topic "agentic RAG in production"
+```
+
+You should see three verbose traces (one per agent), each building on the last.
+
+## Up next
+
+Lesson 03 introduces **MCP-style tool boundaries** — instead of defining tools in-process, you stand up a FastMCP server and let the crew call it. This is the pattern that scales to multi-team agent systems.

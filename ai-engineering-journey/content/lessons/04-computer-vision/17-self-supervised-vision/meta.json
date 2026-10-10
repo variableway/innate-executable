@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/17-self-supervised-vision",
+  "slug": "17-self-supervised-vision",
+  "phase": "04-computer-vision",
+  "order": 17,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Self-Supervised Vision — SimCLR, DINO, MAE",
+    "zh": ""
+  },
+  "hook": "Labels are the bottleneck of supervised vision. Self-supervised pretraining removes them: learn visual features from 100M unlabelled images, fine-tune on 10k labelled ones.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 04 (Image Classification)",
+    "Phase 4 Lesson 14 (ViT)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

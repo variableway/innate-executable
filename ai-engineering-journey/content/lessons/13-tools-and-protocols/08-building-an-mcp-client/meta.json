@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/08-building-an-mcp-client",
+  "slug": "08-building-an-mcp-client",
+  "phase": "13-tools-and-protocols",
+  "order": 8,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Building an MCP Client: Discovery, Routing, and Dual-Era Fallback",
+    "zh": ""
+  },
+  "hook": "A modern MCP client repeats its contract on every request. Its hardest compatibility decision is knowing when an old server is truly old and when a modern server is reporting a correctable error.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13",
+    "Lesson 07"
+  ],
+  "timeMinutes": 85,
+  "needsTranslation": true
+}

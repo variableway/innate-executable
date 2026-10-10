@@ -1,0 +1,17 @@
+{
+  "name": "ai-engineering-journey",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.15.1",
+  "scripts": {
+    "dev": "pnpm --filter @aej/site dev",
+    "build": "pnpm --filter @aej/content build && pnpm --filter @aej/site build",
+    "preview": "pnpm --filter @aej/site preview",
+    "import:content": "node tools/import-content.mjs",
+    "verify": "node tools/verify.mjs",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}

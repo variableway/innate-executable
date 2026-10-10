@@ -1,0 +1,125 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Self-Attention from Scratch\n\n> Attention is a lookup table where every word asks \"who matters to me?\" - and learns the answer.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 3 (Deep Learning Core), Phase 5 Lesson 10 (Sequence-to-Sequence)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement scaled dot-product self-attention from scratch using only NumPy, including query/key/value projections and the softmax-weighted sum\n- Build a multi-head attention layer that splits heads, computes parallel attention, and concatenates results\n- Trace how the attention matrix captures token relationships and explain why scaling by sqrt(d_k) prevents softmax saturation\n- Apply causal masking to convert bidirectional attention into autoregressive (decoder-style) attention",
+    "keyPoints": [
+      "Implement scaled dot-product self-attention from scratch using only NumPy, including query/key/value projections and the softmax-weighted sum",
+      "Build a multi-head attention layer that splits heads, computes parallel attention, and concatenates results",
+      "Trace how the attention matrix captures token relationships and explain why scaling by sqrt(d_k) prevents softmax saturation",
+      "Apply causal masking to convert bidirectional attention into autoregressive (decoder-style) attention"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "RNNs process sequences one token at a time. By the time you reach token 50, the information from token 1 has been squeezed through 50 compression steps. Long-range dependencies get crushed into a fixed-size hidden state - a bottleneck that no amount of LSTM gating fully solves.\n\nThe 2014 Bahdanau attention paper showed the fix: let the decoder look back at every encoder position and decide which ones matter for the current step. But it was still bolted onto an RNN. The 2017 \"Attention Is All You Need\" paper asked a sharper question: what if attention is the *only* mechanism? No recurrence. No convolution. Just attention.\n\nSelf-attention lets every position in a sequence attend to every other position in a single parallel step. That is what makes transformers fast, scalable, and dominant.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### The Database Lookup Analogy\n\nThink of attention as a soft database lookup:\n\n```\nTraditional database:\n  Query: \"capital of France\"  -->  exact match  -->  \"Paris\"\n\nAttention:\n  Query: \"capital of France\"  -->  similarity to ALL keys  -->  weighted blend of ALL values\n```\n\nEvery token generates three vectors:\n- **Query (Q)**: \"What am I looking for?\"\n- **Key (K)**: \"What do I contain?\"\n- **Value (V)**: \"What information do I provide if selected?\"\n\nThe dot product between a query and all keys produces attention scores. High score means \"this key matches my query.\" Those scores weight the values. The output is a weighted sum of values.\n\n### Q, K, V Computation\n\nEach token embedding gets projected through three learned weight matrices:\n\n```\nInput embeddings (sequence of n tokens, each d-dimensional):\n\n  X = [x1, x2, x3, ..., xn]       shape: (n, d)\n\nThree weight matrices:\n\n  Wq  shape: (d, dk)\n  Wk  shape: (d, dk)\n  Wv  shape: (d, dv)\n\nProjections:\n\n  Q = X @ Wq    shape: (n, dk)      each token's query\n  K = X @ Wk    shape: (n, dk)      each token's key\n  V = X @ Wv    shape: (n, dv)      each token's value\n```\n\nVisually, for one token:\n\n```\n             Wq\n  x_i ------[*]------> q_i    \"What am I looking for?\"\n       |\n       |     Wk\n       +----[*]------> k_i    \"What do I contain?\"\n       |\n       |     Wv\n       +----[*]------> v_i    \"What do I offer?\"\n```\n\n### The Attention Matrix\n\nOnce you have Q, K, V for all tokens, attention scores form a matrix:\n\n```\nScores = Q @ K^T    shape: (n, n)\n\n              k1    k2    k3    k4    k5\n        +-----+-----+-----+-----+-----+\n   q1   | 2.1 | 0.3 | 0.1 | 0.8 | 0.2 |   <- how much q1 attends to each key\n        +-----+-----+-----+-----+-----+\n   q2   | 0.4 | 1.9 | 0.7 | 0.1 | 0.3 |\n        +-----+-----+-----+-----+-----+\n   q3   | 0.2 | 0.6 | 2.3 | 0.5 | 0.1 |\n        +-----+-----+-----+-----+-----+\n   q4   | 0.9 | 0.1 | 0.4 | 1.7 | 0.6 |\n        +-----+-----+-----+-----+-----+\n   q5   | 0.1 | 0.3 | 0.2 | 0.5 | 2.0 |\n        +-----+-----+-----+-----+-----+\n\nEach row: one token's attention over the entire sequence\n```\n\nWatch one query at a time sweep the keys: each row scores every token, softmax turns the scores into weights, and the context vector is the weighted blend of values.\n\n```figure\nattention-matrix\n```\n\n### Why Scale?\n\nThe dot products grow with dimension dk. If dk = 64, dot products can be in the range of tens, pushing softmax into regions where gradients vanish. The fix: divide by sqrt(dk).\n\n```\nScaled scores = (Q @ K^T) / sqrt(dk)\n```\n\nThis keeps values in a range where softmax produces useful gradients.\n\n### Softmax Turns Scores into Weights\n\nSoftmax converts raw scores into a probability distribution across each row:\n\n```\nRaw scores for q1:   [2.1, 0.3, 0.1, 0.8, 0.2]\n                            |\n                         softmax\n                            |\nAttention weights:   [0.52, 0.09, 0.07, 0.14, 0.08]   (sums to ~1.0)\n```\n\nNow each token has a set of weights saying how much to attend to every other token.\n\n### Weighted Sum of Values\n\nThe final output for each token is a weighted sum of all value vectors:\n\n```\noutput_i = sum( attention_weight[i][j] * v_j  for all j )\n\nFor token 1:\n  output_1 = 0.52 * v1 + 0.09 * v2 + 0.07 * v3 + 0.14 * v4 + 0.08 * v5\n```\n\n### Full Pipeline\n\n```mermaid\nflowchart LR\n  X[\"X (input)\"] --> Q[\"Q = X · Wq\"]\n  X --> K[\"K = X · Wk\"]\n  X --> V[\"V = X · Wv\"]\n  Q --> S[\"Q · Kᵀ / √dk\"]\n  K --> S\n  S --> SM[\"softmax\"]\n  SM --> WS[\"weighted sum\"]\n  V --> WS\n  WS --> O[\"output\"]\n```\n\nFormula in one line:\n\n```\nAttention(Q, K, V) = softmax( Q @ K^T / sqrt(dk) ) @ V\n```\n\n```figure\nsoftmax-attention-scaling\n```",
+    "keyPoints": [
+      "Query (Q): \"What am I looking for?\"",
+      "Key (K): \"What do I contain?\"",
+      "Value (V): \"What information do I provide if selected?\""
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Traditional database:\n  Query: \"capital of France\"  -->  exact match  -->  \"Paris\"\n\nAttention:\n  Query: \"capital of France\"  -->  similarity to ALL keys  -->  weighted blend of ALL values"
+      },
+      {
+        "lang": "text",
+        "code": "Input embeddings (sequence of n tokens, each d-dimensional):\n\n  X = [x1, x2, x3, ..., xn]       shape: (n, d)\n\nThree weight matrices:\n\n  Wq  shape: (d, dk)\n  Wk  shape: (d, dk)\n  Wv  shape: (d, dv)\n\nProjections:\n\n  Q = X @ Wq    shape: (n, dk)      each token's query\n  K = X @ Wk    shape: (n, dk)      each token's key\n  V = X @ Wv    shape: (n, dv)      each token's value"
+      },
+      {
+        "lang": "text",
+        "code": "             Wq\n  x_i ------[*]------> q_i    \"What am I looking for?\"\n       |\n       |     Wk\n       +----[*]------> k_i    \"What do I contain?\"\n       |\n       |     Wv\n       +----[*]------> v_i    \"What do I offer?\""
+      },
+      {
+        "lang": "text",
+        "code": "Scores = Q @ K^T    shape: (n, n)\n\n              k1    k2    k3    k4    k5\n        +-----+-----+-----+-----+-----+\n   q1   | 2.1 | 0.3 | 0.1 | 0.8 | 0.2 |   <- how much q1 attends to each key\n        +-----+-----+-----+-----+-----+\n   q2   | 0.4 | 1.9 | 0.7 | 0.1 | 0.3 |\n        +-----+-----+-----+-----+-----+\n   q3   | 0.2 | 0.6 | 2.3 | 0.5 | 0.1 |\n        +-----+-----+-----+-----+-----+\n   q4   | 0.9 | 0.1 | 0.4 | 1.7 | 0.6 |\n        +-----+-----+-----+-----+-----+\n   q5   | 0.1 | 0.3 | 0.2 | 0.5 | 2.0 |\n        +-----+-----+-----+-----+-----+\n\nEach row: one token's attention over the entire sequence"
+      },
+      {
+        "lang": "text",
+        "code": "Scaled scores = (Q @ K^T) / sqrt(dk)"
+      },
+      {
+        "lang": "text",
+        "code": "Raw scores for q1:   [2.1, 0.3, 0.1, 0.8, 0.2]\n                            |\n                         softmax\n                            |\nAttention weights:   [0.52, 0.09, 0.07, 0.14, 0.08]   (sums to ~1.0)"
+      },
+      {
+        "lang": "text",
+        "code": "output_i = sum( attention_weight[i][j] * v_j  for all j )\n\nFor token 1:\n  output_1 = 0.52 * v1 + 0.09 * v2 + 0.07 * v3 + 0.14 * v4 + 0.08 * v5"
+      },
+      {
+        "lang": "text",
+        "code": "Attention(Q, K, V) = softmax( Q @ K^T / sqrt(dk) ) @ V"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: Softmax from scratch\n\nSoftmax converts raw logits into probabilities. Subtract the max for numerical stability.\n\n```python\nimport numpy as np\n\ndef softmax(x):\n    shifted = x - np.max(x, axis=-1, keepdims=True)\n    exp_x = np.exp(shifted)\n    return exp_x / np.sum(exp_x, axis=-1, keepdims=True)\n\nlogits = np.array([2.0, 1.0, 0.1])\nprint(f\"logits:  {logits}\")\nprint(f\"softmax: {softmax(logits)}\")\nprint(f\"sum:     {softmax(logits).sum():.4f}\")\n```\n\n### Step 2: Scaled dot-product attention\n\nThe core function. Takes Q, K, V matrices and returns the attention output plus the weight matrix.\n\n```python\ndef scaled_dot_product_attention(Q, K, V):\n    dk = Q.shape[-1]\n    scores = Q @ K.T / np.sqrt(dk)\n    weights = softmax(scores)\n    output = weights @ V\n    return output, weights\n```\n\n### Step 3: Self-attention class with learned projections\n\nA full self-attention module with Wq, Wk, Wv weight matrices initialized with Xavier-like scaling.\n\n```python\nclass SelfAttention:\n    def __init__(self, d_model, dk, dv, seed=42):\n        rng = np.random.default_rng(seed)\n        scale = np.sqrt(2.0 / (d_model + dk))\n        self.Wq = rng.normal(0, scale, (d_model, dk))\n        self.Wk = rng.normal(0, scale, (d_model, dk))\n        scale_v = np.sqrt(2.0 / (d_model + dv))\n        self.Wv = rng.normal(0, scale_v, (d_model, dv))\n        self.dk = dk\n\n    def forward(self, X):\n        Q = X @ self.Wq\n        K = X @ self.Wk\n        V = X @ self.Wv\n        output, weights = scaled_dot_product_attention(Q, K, V)\n        return output, weights\n```\n\n### Step 4: Run it on a sentence\n\nCreate fake embeddings for a sentence and watch the attention weights.\n\n```python\nsentence = [\"The\", \"cat\", \"sat\", \"on\", \"the\", \"mat\"]\nn_tokens = len(sentence)\nd_model = 8\ndk = 4\ndv = 4\n\nrng = np.random.default_rng(42)\nX = rng.normal(0, 1, (n_tokens, d_model))\n\nattn = SelfAttention(d_model, dk, dv, seed=42)\noutput, weights = attn.forward(X)\n\nprint(\"Attention weights (each row: where that token looks):\\n\")\nprint(f\"{'':>6}\", end=\"\")\nfor token in sentence:\n    print(f\"{token:>6}\", end=\"\")\nprint()\n\nfor i, token in enumerate(sentence):\n    print(f\"{token:>6}\", end=\"\")\n    for j in range(n_tokens):\n        w = weights[i][j]\n        print(f\"{w:6.3f}\", end=\"\")\n    print()\n```\n\n### Step 5: Visualize attention with ASCII heatmap\n\nMap attention weights to characters for a quick visual.\n\n```python\ndef ascii_heatmap(weights, tokens, chars=\" ░▒▓█\"):\n    n = len(tokens)\n    print(f\"\\n{'':>6}\", end=\"\")\n    for t in tokens:\n        print(f\"{t:>6}\", end=\"\")\n    print()\n\n    for i in range(n):\n        print(f\"{tokens[i]:>6}\", end=\"\")\n        for j in range(n):\n            level = int(weights[i][j] * (len(chars) - 1) / weights.max())\n            level = min(level, len(chars) - 1)\n            print(f\"{'  ' + chars[level] + '   '}\", end=\"\")\n        print()\n\nascii_heatmap(weights, sentence)\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "PyTorch's `nn.MultiheadAttention` does exactly what we built, plus multi-head splitting and output projection:\n\n```python\nimport torch\nimport torch.nn as nn\n\nd_model = 8\nn_heads = 2\nseq_len = 6\n\nmha = nn.MultiheadAttention(embed_dim=d_model, num_heads=n_heads, batch_first=True)\n\nX_torch = torch.randn(1, seq_len, d_model)\n\noutput, attn_weights = mha(X_torch, X_torch, X_torch)\n\nprint(f\"Input shape:            {X_torch.shape}\")\nprint(f\"Output shape:           {output.shape}\")\nprint(f\"Attention weight shape: {attn_weights.shape}\")\nprint(f\"\\nAttn weights (averaged over heads):\")\nprint(attn_weights[0].detach().numpy().round(3))\n```\n\nThe key difference: multi-head attention runs multiple attention functions in parallel, each with its own Q, K, V projections of size dk = d_model / n_heads, then concatenates results. This lets the model attend to different relationship types simultaneously.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces:\n- `outputs/prompt-attention-explainer.md` - a prompt for explaining attention through the database lookup analogy",
+    "keyPoints": [
+      "`outputs/prompt-attention-explainer.md` - a prompt for explaining attention through the database lookup analogy"
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Modify `scaled_dot_product_attention` to accept an optional mask matrix that sets certain positions to negative infinity before softmax (this is how causal/decoder masking works)\n2. Implement multi-head attention from scratch: split Q, K, V into `n_heads` chunks, run attention on each, concatenate, and project through a final weight matrix Wo\n3. Take two different sentences of the same length, feed them through the same SelfAttention instance, and compare their attention patterns. What changes? What stays the same?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|----------------------|\n| Query (Q) | \"The question vector\" | A learned projection of the input that represents what information this token is looking for |\n| Key (K) | \"The label vector\" | A learned projection that represents what information this token contains, matched against queries |\n| Value (V) | \"The content vector\" | A learned projection carrying the actual information that gets aggregated based on attention scores |\n| Scaled dot-product attention | \"The attention formula\" | softmax(QK^T / sqrt(dk)) @ V - scaling prevents softmax saturation in high dimensions |\n| Self-attention | \"The token looks at itself and others\" | Attention where Q, K, V all come from the same sequence, letting every position attend to every other position |\n| Attention weights | \"How much focus\" | A probability distribution over positions, produced by softmax over scaled dot products |\n| Multi-head attention | \"Parallel attention\" | Running multiple attention functions with different projections, then concatenating results for richer representations |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Attention Is All You Need (Vaswani et al., 2017)](https://arxiv.org/abs/1706.03762) - the original transformer paper\n- [The Illustrated Transformer (Jay Alammar)](https://jalammar.github.io/illustrated-transformer/) - best visual walkthrough of the full architecture\n- [The Annotated Transformer (Harvard NLP)](https://nlp.seas.harvard.edu/annotated-transformer/) - line-by-line PyTorch implementation with explanations",
+    "keyPoints": [
+      "[Attention Is All You Need (Vaswani et al., 2017)](https://arxiv.org/abs/1706.03762) - the original transformer paper",
+      "[The Illustrated Transformer (Jay Alammar)](https://jalammar.github.io/illustrated-transformer/) - best visual walkthrough of the full architecture",
+      "[The Annotated Transformer (Harvard NLP)](https://nlp.seas.harvard.edu/annotated-transformer/) - line-by-line PyTorch implementation with explanations"
+    ],
+    "commands": []
+  }
+]

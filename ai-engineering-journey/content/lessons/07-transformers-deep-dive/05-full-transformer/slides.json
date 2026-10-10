@@ -1,0 +1,104 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# The Full Transformer — Encoder + Decoder\n\n> Attention is the star. Everything else — residuals, normalization, feed-forward, cross-attention — is the scaffolding that lets you stack it deep.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 7 · 02 (Self-Attention), Phase 7 · 03 (Multi-Head Attention), Phase 7 · 04 (Positional Encoding)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "A single attention layer is a feature extractor, not a model. One matmul per layer is not enough capacity for language. You need depth — and depth breaks without the right plumbing.\n\nThe 2017 Vaswani paper packaged six design decisions that turned one attention layer into a stackable block. Every transformer since — encoder-only (BERT), decoder-only (GPT), encoder-decoder (T5) — inherits the same skeleton. In 2026 the blocks have been refined (RMSNorm, SwiGLU, pre-norm, RoPE) but the skeleton is identical.\n\nThis lesson is the skeleton. Next lessons specialize it — 06 for encoders, 07 for decoders, 08 for encoder-decoder.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Encoder and decoder block internals, wired](../assets/full-transformer.svg)\n\n### The six pieces\n\n1. **Embedding + positional signal.** Tokens → vectors. Position injected via RoPE (modern) or sinusoidal (classic).\n2. **Self-attention.** Every position attends to every other. Masked in decoders.\n3. **Feed-forward network (FFN).** Position-wise two-layer MLP: `W_2 · activation(W_1 · x)`. Expansion ratio 4× by default.\n4. **Residual connection.** `x + sublayer(x)`. Without this, gradients vanish past ~6 layers.\n5. **Layer normalization.** `LayerNorm` or `RMSNorm` (modern). Stabilizes the residual stream.\n6. **Cross-attention (decoder only).** Queries come from the decoder, keys and values from the encoder output.\n\nWatch a vector flow through one block: attention mixes across positions, the residual carries it forward, the FFN transforms it, and norm keeps the stream stable.\n\n```figure\ntransformer-block\n```\n\n### Encoder block (used by BERT, T5 encoder)\n\n```\nx → LN → MHA(self) → + → LN → FFN → + → out\n                     ^              ^\n                     |              |\n                     └── residual ──┘\n```\n\nEncoder is bidirectional. No masking. All positions see all positions.\n\n### Decoder block (used by GPT, T5 decoder)\n\n```\nx → LN → MHA(masked self) → + → LN → MHA(cross to encoder) → + → LN → FFN → + → out\n```\n\nDecoder has three sublayers per block. The middle one — cross-attention — is the only place information flows from encoder to decoder. In a pure decoder-only architecture (GPT), cross-attention is omitted and you just have masked self-attention + FFN.\n\n### Pre-norm vs post-norm\n\nOriginal paper: `x + sublayer(LN(x))` vs `LN(x + sublayer(x))`. Post-norm lost favor around 2019 — it is harder to train deeply without careful warmup. Pre-norm (`LN` *before* sublayer) is the 2026 default: Llama, Qwen, GPT-3+, Mistral all use it.\n\n### The 2026 modernized block\n\nVaswani 2017 shipped LayerNorm + ReLU. Modern stacks replaced both. What production blocks actually look like:\n\n| Component | 2017 | 2026 |\n|-----------|------|------|\n| Normalization | LayerNorm | RMSNorm |\n| FFN activation | ReLU | SwiGLU |\n| FFN expansion | 4× | 2.6× (SwiGLU uses three matrices, total params match) |\n| Position | Sinusoidal absolute | RoPE |\n| Attention | Full MHA | GQA (or MLA) |\n| Bias terms | Yes | No |\n\nRMSNorm drops the mean-centering of LayerNorm (one fewer subtraction), which saves compute and is empirically at least as stable. SwiGLU (`Swish(W1 x) ⊙ W3 x`) consistently outperforms ReLU/GELU FFN by ~0.5 point ppl in the Llama, PaLM and Qwen papers.\n\n### Parameter count\n\nFor one block with `d_model = d` and FFN expansion `r`:\n\n- MHA: `4 · d²` (Q, K, V, O projections)\n- FFN (SwiGLU): `3 · d · (r · d)` ≈ `3rd²`\n- Norms: negligible\n\nAt `d = 4096, r = 2.6, layers = 32` (roughly Llama 3 8B), total: `32 · (4·4096² + 3·2.6·4096²) ≈ 32 · (16 + 32) M = ~1.5B parameters per layer × 32 ≈ 7B` (plus embeddings and head). Matches published counts.",
+    "keyPoints": [
+      "Embedding + positional signal.",
+      "Self-attention.",
+      "Feed-forward network (FFN).",
+      "Residual connection.",
+      "Layer normalization.",
+      "Cross-attention (decoder only)."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "x → LN → MHA(self) → + → LN → FFN → + → out\n                     ^              ^\n                     |              |\n                     └── residual ──┘"
+      },
+      {
+        "lang": "text",
+        "code": "x → LN → MHA(masked self) → + → LN → MHA(cross to encoder) → + → LN → FFN → + → out"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: the building blocks\n\nUsing the tiny `Matrix` class from Lesson 03 (copied to this file for independence):\n\n- `layer_norm(x, eps=1e-5)` — subtract mean, divide by std.\n- `rms_norm(x, eps=1e-6)` — divide by RMS. No mean subtraction.\n- `gelu(x)` and `silu(x) * W3 x` (SwiGLU).\n- `ffn_swiglu(x, W1, W2, W3)`.\n- `encoder_block(x, params)` and `decoder_block(x, enc_out, params)`.\n\nSee `code/main.py` for the full wiring.\n\n### Step 2: wire a 2-layer encoder and a 2-layer decoder\n\nStack them. Pass the encoder output into every decoder cross-attention. Add a final LN before the output projection.\n\n```python\ndef encode(tokens, params):\n    x = embed(tokens, params.emb) + sinusoidal(len(tokens), params.d)\n    for block in params.encoder_blocks:\n        x = encoder_block(x, block)\n    return x\n\ndef decode(target_tokens, encoder_out, params):\n    x = embed(target_tokens, params.emb) + sinusoidal(len(target_tokens), params.d)\n    for block in params.decoder_blocks:\n        x = decoder_block(x, encoder_out, block)\n    return x\n```\n\n### Step 3: run forward on a toy example\n\nFeed a 6-token source and a 5-token target through. Verify the output shape is `(5, vocab)`. No training — this lesson is about the architecture, not the loss.\n\n### Step 4: swap in RMSNorm + SwiGLU\n\nReplace LayerNorm and ReLU-FFN with RMSNorm and SwiGLU. Confirm shapes still match. This is the 2026 modernization with one function substitution.",
+    "keyPoints": [
+      "`layer_norm(x, eps=1e-5)` — subtract mean, divide by std.",
+      "`rms_norm(x, eps=1e-6)` — divide by RMS. No mean subtraction.",
+      "`gelu(x)` and `silu(x) * W3 x` (SwiGLU).",
+      "`ffn_swiglu(x, W1, W2, W3)`.",
+      "`encoder_block(x, params)` and `decoder_block(x, enc_out, params)`."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "The PyTorch/TF reference implementations: `nn.TransformerEncoderLayer`, `nn.TransformerDecoderLayer`. But most 2026 production code rolls its own block because:\n\n- Flash Attention is called inside attention, not via `nn.MultiheadAttention`.\n- GQA / MLA are not in the stdlib reference.\n- RoPE, RMSNorm, SwiGLU are not the PyTorch defaults.\n\nHF `transformers` has clean reference blocks you should read: `modeling_llama.py` is the canonical 2026 decoder-only block. It's ~500 lines and worth walking through once.\n\n**Encoder vs decoder vs encoder-decoder — when to pick:**\n\n| Need | Pick | Example |\n|------|------|---------|\n| Classification, embeddings, QA over text | Encoder-only | BERT, DeBERTa, ModernBERT |\n| Text generation, chat, code, reasoning | Decoder-only | GPT, Llama, Claude, Qwen |\n| Structured input → structured output (translation, summarization) | Encoder-decoder | T5, BART, Whisper |\n\nDecoder-only won language because it scales cleanest and handles both comprehension and generation. Encoder-decoder is still best when the input has a clear \"source sequence\" identity (translation, speech recognition, structured tasks).",
+    "keyPoints": [
+      "Flash Attention is called inside attention, not via `nn.MultiheadAttention`.",
+      "GQA / MLA are not in the stdlib reference.",
+      "RoPE, RMSNorm, SwiGLU are not the PyTorch defaults.",
+      "Encoder vs decoder vs encoder-decoder — when to pick:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "See `outputs/skill-transformer-block-reviewer.md`. The skill reviews a new transformer block implementation against the 2026 defaults and flags missing pieces (pre-norm, RoPE, RMSNorm, GQA, FFN expansion ratio).",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Count the parameters in your encoder_block at `d_model=512, n_heads=8, ffn_expansion=4, swiglu=True`. Validate by implementing the block and using `sum(p.numel() for p in block.parameters())`.\n2. **Medium.** Switch from post-norm to pre-norm. Initialize both and measure the activation norm after 12 stacked layers on random input. Post-norm's activations should explode; pre-norm's should stay bounded.\n3. **Hard.** Implement a 4-layer encoder-decoder on a toy copy task (copy `x` reversed). Train 100 steps. Report loss. Swap in RMSNorm + SwiGLU + RoPE — does loss drop?",
+    "keyPoints": [
+      "Hard."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| Block | \"One transformer layer\" | Stack of norm + attention + norm + FFN, wrapped in residual connections. |\n| Residual | \"Skip connection\" | `x + f(x)` output; enables gradient flow through deep stacks. |\n| Pre-norm | \"Normalize before, not after\" | Modern: `x + sublayer(LN(x))`. Trains deeper without warmup gymnastics. |\n| RMSNorm | \"LayerNorm without the mean\" | Divide by RMS; one less op, same empirical stability. |\n| SwiGLU | \"The FFN everyone switched to\" | `Swish(W1 x) ⊙ W3 x → W2`. Beats ReLU/GELU on LM ppl. |\n| Cross-attention | \"How the decoder sees the encoder\" | MHA with Q from decoder, K/V from encoder outputs. |\n| FFN expansion | \"How wide the middle MLP is\" | Ratio of hidden-size to d_model, usually 4 (LayerNorm) or 2.6 (SwiGLU). |\n| Bias-free | \"Drop the +b terms\" | Modern stacks omit biases in linear layers; slight ppl improvement, smaller model. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Vaswani et al. (2017). Attention Is All You Need](https://arxiv.org/abs/1706.03762) — original block spec.\n- [Xiong et al. (2020). On Layer Normalization in the Transformer Architecture](https://arxiv.org/abs/2002.04745) — why pre-norm beats post-norm deeply.\n- [Zhang, Sennrich (2019). Root Mean Square Layer Normalization](https://arxiv.org/abs/1910.07467) — RMSNorm.\n- [Shazeer (2020). GLU Variants Improve Transformer](https://arxiv.org/abs/2002.05202) — the SwiGLU paper.\n- [HuggingFace `modeling_llama.py`](https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py) — canonical 2026 decoder-only block.",
+    "keyPoints": [
+      "[Vaswani et al. (2017). Attention Is All You Need](https://arxiv.org/abs/1706.03762) — original block spec.",
+      "[Xiong et al. (2020). On Layer Normalization in the Transformer Architecture](https://arxiv.org/abs/2002.04745) — why pre-norm beats post-norm deeply.",
+      "[Zhang, Sennrich (2019). Root Mean Square Layer Normalization](https://arxiv.org/abs/1910.07467) — RMSNorm.",
+      "[Shazeer (2020). GLU Variants Improve Transformer](https://arxiv.org/abs/2002.05202) — the SwiGLU paper."
+    ],
+    "commands": []
+  }
+]

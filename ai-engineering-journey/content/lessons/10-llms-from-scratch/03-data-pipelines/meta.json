@@ -1,0 +1,23 @@
+{
+  "id": "10-llms-from-scratch/03-data-pipelines",
+  "slug": "03-data-pipelines",
+  "phase": "10-llms-from-scratch",
+  "order": 3,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Data Pipelines for Pre-Training",
+    "zh": ""
+  },
+  "hook": "The model is a mirror. It reflects whatever data you feed it. Feed it garbage, it reflects garbage with perfect fluency.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lessons 01-02 (Tokenizers",
+    "Building a Tokenizer)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

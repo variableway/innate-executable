@@ -1,0 +1,24 @@
+{
+  "id": "13-tools-and-protocols/28-mcp-tool-contracts-and-content",
+  "slug": "28-mcp-tool-contracts-and-content",
+  "phase": "13-tools-and-protocols",
+  "order": 28,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Tool Contracts and Content",
+    "zh": ""
+  },
+  "hook": "A tool is safe to automate only when discovery, arguments, results, pagination, and transport metadata agree on one contract.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13",
+    "Lessons 07",
+    "09",
+    "and 10"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

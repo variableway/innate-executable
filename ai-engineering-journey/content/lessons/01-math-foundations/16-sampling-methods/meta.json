@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/16-sampling-methods",
+  "slug": "16-sampling-methods",
+  "phase": "01-math-foundations",
+  "order": 16,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Sampling Methods",
+    "zh": "采样方法"
+  },
+  "hook": "Sampling is how AI explores the space of possibilities.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 06-07 (Probability",
+    "Bayes' Theorem)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": false
+}

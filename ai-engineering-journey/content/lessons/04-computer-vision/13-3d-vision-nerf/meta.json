@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/13-3d-vision-nerf",
+  "slug": "13-3d-vision-nerf",
+  "phase": "04-computer-vision",
+  "order": 13,
+  "phaseOrder": 4,
+  "title": {
+    "en": "3D Vision — Point Clouds & NeRFs",
+    "zh": ""
+  },
+  "hook": "3D vision comes in two flavours. Point clouds are the sensor's raw output. NeRFs are the learned volumetric field. Both answer \"what is where in space.\"",
+  "type": "Learn + Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 03 (CNNs)",
+    "Phase 1 Lesson 12 (Tensor Operations)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

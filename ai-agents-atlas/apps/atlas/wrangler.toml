@@ -1,0 +1,9 @@
+name = "ai-agents-atlas"
+compatibility_date = "2026-01-01"
+pages_build_output_dir = "./dist"
+
+# Static-only site — Cloudflare Pages serves these from edge cache.
+# No functions, no KV, no Durable Objects required.
+
+[build]
+command = "pnpm build"

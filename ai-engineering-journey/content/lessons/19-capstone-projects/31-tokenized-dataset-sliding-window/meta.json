@@ -1,0 +1,23 @@
+{
+  "id": "19-capstone-projects/31-tokenized-dataset-sliding-window",
+  "slug": "31-tokenized-dataset-sliding-window",
+  "phase": "19-capstone-projects",
+  "order": 31,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Tokenized Dataset with Sliding Window",
+    "zh": ""
+  },
+  "hook": "A pretraining run is a function from token ids to gradients. This lesson builds the conveyor that feeds the ids in.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 04 lessons",
+    "Phase 07 transformer lessons",
+    "Lesson 30 of this phase"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

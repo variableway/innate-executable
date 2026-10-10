@@ -1,0 +1,22 @@
+{
+  "id": "00-setup-and-tooling/10-terminal-and-shell",
+  "slug": "10-terminal-and-shell",
+  "phase": "00-setup-and-tooling",
+  "order": 10,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Terminal & Shell",
+    "zh": "终端与 Shell"
+  },
+  "hook": "The terminal is where AI engineers live. Get comfortable here.",
+  "type": "Learn",
+  "languages": [
+    "--"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 35,
+  "needsTranslation": false
+}

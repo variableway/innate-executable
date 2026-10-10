@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/34-repo-memory-and-state",
+  "slug": "34-repo-memory-and-state",
+  "phase": "14-agent-engineering",
+  "order": 34,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Repo Memory and Durable State",
+    "zh": ""
+  },
+  "hook": "Chat history is volatile. The repo is durable. The workbench stores agent state in versioned files so the next session, the next agent, and the next reviewer all read from the same source of truth.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib + `jsonschema` optional)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 32 (Minimal Workbench)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

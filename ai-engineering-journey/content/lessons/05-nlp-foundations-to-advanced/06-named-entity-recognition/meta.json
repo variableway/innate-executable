@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/06-named-entity-recognition",
+  "slug": "06-named-entity-recognition",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 6,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Named Entity Recognition",
+    "zh": ""
+  },
+  "hook": "Pull the names out. Sounds easy until you deal with ambiguous boundaries, nested entities, and domain jargon.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 02 (BoW + TF-IDF)",
+    "Phase 5 · 03 (Word Embeddings)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

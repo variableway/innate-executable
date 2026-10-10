@@ -1,0 +1,21 @@
+{
+  "id": "13-tools-and-protocols/25-skill-invocation-and-routing",
+  "slug": "25-skill-invocation-and-routing",
+  "phase": "13-tools-and-protocols",
+  "order": 25,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Skill Invocation and Routing",
+    "zh": ""
+  },
+  "hook": "Invocation is an authority decision followed by a relevance decision. A good description helps the model choose; a good policy decides whether that choice is allowed.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 24 (Skill Discovery and Progressive Disclosure)"
+  ],
+  "timeMinutes": 105,
+  "needsTranslation": true
+}

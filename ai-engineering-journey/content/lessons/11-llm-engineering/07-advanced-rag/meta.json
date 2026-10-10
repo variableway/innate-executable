@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/07-advanced-rag",
+  "slug": "07-advanced-rag",
+  "phase": "11-llm-engineering",
+  "order": 7,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Advanced RAG (Chunking, Reranking, Hybrid Search)",
+    "zh": ""
+  },
+  "hook": "Basic RAG retrieves the top-k most similar chunks. That works for simple questions. It falls apart for multi-hop reasoning, ambiguous queries, and large corpora. Advanced RAG is the difference between a demo that works on 10 documents and a system that works on 10 million.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11",
+    "Lesson 06 (RAG)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

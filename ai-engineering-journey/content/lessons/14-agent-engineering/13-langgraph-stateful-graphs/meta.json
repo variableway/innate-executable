@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/13-langgraph-stateful-graphs",
+  "slug": "13-langgraph-stateful-graphs",
+  "phase": "14-agent-engineering",
+  "order": 13,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Stateful Graph Orchestration — Durable Execution and Checkpoints",
+    "zh": ""
+  },
+  "hook": "Agent is a state machine; nodes are functions; edges are transitions; state is checkpointed after each node. Resume from any failure at the last successful checkpoint. LangGraph is the 2026 reference for this model of low-level stateful orchestration.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 01 (Agent Loop)",
+    "Phase 14 · 12 (Workflow Patterns)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

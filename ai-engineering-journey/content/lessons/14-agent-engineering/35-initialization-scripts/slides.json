@@ -1,0 +1,109 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Initialization Scripts for Agents\n\n> Every session that starts cold pays a tax. The agent reads the same files, retries the same probes, and rediscovers the same paths. An init script pays the tax once and writes the answers into state.\n\n**Type:** Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 · 32 (Minimal Workbench), Phase 14 · 34 (Repo Memory)\n**Time:** ~45 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Identify the work an agent should never have to redo per session.\n- Build a deterministic init script that probes runtime, dependencies, and repo health.\n- Persist the probe result so the agent reads it instead of re-running checks.\n- Fail loud, fast, and with one place to look when initialization fails.",
+    "keyPoints": [
+      "Identify the work an agent should never have to redo per session.",
+      "Build a deterministic init script that probes runtime, dependencies, and repo health.",
+      "Persist the probe result so the agent reads it instead of re-running checks.",
+      "Fail loud, fast, and with one place to look when initialization fails."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Open a session. The agent guesses the Python version. Guesses the test command. Lists the repo root five times to find the entry point. Tries to import a package that is not installed. Asks the user where the config file lives. By the time it makes a real edit, ten thousand tokens have gone to setup work that should have been a single script.\n\nThe fix is one initialization script that runs before the agent does anything else and writes a `init_report.json` the agent reads at startup.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "```mermaid\nflowchart TD\n  Start[Session Start] --> Init[init_agent.py]\n  Init --> Probes[probe runtime / deps / paths / env / tests]\n  Probes --> Report[init_report.json]\n  Report --> Decision{healthy?}\n  Decision -- yes --> Agent[Agent Loop]\n  Decision -- no --> Halt[fail loud, halt, surface to human]\n```\n\n### What the init script probes\n\n| Probe | Why it matters |\n|-------|----------------|\n| Runtime versions | Wrong Python or Node version means silent wrong-version bugs |\n| Dependency availability | A missing package later costs ten times the cost of catching it now |\n| Test command | The agent must know how to verify; if the command is missing the workbench is broken |\n| Repo paths | Hard-coded paths drift; resolve them once and pin |\n| Environment variables | Missing `OPENAI_API_KEY` is a failure surface, not a runtime mystery |\n| State + board freshness | Stale state from a crashed session is a footgun |\n| Last-known-good commit | Anchor for the handoff diff at the end of the session |\n\n### Fail loud, fail fast, fail in one place\n\nA probe failure means halt and surface to the human. No \"the agent will figure it out.\" The whole point of init is to refuse to start when the workbench is broken.\n\n### Idempotent\n\nRun it twice in a row. The second run should be a no-op except for a fresh timestamp. Idempotency is what lets you wire the script into CI, hooks, or a pre-task slash command.\n\n### Init versus startup rules\n\nRules (Phase 14 · 33) describe what must be true to act. Init is the script that establishes that those rules can be checked. Rules without init become \"be careful.\" Init without rules becomes a polished failure.\n\n```figure\nwb-init-probes\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements `init_agent.py`:\n\n- Five probes: Python version, listed dependencies via `importlib.util.find_spec`, test command resolvability, required env vars, state file freshness.\n- Each probe returns `(name, status, detail)`.\n- The script writes `init_report.json` with the full probe set and exits non-zero if any block-severity probe fails.\n\nRun it:\n\n```\npython3 code/main.py\n```\n\nThe script prints the table of probes, writes `init_report.json`, and exits zero on the happy path or non-zero with a list of failed probes.",
+    "keyPoints": [
+      "Five probes: Python version, listed dependencies via `importlib.util.find_spec`, test command resolvability, required env vars, state file freshness.",
+      "Each probe returns `(name, status, detail)`.",
+      "The script writes `init_report.json` with the full probe set and exits non-zero if any block-severity probe fails."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "production-patterns-in-the-wild",
+    "title": "Production patterns in the wild",
+    "bodyMarkdown": "Three patterns separate a useful init script from a ceremony.\n\n**Last-known-good commit anchoring.** Probe the current commit against a `LKG` file written on the last successful merge. If the diff exceeds a budget (default 50 files), refuse to start and require a human to ratify the new baseline. This is what Cloudflare's AI Code Review uses to scope reviewer agents: every review session anchors against the same last-known-good and never compounds drift across sessions.\n\n**Lock files with TTL.** Write a `prereqs.lock` after the first successful probe pass. Subsequent runs trust the lock for N hours (24h default) and skip the expensive probes. The init script reads the lock first; if it is fresh and the dependency manifest hash matches, it short-circuits. This is the same pattern Docker uses for layer caches: idempotent probe + content hash = skip.\n\n**No network, no LLM, no surprises in the hot path.** Init probes are deterministic plumbing. A probe that calls an LLM to classify a failure or that hits an external service to check a license is not a probe; it is a workflow. If a probe takes longer than three seconds in a dry run, treat that as a workbench smell and either move it out of init or cache its result.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "In production:\n\n- **Claude Code hooks.** `pre-task` hook calls the init script and refuses to launch the agent if it fails.\n- **GitHub Actions.** A `setup-agent` job runs the init script; the agent job depends on it.\n- **Docker entrypoint.** The agent container runs the init script before exec-ing the agent runtime; logs surface on failure.\n\nThe init script is portable because it makes no calls to a specific framework. Bash, Make, or a tasks file can all wrap it.",
+    "keyPoints": [
+      "Claude Code hooks.: `pre-task` hook calls the init script and refuses to launch the agent if it fails.",
+      "GitHub Actions.: A `setup-agent` job runs the init script; the agent job depends on it.",
+      "Docker entrypoint.: The agent container runs the init script before exec-ing the agent runtime; logs surface on failure."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "`outputs/skill-init-script.md` interviews the project, classifies its setup work into probes, and emits a project-specific `init_agent.py` plus a CI workflow that runs it before any agent step.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Add a probe that diffs the current commit against the last-known-good commit and refuses to start if more than 50 files changed.\n2. Wire the script to write a `prereqs.lock` file and refuse to start if the lock is older than seven days.\n3. Add a `--fix` flag that auto-installs missing dev dependencies but never modifies runtime dependencies without approval.\n4. Move probes from hardcoded functions to a YAML registry. Defend the trade-off.\n5. Add a timing budget per probe. A probe that runs longer than three seconds is a workbench smell.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| Probe | \"A check\" | A deterministic function returning `(name, status, detail)` |\n| Init report | \"Setup output\" | JSON written next to state with the probe results |\n| Idempotent | \"Safe to re-run\" | Two runs in a row produce identical reports modulo timestamp |\n| Fail loud | \"Don't swallow\" | Halt and surface to the human; no silent fallback |\n| Setup tax | \"Bootstrap cost\" | The tokens the agent spends per session rediscovering the obvious |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Anthropic, Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)\n- [GitHub Actions, composite actions for setup](https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action)\n- [microservices.io, GenAI dev platform: guardrails](https://microservices.io/post/architecture/2026/03/09/genai-development-platform-part-1-development-guardrails.html) — pre-commit + CI checks as init\n- [Augment Code, How to Build Your AGENTS.md (2026)](https://www.augmentcode.com/guides/how-to-build-agents-md) — init expectations\n- [Codex Blog, Codex CLI Context Compaction](https://codex.danielvaughan.com/2026/03/31/codex-cli-context-compaction-architecture/) — session start as compaction-aware init\n- Phase 14 · 33 — the rule set this script enables\n- Phase 14 · 34 — the state file this script seeds\n- Phase 14 · 38 — the verification gate the init script feeds\n- Phase 14 · 40 — the handoff that consumes the init report's last-known-good",
+    "keyPoints": [
+      "[Anthropic, Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)",
+      "[GitHub Actions, composite actions for setup](https://docs.github.com/en/actions/sharing-automations/creating-actions/creating-a-composite-action)",
+      "[Augment Code, How to Build Your AGENTS.md (2026)](https://www.augmentcode.com/guides/how-to-build-agents-md) — init expectations",
+      "Phase 14 · 33 — the rule set this script enables",
+      "Phase 14 · 34 — the state file this script seeds",
+      "Phase 14 · 38 — the verification gate the init script feeds"
+    ],
+    "commands": []
+  }
+]

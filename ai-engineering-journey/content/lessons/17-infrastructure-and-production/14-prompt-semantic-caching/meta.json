@@ -1,0 +1,23 @@
+{
+  "id": "17-infrastructure-and-production/14-prompt-semantic-caching",
+  "slug": "14-prompt-semantic-caching",
+  "phase": "17-infrastructure-and-production",
+  "order": 14,
+  "phaseOrder": 17,
+  "title": {
+    "en": "Prompt Caching and Semantic Caching Economics",
+    "zh": ""
+  },
+  "hook": "**Pricing snapshot dated 2026-04.** Numeric claims below reflect vendor rate cards captured at this lesson's publication; verify against the linked docs before quoting them downstream.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "toy two-layer cache simulator)"
+  ],
+  "prerequisites": [
+    "Phase 17 · 04 (Serving Engine Internals)",
+    "Phase 17 · 06 (SGLang RadixAttention)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

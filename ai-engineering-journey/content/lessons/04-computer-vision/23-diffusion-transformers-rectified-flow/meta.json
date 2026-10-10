@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/23-diffusion-transformers-rectified-flow",
+  "slug": "23-diffusion-transformers-rectified-flow",
+  "phase": "04-computer-vision",
+  "order": 23,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Diffusion Transformers & Rectified Flow",
+    "zh": ""
+  },
+  "hook": "The U-Net is not the secret of diffusion. Replace it with a transformer, swap the noise schedule for a straight-line flow, and suddenly you have SD3, FLUX, and every 2026 text-to-image model.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 10 (Diffusion DDPM)",
+    "Phase 4 Lesson 14 (ViT)",
+    "Phase 7 Lesson 02 (Self-Attention)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

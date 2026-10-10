@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/16-text-generation-pre-transformer",
+  "slug": "16-text-generation-pre-transformer",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 16,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Text Generation Before Transformers — N-gram Language Models",
+    "zh": ""
+  },
+  "hook": "If a word is surprising, the model is bad. Perplexity makes surprise a number. Smoothing keeps it finite.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 01 (Text Processing)",
+    "Phase 2 · 14 (Naive Bayes)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/43-frame-the-task-before-code",
+  "slug": "43-frame-the-task-before-code",
+  "phase": "14-agent-engineering",
+  "order": 43,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Frame the Task Before the Agent Writes Code",
+    "zh": ""
+  },
+  "hook": "A coding agent can implement a clear task quickly. It can also implement an unclear task quickly. The speed is the same. The cost is not.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 lessons 31 and 36"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

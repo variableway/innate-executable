@@ -1,0 +1,22 @@
+{
+  "id": "10-llms-from-scratch/08-dpo",
+  "slug": "08-dpo",
+  "phase": "10-llms-from-scratch",
+  "order": 8,
+  "phaseOrder": 10,
+  "title": {
+    "en": "DPO: Direct Preference Optimization",
+    "zh": ""
+  },
+  "hook": "RLHF works. It also requires training three models (SFT, reward model, policy), managing PPO's instability, and tuning a KL penalty. DPO asks: what if you could skip all of that? DPO directly optimizes the language model on preference pairs. No reward model. No PPO. One training loop. Same results.",
+  "type": "Build",
+  "languages": [
+    "Python (with numpy)"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lesson 07 (RLHF)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

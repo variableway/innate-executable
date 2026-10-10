@@ -1,0 +1,108 @@
+---
+title: "Your first CrewAI agent"
+description: "Build a single researcher agent with CrewAI, give it a clear role, and run one task to inspect the response path."
+author: "Atlas Team"
+publishedAt: 2025-08-12
+level: "beginner"
+framework: "crewai"
+industry: "general"
+tags: ["crewai", "agent-basics", "single-agent"]
+duration: 8
+order: 1
+prerequisites: []
+related: []
+objectives:
+  - "Install the CrewAI lesson dependencies"
+  - "Define a role-driven research agent"
+  - "Attach the agent to one clear task"
+  - "Run the crew and read the final output"
+resources:
+  - { label: "agent.py", url: "https://github.com/ashishpatel26/500-AI-Agents-Projects/blob/main/crewai_mcp_course/lesson_01/agent.py", type: "github" }
+  - { label: "requirements.txt", url: "https://github.com/ashishpatel26/500-AI-Agents-Projects/blob/main/crewai_mcp_course/lesson_01/requirements.txt", type: "github" }
+---
+
+## What you'll learn
+
+By the end of this lesson you will have a runnable CrewAI agent that produces a 250-word research briefing on any topic you give it. The goal is not feature depth — it is to understand the **three primitives** every CrewAI agent uses:
+
+1. `Agent` — who is doing the work
+2. `Task` — what they are doing
+3. `Crew` — how the work flows
+
+## The minimum viable crew
+
+Create `agent.py` with three short sections:
+
+```python title="agent.py"
+from crewai import Agent, Crew, Process, Task
+from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+
+researcher = Agent(
+    role="AI Researcher",
+    goal="Research and summarize the latest developments in AI agents",
+    backstory="Seasoned AI researcher who writes clear, accurate briefings.",
+    llm=llm,
+    verbose=True,
+)
+
+research_task = Task(
+    description='Write a concise 250-word briefing on "The state of AI agents in 2025".',
+    expected_output="A concise technical briefing on AI agents in 2025",
+    agent=researcher,
+)
+
+crew = Crew(agents=[researcher], tasks=[research_task], process=Process.sequential)
+
+if __name__ == "__main__":
+    result = crew.kickoff()
+    print(result)
+```
+
+## Run it
+
+```bash
+pip install -r requirements.txt
+export OPENAI_API_KEY=sk-...
+python agent.py
+```
+
+You should see a `verbose=True` trace of the agent reasoning, followed by a printed briefing.
+
+## Anatomy of an `Agent`
+
+| Field | Purpose |
+|---|---|
+| `role` | One-line job title. The model uses it to choose tone and expertise. |
+| `goal` | What success looks like. Make it concrete and measurable. |
+| `backstory` | Free-form context that biases behaviour (style, depth, persona). |
+| `llm` | The model handle. Anything LangChain supports works. |
+| `tools` | Optional list of callables (we'll see tools in lesson 02). |
+| `verbose` | If true, prints reasoning steps to stdout. |
+
+## Anatomy of a `Task`
+
+`description` is the user-facing prompt. `expected_output` is your **acceptance criteria** — telling the model the format you want back (length, structure, tone) makes output dramatically more stable.
+
+## Anatomy of a `Crew`
+
+```python
+Crew(agents=[...], tasks=[...], process=Process.sequential)
+```
+
+`process` is the execution mode:
+- `Process.sequential` — tasks run one after another, later tasks see earlier outputs.
+- `Process.hierarchical` — a manager agent delegates tasks to the others.
+
+Lesson 02 will use sequential with multiple agents; lesson 03 will revisit hierarchical patterns.
+
+## Common pitfalls
+
+- **Empty `backstory`** — without it the model drifts toward generic tone. Always give your agent a perspective.
+- **Vague `expected_output`** — "a good answer" gets you inconsistent answers. "A 250-word briefing with three sections" gets you repeatable ones.
+- **Forgetting `verbose=True` while debugging** — turn it on early; turn it off for production logs.
+
+## Up next
+
+In [lesson 02](/lessons/crewai-multi-agent-crew) you will extend this into a three-agent team where a Researcher, Writer, and Editor hand work off sequentially.

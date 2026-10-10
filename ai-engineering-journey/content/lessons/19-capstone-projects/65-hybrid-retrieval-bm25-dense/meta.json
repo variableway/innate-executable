@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/65-hybrid-retrieval-bm25-dense",
+  "slug": "65-hybrid-retrieval-bm25-dense",
+  "phase": "19-capstone-projects",
+  "order": 65,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Hybrid Retrieval with BM25 and Dense Embeddings",
+    "zh": ""
+  },
+  "hook": "Lexical and semantic retrieval fail on opposite query distributions. Hybrid retrieval with reciprocal rank fusion does not interpolate, it votes - and the vote wins on every query class.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 lessons 04 (embeddings)",
+    "06 (RAG); Phase 19 Track B foundations (lessons 20-29); Phase 19 lesson 64 (chunking strategies)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

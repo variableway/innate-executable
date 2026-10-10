@@ -1,0 +1,349 @@
+/*
+ * Tailwind v4 entry — CSS-first configuration replaces the legacy
+ * tailwind.config.ts. Tokens, dark mode, plugins, keyframes, and
+ * content sources are all declared inline so the Vite plugin can
+ * generate utilities at build time.
+ */
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+
+/* Class-based dark mode (was `darkMode: ['class']` in v3). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Auto-detection covers the source tree, but we list it explicitly
+ * so the Vite plugin picks up content in subfolders without surprise.
+ * The superlinear-academy directory is a standalone reference project
+ * (with its own Radix-based classes) — never scan it for utilities.
+ */
+@source "../**/*.{astro,html,js,jsx,md,mdx,ts,tsx}";
+@source "../../../../packages/ui/src";
+@source not "../../../academy/**";
+
+/* -------------------------------------------------------------------------
+ * Theme tokens
+ *
+ * Each color uses `hsl(var(--*))` so the HSL channels declared in `:root`
+ * and `.dark` below stay the source of truth — the same pattern that the
+ * shadcn/ui ecosystem uses.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /*
+   * Fonts are runtime-variable-driven so a second palette (see the
+   * `[data-palette='blueprint']` block below) can swap the whole
+   * type system without regenerating utilities.
+   */
+  --font-sans: var(--site-font-sans);
+  --font-mono: var(--site-font-mono);
+  --font-display: var(--site-font-display, var(--site-font-sans));
+
+  /* Tighter 2xl breakpoint (was `screens: { '2xl': '1280px' }` in v3). */
+  --breakpoint-2xl: 1280px;
+}
+
+/*
+ * Container override.
+ * Tailwind v4's built-in `container` only sets width + per-breakpoint
+ * max-width — no centering and no horizontal padding. Every page wraps
+ * content in bare `container`, so we re-declare it with the same
+ * max-widths plus auto margins and responsive inline padding.
+ */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    max-width: 40rem;
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 48rem) {
+    max-width: 48rem;
+  }
+  @media (width >= 64rem) {
+    max-width: 64rem;
+    padding-inline: 2rem;
+  }
+  @media (width >= 80rem) {
+    max-width: 80rem;
+  }
+  @media (width >= 1280px) {
+    max-width: 1280px;
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * HSL channels — light + dark themes
+ * ------------------------------------------------------------------------- */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 238 75% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 238 75% 60%;
+  --radius: 0.5rem;
+
+  /* Dialog/sheet scrim color (alpha applied at the utility call site). */
+  --overlay: 0 0% 0%;
+
+  /* Runtime font stacks — overridden by the blueprint palette. */
+  --site-font-sans:
+    ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --site-font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 5.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 238 75% 65%;
+  --primary-foreground: 240 10% 3.9%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62% 45%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 238 75% 65%;
+}
+
+/*
+ * Blueprint palette — "technical manual" skin inspired by
+ * ai-engineering-from-scratch: cream paper, electric blueprint blue,
+ * serif body, pixel display font, zero radius, dot-grid paper.
+ * Everything hangs off the attribute so the default theme is untouched.
+ */
+[data-palette='blueprint'] {
+  --background: 60 20% 97%; /* #fafaf5 */
+  --foreground: 0 0% 10%; /* #1a1a1a */
+  --card: 48 29% 93%; /* #f3f1e8 */
+  --card-foreground: 0 0% 10%;
+  --popover: 60 20% 97%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 231 100% 61%; /* #3553ff */
+  --primary-foreground: 60 20% 97%;
+  --secondary: 48 20% 90%;
+  --secondary-foreground: 0 0% 10%;
+  --muted: 48 20% 90%;
+  --muted-foreground: 60 1% 48%; /* #7a7a78 */
+  --accent: 231 100% 96%; /* blueprint tint */
+  --accent-foreground: 231 80% 45%;
+  --destructive: 0 72% 45%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 48 12% 82%;
+  --input: 48 12% 82%;
+  --ring: 231 100% 61%;
+  --radius: 0;
+  --overlay: 0 0% 10%;
+
+  --site-font-sans: 'Source Serif 4', 'Source Serif Pro', Georgia, serif;
+  --site-font-mono: 'JetBrains Mono', ui-monospace, 'Consolas', monospace;
+  --site-font-display: 'VT323', 'JetBrains Mono', ui-monospace, monospace;
+}
+
+[data-palette='blueprint'].dark {
+  --background: 226 44% 7%; /* #0a0d1a */
+  --foreground: 48 16% 89%; /* #e8e6dc */
+  --card: 229 43% 13%; /* #131830 */
+  --card-foreground: 48 16% 89%;
+  --popover: 229 43% 13%;
+  --popover-foreground: 48 16% 89%;
+  --primary: 223 100% 71%; /* #6b8eff */
+  --primary-foreground: 226 44% 7%;
+  --secondary: 229 32% 20%;
+  --secondary-foreground: 48 16% 89%;
+  --muted: 229 32% 20%;
+  --muted-foreground: 60 2% 47%;
+  --accent: 226 44% 16%;
+  --accent-foreground: 223 100% 81%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 229 25% 25%;
+  --input: 229 25% 25%;
+  --ring: 223 100% 71%;
+  --overlay: 226 44% 4%;
+}
+
+/* Dot-grid paper + pixel display headings, blueprint only. */
+[data-palette='blueprint'] body {
+  background-image: radial-gradient(hsl(var(--foreground) / 0.07) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+[data-palette='blueprint'] .prose :where(h1, h2, h3) {
+  font-family: var(--site-font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: hsl(var(--primary));
+}
+
+/* -------------------------------------------------------------------------
+ * Base layer
+ * ------------------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* iOS 26+ Safari: lets Base UI backdrops cover the visual viewport. */
+    position: relative;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+
+  /* Respect reduced-motion: no smooth scrolling, near-instant animations. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/*
+ * Typography plugin shadcn override.
+ * Replaces the v3 `prose-zinc` variant — same color tokens, applied
+ * globally to `.prose` instead of registered as a new utility.
+ */
+.prose {
+  --tw-prose-body: hsl(var(--foreground));
+  --tw-prose-headings: hsl(var(--foreground));
+  --tw-prose-links: hsl(var(--primary));
+  --tw-prose-bold: hsl(var(--foreground));
+  --tw-prose-code: hsl(var(--foreground));
+  --tw-prose-pre-bg: hsl(var(--muted));
+  --tw-prose-quotes: hsl(var(--muted-foreground));
+  --tw-prose-quote-borders: hsl(var(--border));
+  --tw-prose-counters: hsl(var(--muted-foreground));
+  --tw-prose-bullets: hsl(var(--border));
+  --tw-prose-hr: hsl(var(--border));
+  --tw-prose-th-borders: hsl(var(--border));
+  --tw-prose-td-borders: hsl(var(--border));
+}
+
+/* -------------------------------------------------------------------------
+ * Custom utilities
+ * ------------------------------------------------------------------------- */
+@layer utilities {
+  /* Subtle scrollbar that fits the minimal palette. */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  /* Blueprint signature: hard offset shadow, no blur. */
+  .shadow-hard {
+    box-shadow: 3px 3px 0 hsl(var(--foreground));
+  }
+  .shadow-hard-lg {
+    box-shadow: 5px 5px 0 hsl(var(--foreground));
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Shiki / rehype-pretty-code tweaks
+ * ------------------------------------------------------------------------- */
+[data-rehype-pretty-code-figure] pre {
+  @apply rounded-md border border-border bg-muted/40 px-0 py-4 text-sm;
+  overflow-x: auto;
+}
+[data-rehype-pretty-code-figure] code {
+  @apply font-mono;
+  counter-reset: line;
+}
+[data-rehype-pretty-code-figure] [data-line] {
+  @apply block px-4;
+}
+[data-rehype-pretty-code-figure] [data-highlighted-line] {
+  background: hsl(var(--primary) / 0.08);
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+  border-left: 2px solid hsl(var(--primary));
+}
+[data-rehype-pretty-code-title] {
+  @apply rounded-t-md border border-b-0 border-border bg-muted px-4 py-2 font-mono text-xs text-muted-foreground;
+}
+code[data-language] {
+  @apply font-mono;
+}
+
+/* Mermaid diagrams (Phase 5). */
+.mermaid {
+  @apply rounded-md border border-border bg-card p-4;
+}

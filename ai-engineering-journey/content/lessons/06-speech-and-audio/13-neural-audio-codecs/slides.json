@@ -1,0 +1,107 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Neural Audio Codecs — EnCodec, SNAC, Mimi, DAC and the Semantic-Acoustic Split\n\n> 2026 audio generation is almost all tokens. EnCodec, SNAC, Mimi, and DAC turn continuous waveforms into discrete sequences that a transformer can predict. The semantic-vs-acoustic token split — first-codebook as semantic, rest as acoustic — is the most important architectural shift since the Transformer for audio.\n\n**Type:** Learn\n**Languages:** Python\n**Prerequisites:** Phase 6 · 02 (Spectrograms), Phase 10 · 11 (Quantization), Phase 5 · 19 (Subword Tokenization)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Language models work on discrete tokens. Audio is continuous. If you want an LLM-style model for speech / music — MusicGen, Moshi, Sesame CSM, VibeVoice, Orpheus — you first need a **neural audio codec**: a learned encoder that discretizes audio into a small vocabulary of tokens, and a matching decoder that reconstructs the waveform.\n\nTwo families have emerged:\n\n1. **Reconstruction-first codecs** — EnCodec, DAC. Optimize perceptual audio quality. Tokens are \"acoustic\" — they capture everything including speaker identity, timbre, background noise.\n2. **Semantic-first codecs** — Mimi (Kyutai), SpeechTokenizer. Force the first codebook to encode linguistic / phonetic content (often by distilling from WavLM). Subsequent codebooks are acoustic detail.\n\nThe 2024-2026 insight: **a pure reconstruction codec gives you blurry speech when you try to generate from text.** The LLM over codec tokens has to learn both language structure AND acoustic structure in the same codebook, which doesn't scale. Separating them — semantic codebook 0, acoustic codebooks 1-N — is what makes Moshi and Sesame CSM work.",
+    "keyPoints": [
+      "Reconstruction-first codecs"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Four codec landscape: EnCodec, DAC, SNAC (multi-scale), Mimi (semantic+acoustic)](../assets/codec-comparison.svg)\n\n### The core trick: Residual Vector Quantization (RVQ)\n\nRather than one big codebook (which would need millions of codes for good quality), all modern audio codecs use **RVQ**: a cascade of small codebooks. The first codebook quantizes the encoder output; the second quantizes the residual; etc. Each codebook is 1024 codes. 8 codebooks = effective vocabulary of 1024^8 = 10^24.\n\nAt inference time, the decoder sums all chosen codes per frame to reconstruct.\n\n### The four codecs that matter in 2026\n\n**EnCodec (Meta, 2022).** The baseline. Encoder-decoder over waveform, RVQ bottleneck. 24 kHz, 32 codebooks possible, default 4 codebooks @ 1.5 kbps. Uses `1D conv + transformer + 1D conv` architecture. Used by MusicGen.\n\n**DAC (Descript, 2023).** RVQ with L2-normalized codebooks, periodic activation functions, improved losses. Highest reconstruction fidelity of any open codec — sometimes indistinguishable from original speech with 12 codebooks. 44.1 kHz full-band.\n\n**SNAC (Hubert Siuzdak, 2024).** Multi-scale RVQ — the coarse codebooks operate at a lower frame rate than fine ones. Effectively models audio hierarchically: a coarse \"sketch\" at ~12 Hz plus detail at 50 Hz. Used by Orpheus-3B because the hierarchical structure maps well onto LM-based generation.\n\n**Mimi (Kyutai, 2024).** The 2026 game-changer. 12.5 Hz frame rate (extremely low), 8 codebooks @ 4.4 kbps. Codebook 0 is **distilled from WavLM** — trained to predict WavLM's speech-content features. Codebooks 1-7 are acoustic residuals. This split powers Moshi (Lesson 15) and Sesame CSM.\n\n### Frame rates matter for language modeling\n\nLower frame rate = shorter sequence = faster LM.\n\n| Codec | Frame rate | 1 s = N frames | Good for |\n|-------|-----------|----------------|---------|\n| EnCodec-24k | 75 Hz | 75 | music, general audio |\n| DAC-44.1k | 86 Hz | 86 | high-fidelity music |\n| SNAC-24k (coarse) | ~12 Hz | 12 | AR-LM efficient |\n| Mimi | 12.5 Hz | 12.5 | streaming speech |\n\nAt 12.5 Hz, a 10-second utterance is only 125 codec frames — a transformer can easily predict them.\n\n### Semantic vs acoustic tokens\n\n```\nframe_t → [semantic_token_t, acoustic_token_0_t, acoustic_token_1_t, ..., acoustic_token_6_t]\n```\n\n- **Semantic token (codebook 0 in Mimi).** Encodes what was said — phonemes, words, content. Distilled from WavLM via an auxiliary prediction loss.\n- **Acoustic tokens (codebooks 1-7).** Encode timbre, speaker identity, prosody, background noise, fine detail.\n\nAn AR LM predicts the semantic token first (conditioned on text), then predicts acoustic tokens (conditioned on semantic + speaker reference). This factorization is why modern TTS can zero-shot-clone voices: the semantic model handles content; the acoustic model handles timbre.\n\n### 2026 reconstruction quality (bits per sec, lower bitrate is better)\n\n| Codec | Bitrate | PESQ | ViSQOL |\n|-------|---------|------|--------|\n| Opus-20kbps | 20 kbps | 4.0 | 4.3 |\n| EnCodec-6kbps | 6 kbps | 3.2 | 3.8 |\n| DAC-6kbps | 6 kbps | 3.5 | 4.0 |\n| SNAC-3kbps | 3 kbps | 3.3 | 3.8 |\n| Mimi-4.4kbps | 4.4 kbps | 3.1 | 3.7 |\n\nTraditional codecs like Opus still win per bit on perceptual quality. Neural codecs win on **discrete tokens** (which Opus does not produce) and **generative-model quality** (what the LM can do with those tokens).\n\n```figure\nrvq-codec-cascade\n```",
+    "keyPoints": [
+      "Semantic token (codebook 0 in Mimi).: Encodes what was said — phonemes, words, content. Distilled from WavLM via an auxiliary prediction loss.",
+      "Acoustic tokens (codebooks 1-7).: Encode timbre, speaker identity, prosody, background noise, fine detail."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "frame_t → [semantic_token_t, acoustic_token_0_t, acoustic_token_1_t, ..., acoustic_token_6_t]"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: encode with EnCodec\n\n```python\nfrom encodec import EncodecModel\nimport torch\n\nmodel = EncodecModel.encodec_model_24khz()\nmodel.set_target_bandwidth(6.0)  # kbps\n\nwav = torch.randn(1, 1, 24000)\nwith torch.no_grad():\n    encoded = model.encode(wav)\ncodes, scale = encoded[0]\n# codes: (1, n_codebooks, n_frames), dtype=int64\n```\n\n`n_codebooks=8` at 6 kbps. Each code is 0-1023 (10-bit).\n\n### Step 2: decode and measure reconstruction\n\n```python\nwith torch.no_grad():\n    wav_recon = model.decode([(codes, scale)])\n\nfrom torchaudio.functional import compute_deltas\nimport torch.nn.functional as F\n\nmse = F.mse_loss(wav_recon[:, :, :wav.shape[-1]], wav).item()\n```\n\n### Step 3: the semantic-acoustic split (Mimi-style)\n\n```python\nfrom moshi.models import loaders\nmimi = loaders.get_mimi()\n\nwith torch.no_grad():\n    codes = mimi.encode(wav)  # shape (1, 8, frames@12.5Hz)\n\nsemantic = codes[:, 0]\nacoustic = codes[:, 1:]\n```\n\nSemantic codebook 0 is WavLM-aligned. You can train a text-to-semantic transformer — much smaller vocabulary than going direct-to-audio. Then a separate acoustic-to-waveform decoder conditions on a speaker reference.\n\n### Step 4: why AR LM over codec tokens works\n\nFor a 10 s speech clip at Mimi's 12.5 Hz × 8 codebooks:\n\n```\nN_tokens = 10 * 12.5 * 8 = 1000 tokens\n```\n\n1000 tokens is a trivial context for a transformer. A 256M-parameter transformer can generate 10 seconds of speech in milliseconds on a modern GPU.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "N_tokens = 10 * 12.5 * 8 = 1000 tokens"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Map problem → codec:\n\n| Task | Codec |\n|------|-------|\n| General music generation | EnCodec-24k |\n| Highest-fidelity reconstruction | DAC-44.1k |\n| AR LM over speech (TTS) | SNAC or Mimi |\n| Streaming full-duplex speech | Mimi (12.5 Hz) |\n| Sound-effect library with text | EnCodec + T5 condition |\n| Fine-grained audio editing | DAC + inpainting |\n\nRule of thumb: **if you're building a generative model, start with Mimi or SNAC. If you're building a compression pipeline, use Opus.**",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "pitfalls",
+    "title": "Pitfalls",
+    "bodyMarkdown": "- **Too many codebooks.** Adding codebooks increases fidelity linearly but LM sequence length linearly too. Stop at 8-12.\n- **Frame-rate mismatch.** Training LM on 12.5 Hz Mimi then fine-tuning on 50 Hz EnCodec fails silently.\n- **Assuming all codebooks equal.** In Mimi, codebook 0 carries content; losing it destroys intelligibility. Losing codebook 7 is barely noticeable.\n- **Using reconstruction quality as the only metric.** A codec can have great reconstruction but be useless for LM-based generation if the semantic structure is bad.",
+    "keyPoints": [
+      "Too many codebooks.: Adding codebooks increases fidelity linearly but LM sequence length linearly too. Stop at 8-12.",
+      "Frame-rate mismatch.: Training LM on 12.5 Hz Mimi then fine-tuning on 50 Hz EnCodec fails silently.",
+      "Assuming all codebooks equal.: In Mimi, codebook 0 carries content; losing it destroys intelligibility. Losing codebook 7 is barely noticeable.",
+      "Using reconstruction quality as the only metric.: A codec can have great reconstruction but be useless for LM-based generation if the semantic structure is bad."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Save as `outputs/skill-codec-picker.md`. Pick a codec for a given generative or compression task.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Run `code/main.py`. It implements a toy scalar + residual quantizer and measures reconstruction error as you add codebooks.\n2. **Medium.** Install `encodec` and compare 1, 4, 8, 32 codebooks on a held-out speech clip. Plot PESQ or MSE vs bitrate.\n3. **Hard.** Load Mimi. Encode a clip. Replace codebook 0 with random integers; decode. Then replace codebook 7 similarly. Compare the two corruptions — codebook 0 corruption should destroy intelligibility; codebook 7 corruption should barely change anything.",
+    "keyPoints": [
+      "Easy.",
+      "Medium."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| RVQ | Residual quantization | Cascade of small codebooks; each quantizes the previous residual. |\n| Frame rate | Codec speed | How many token-frames per second. Lower = faster LM. |\n| Semantic codebook | Codebook 0 (Mimi) | Codebook distilled from SSL features; encodes content. |\n| Acoustic codebooks | Everything else | Timbre, prosody, noise, fine detail. |\n| PESQ / ViSQOL | Perceptual quality | Objective metrics correlating with MOS. |\n| EnCodec | Meta codec | The RVQ baseline; used by MusicGen. |\n| Mimi | Kyutai codec | 12.5 Hz frame rate; semantic-acoustic split; powers Moshi. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Défossez et al. (2023). EnCodec](https://arxiv.org/abs/2210.13438) — the RVQ baseline.\n- [Kumar et al. (2023). Descript Audio Codec (DAC)](https://arxiv.org/abs/2306.06546) — highest-fidelity open.\n- [Siuzdak (2024). SNAC](https://arxiv.org/abs/2410.14411) — multi-scale RVQ.\n- [Kyutai (2024). Mimi codec](https://kyutai.org/codec-explainer) — semantic-acoustic split, WavLM distillation.\n- [Borsos et al. (2023). AudioLM](https://arxiv.org/abs/2209.03143) — the two-stage semantic/acoustic paradigm.\n- [Zeghidour et al. (2021). SoundStream](https://arxiv.org/abs/2107.03312) — the original streamable RVQ codec.",
+    "keyPoints": [
+      "[Défossez et al. (2023). EnCodec](https://arxiv.org/abs/2210.13438) — the RVQ baseline.",
+      "[Kumar et al. (2023). Descript Audio Codec (DAC)](https://arxiv.org/abs/2306.06546) — highest-fidelity open.",
+      "[Siuzdak (2024). SNAC](https://arxiv.org/abs/2410.14411) — multi-scale RVQ.",
+      "[Kyutai (2024). Mimi codec](https://kyutai.org/codec-explainer) — semantic-acoustic split, WavLM distillation.",
+      "[Borsos et al. (2023). AudioLM](https://arxiv.org/abs/2209.03143) — the two-stage semantic/acoustic paradigm.",
+      "[Zeghidour et al. (2021). SoundStream](https://arxiv.org/abs/2107.03312) — the original streamable RVQ codec."
+    ],
+    "commands": []
+  }
+]

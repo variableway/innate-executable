@@ -1,0 +1,101 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Gradient Accumulation\n\n> Train at an effective batch you cannot afford, one micro-batch at a time. Scale the loss, hold the optimizer step, and let the gradients pile up.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 19 lessons 42 to 45\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Derive the effective batch identity: `effective_batch = micro_batch * accum_steps`.\n- Implement loss-per-micro-batch scaling so the accumulated gradient matches a single full-batch backward.\n- Skip optimizer synchronization until the last micro-batch (sync-on-last-step).\n- Read a throughput against effective batch curve and explain the diminishing return.",
+    "keyPoints": [
+      "Derive the effective batch identity: `effective_batch = micro_batch * accum_steps`.",
+      "Implement loss-per-micro-batch scaling so the accumulated gradient matches a single full-batch backward.",
+      "Skip optimizer synchronization until the last micro-batch (sync-on-last-step).",
+      "Read a throughput against effective batch curve and explain the diminishing return."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You want to train at an effective batch of 512 because the loss curve is smoother and the optimizer step makes more sense at that scale. The accelerator on the desk holds 32 examples before it runs out of memory. Doubling the batch is not an option. Halving the model is not an option. The trick the field reached for in 2017 and never stopped using is to run 16 backward passes, let the gradients accumulate inside the parameter buffers, and only step the optimizer when the count reaches the target.\n\nThe risk is that the loss is no longer the same number it was at the bigger batch. The cross entropy of 16 mini-batches summed naively is 16 times the loss of one full batch. Without scaling, the gradient direction is correct but the magnitude is wrong, and the optimizer step is 16 times too big. The fix is one division. The fix is also easy to forget.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "```mermaid\nflowchart LR\n  start[start] --> zero[zero grads]\n  zero --> mb1[micro batch 1: forward + scaled backward]\n  mb1 --> mb2[micro batch 2: forward + scaled backward]\n  mb2 --> dots[...]\n  dots --> mbN[micro batch N: forward + scaled backward + sync]\n  mbN --> step[optimizer step]\n  step --> next[next effective step]\n```\n\nThe contract is short:\n\n- Loss for each micro-batch is divided by `accum_steps` before `backward()`. PyTorch sums gradients into `param.grad` by default; the division pushes the running sum back into the right scale.\n- The optimizer step fires once per effective batch, after the last micro-batch's backward. Stepping mid-accumulation skews every parameter the rest of the run depends on.\n- The optimizer's state (momentum buffers, Adam moments) advances once per effective step, not once per micro-batch. The exponential moving averages would otherwise see the wrong frequency and burn through the schedule.\n- On a single device this is bookkeeping. On a multi-rank cluster the same pattern wraps the non-final micro-batches in a `no_sync` context that skips the gradient all-reduce; the last micro-batch reduces the full accumulated gradient in one pass instead of paying the network cost N times.\n\n### The equivalence proof in code\n\n```python\nloss = criterion(model(x_full), y_full)\nloss.backward()\nopt.step()\n```\n\nis equivalent to\n\n```python\nfor x, y in chunks(x_full, y_full, n):\n    scaled = criterion(model(x), y) / n\n    scaled.backward()\nopt.step()\n```\n\nup to floating point summation order. The accumulated gradient buffer at the end of the loop is the same tensor that a single full-batch backward would produce. The lesson code asserts this with a max-abs difference under 1e-4 in `equivalence_check`.\n\n### Where the cost goes\n\nEach micro-batch costs one forward and one backward. With accumulation you trade memory for time. The throughput curve in `outputs/accum-curve.json` shows what happens as the effective batch grows at fixed micro-batch:\n\n```mermaid\nflowchart TD\n  micro[fixed micro batch] --> small[small accum: low loss noise budget, high stepper churn]\n  micro --> large[large accum: smooth loss, optimizer step rare]\n  small --> sps1[samples per second saturates at hardware limit]\n  large --> sps2[samples per second still hits hardware limit]\n  sps1 --> note[total samples per optimizer step scales linearly with accum]\n  sps2 --> note\n```\n\nThere is no free lunch. Doubling `accum_steps` doubles the wall time per optimizer step. What changes is the variance of the gradient estimate: at the same wall budget you have made fewer optimizer steps but each one was averaged over more samples. The literature treats large batch and small batch as different optimization problems; the lesson here is mechanical, not statistical.\n\n```figure\ncc-grad-accumulation\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` is the runnable artifact. It does three things.\n\n### Step 1: equivalence check\n\n`equivalence_check()` builds two copies of the same network with the same seed. One sees a 16-sample batch in one forward pass. The other sees four 4-sample chunks with the loss divided by four. The function compares the gradient buffers before the optimizer step and the parameters after. The assertion is `max_abs_diff < 1e-4`.\n\n### Step 2: sync-on-last-step pattern\n\n`train_one_optimizer_step` walks micro-batches. For every micro-batch except the last it enters `no_sync_context(model)`. On a single process the context is a no-op; on DDP this is where the gradient all-reduce is skipped. The bookkeeping is the same regardless. A `sync_counter` records how many times we left the no_sync scope; for N micro-batches the count is one per effective step, not N.\n\n### Step 3: the throughput curve\n\n`sweep_effective_batches` runs the same model with a fixed micro-batch and a list of accumulation steps. For each setting it logs:\n\n- `samples_per_sec`: total samples seen divided by wall time\n- `median_step_ms`: 50th percentile per effective step\n- `sync_calls`: collective points exercised\n- `avg_loss`: average across the sweep's optimizer steps\n\nThe output lands in `outputs/accum-curve.json` and is reusable from a notebook.\n\nRun it:\n\n```bash\npython3 code/main.py\n```\n\nThe script prints the equivalence diff, then the sweep table, then the JSON path. Exit code zero.",
+    "keyPoints": [
+      "`samples_per_sec`: total samples seen divided by wall time",
+      "`median_step_ms`: 50th percentile per effective step",
+      "`sync_calls`: collective points exercised",
+      "`avg_loss`: average across the sweep's optimizer steps"
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "In production training, gradient accumulation lives behind one knob. PyTorch's pattern is `accumulation_steps = effective_batch // (micro_batch * world_size)`. Frameworks that you are not allowed to use here wrap the same loop, but the steps are the same: scale the loss, skip sync on non-final micros, accumulate, step once.\n\nThree patterns in the wild:\n\n- The micro-batch size is chosen to saturate device memory. Anything smaller wastes accelerator cycles. Anything larger crashes.\n- The effective batch is chosen from a learning rate schedule. Large effective batches need scaled learning rates and warmup; this is the linear scaling rule talked about since 2017.\n- The accumulation count is the bridge between the two and the only knob you are free to tune at runtime without rewriting the data loader.",
+    "keyPoints": [
+      "The micro-batch size is chosen to saturate device memory. Anything smaller wastes accelerator cycles. Anything larger crashes.",
+      "The accumulation count is the bridge between the two and the only knob you are free to tune at runtime without rewriting the data loader."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "`outputs/skill-gradient-accumulation.md` captures the recipe so a peer can drop it into a new repo: scale loss by `accum_steps`, skip optimizer sync on non-final micros, step the optimizer once per effective batch, log throughput against effective batch as JSON so the trade is visible.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Re-run the sweep with `--num-steps 100` and plot samples per second against effective batch. Where does the curve flatten?\n2. Add a wrong scaling variant (no division) and show the parameter diff at step 1 against the reference.\n3. Swap SGD for AdamW and confirm the optimizer state advances once per effective step, not once per micro-batch.\n4. Introduce a real `DistributedDataParallel` wrapper and route the `no_sync_context` to its method. Confirm sync_calls drops by N-1 per effective batch.\n5. Modify the equivalence check to compare two different micro splits (2 by 8 vs 4 by 4) and explain any tolerance you need to relax.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|------------------------|\n| Micro batch | The batch you forward | The slice that fits in memory in a single forward pass |\n| Accum steps | Backward passes per step | Number of backwards summed before one optimizer step |\n| Effective batch | The batch | Micro batch times accum steps times data parallel world size |\n| Loss scaling | Divide by N | Per-micro-batch division so summed gradients match full batch |\n| Sync on last | Skip the rest | Only run the gradient collective on the last backward in the window |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- PyTorch docs on `DistributedDataParallel.no_sync` for the production version of the sync-on-last-step trick.\n- Goyal et al., 2017, on linear scaling for large batch training, the canonical reason to care about effective batch.\n- PyTorch issue tracker on gradient accumulation interactions with mixed precision unscaling.\n- Phase 19 lessons 42 to 45 cover the model, data loader, optimizer, and trainer scaffolding this lesson assumes.\n- Phase 19 lesson 47 covers checkpoint and resume so a long accumulation run survives a wallclock cap.",
+    "keyPoints": [
+      "PyTorch docs on `DistributedDataParallel.no_sync` for the production version of the sync-on-last-step trick.",
+      "Goyal et al., 2017, on linear scaling for large batch training, the canonical reason to care about effective batch.",
+      "PyTorch issue tracker on gradient accumulation interactions with mixed precision unscaling.",
+      "Phase 19 lessons 42 to 45 cover the model, data loader, optimizer, and trainer scaffolding this lesson assumes.",
+      "Phase 19 lesson 47 covers checkpoint and resume so a long accumulation run survives a wallclock cap."
+    ],
+    "commands": []
+  }
+]

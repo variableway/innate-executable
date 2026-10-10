@@ -1,0 +1,21 @@
+{
+  "id": "11-llm-engineering/02-few-shot-cot",
+  "slug": "02-few-shot-cot",
+  "phase": "11-llm-engineering",
+  "order": 2,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Few-Shot, Chain-of-Thought, Tree-of-Thought",
+    "zh": ""
+  },
+  "hook": "Telling a model what to do is prompting. Showing it how to think is engineering. The gap between 78% and 91% accuracy on the same model, same task, same data is not a better model. It is a better reasoning strategy.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 11.01 (Prompt Engineering)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

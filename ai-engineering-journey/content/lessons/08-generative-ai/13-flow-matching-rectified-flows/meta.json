@@ -1,0 +1,22 @@
+{
+  "id": "08-generative-ai/13-flow-matching-rectified-flows",
+  "slug": "13-flow-matching-rectified-flows",
+  "phase": "08-generative-ai",
+  "order": 13,
+  "phaseOrder": 8,
+  "title": {
+    "en": "Flow Matching & Rectified Flows",
+    "zh": ""
+  },
+  "hook": "Diffusion models take 20-50 sampling steps because they walk a curved path from noise to data. Flow matching (Lipman et al., 2023) and rectified flow (Liu et al., 2022) trained straight paths. Straighter paths mean fewer steps mean faster inference. Stable Diffusion 3, Flux.1, and AudioCraft 2 all switched to flow matching in 2024.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 8 · 06 (DDPM)",
+    "Phase 1 · Calculus"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

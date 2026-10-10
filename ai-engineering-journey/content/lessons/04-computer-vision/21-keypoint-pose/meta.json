@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/21-keypoint-pose",
+  "slug": "21-keypoint-pose",
+  "phase": "04-computer-vision",
+  "order": 21,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Keypoint Detection & Pose Estimation",
+    "zh": ""
+  },
+  "hook": "A pose is a set of ordered keypoints. A keypoint detector is a heatmap regressor. Everything else is bookkeeping.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 06 (Detection)",
+    "Phase 4 Lesson 07 (U-Net)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

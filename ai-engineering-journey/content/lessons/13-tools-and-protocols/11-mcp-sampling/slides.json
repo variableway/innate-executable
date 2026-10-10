@@ -1,0 +1,160 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# MCP Model Input: Sampling Migration and Stateless MRTR\n\n> MCP 2026-07-28 deprecates Sampling for new designs and removes the server-to-client request channel. If an existing workflow still needs the client's model, the server returns an `input_required` result and the client retries the original request with the model output. The reasoning loop becomes explicit, bounded, and stateless at the protocol layer.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 13 · 07 (MCP server), Phase 13 · 10 (resources and prompts)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Explain why Sampling is deprecated in MCP 2026-07-28 and choose the direct model integration default for new servers.\n- Implement a compatibility workflow that carries `sampling/createMessage` through Multi Round-Trip Requests (MRTR).\n- Put the protocol revision and client capabilities in every request `_meta` object.\n- Return `resultType: \"input_required\"` and retry the original method with a fresh JSON-RPC id.\n- Integrity-protect `requestState` and bind it to the principal, method, arguments, and expiry.\n- Bound model-assisted loops with capability checks, approval, response validation, and a round limit.",
+    "keyPoints": [
+      "Explain why Sampling is deprecated in MCP 2026-07-28 and choose the direct model integration default for new servers.",
+      "Implement a compatibility workflow that carries `sampling/createMessage` through Multi Round-Trip Requests (MRTR).",
+      "Put the protocol revision and client capabilities in every request `_meta` object.",
+      "Return `resultType: \"input_required\"` and retry the original method with a fresh JSON-RPC id.",
+      "Integrity-protect `requestState` and bind it to the principal, method, arguments, and expiry.",
+      "Bound model-assisted loops with capability checks, approval, response validation, and a round limit."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-decision-before-the-protocol",
+    "title": "The Decision Before the Protocol",
+    "bodyMarkdown": "A tool such as `summarize_repo` needs two kinds of work:\n\n1. Deterministic work: list files, read allowed files, validate paths, and assemble content.\n2. Model work: choose representative files and synthesize the summary.\n\nYou now have two valid architectures.\n\n### New server: integrate with a model provider directly\n\nThis is the current default. The server owns model selection, credentials, budgets, retries, and observability. It returns one ordinary `tools/call` result to the MCP client.\n\nChoose this when the server is already a hosted service or when predictable model behavior matters more than using the host's model.\n\n### Existing Sampling workflow: migrate it to MRTR\n\nSampling still exists during its deprecation window. A server targeting 2026-07-28 cannot send a live `sampling/createMessage` request back to the client. It instead embeds that request in an `InputRequiredResult`.\n\nChoose this compatibility path only when using the client's model and credentials is a real product requirement. Record a removal plan because new implementations should not adopt deprecated Sampling.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-stateless-contract",
+    "title": "The Stateless Contract",
+    "bodyMarkdown": "The July 2026 protocol has no `initialize` exchange, no `notifications/initialized`, and no `Mcp-Session-Id`. Every request carries the information that used to live in the handshake:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"summarize_repo\",\n    \"arguments\": {\"audience\": \"developer\"},\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {\"sampling\": {}},\n      \"io.modelcontextprotocol/clientInfo\": {\n        \"name\": \"lesson-client\",\n        \"version\": \"1.0.0\"\n      }\n    }\n  }\n}\n```\n\nThe server validates the revision on every request. A missing or non-string version is invalid params, `-32602`. An unsupported string returns `-32022` with exact data `{\"supported\":[\"2026-07-28\"],\"requested\":\"<client version>\"}`. A missing Sampling capability returns `-32021` with `data.requiredCapabilities` set to `{\"sampling\":{}}`.\n\nAn envelope without a JSON-RPC `id` is a notification. The receiver may process it, but it emits neither a success response nor an error response. A Streamable HTTP adapter returns `202 Accepted` with no body for an accepted notification.\n\nThe server also implements `server/discover` with the exact `supportedVersions` key, capabilities, `ttlMs`, and `cacheScope` so a client can learn and cache the server contract before calling a tool. Because discovery advertises `tools`, the server also implements mandatory `tools/list`. Its deterministic `summarize_repo` descriptor includes a valid object `inputSchema`, `resultType: \"complete\"`, server identity metadata, and public cache hints.\n\nEvery successful modern result has a discriminator:\n\n- `resultType: \"complete\"` means the operation finished.\n- `resultType: \"input_required\"` means the client must fulfill embedded requests and retry.\n- Extensions may define additional result types. The Tasks extension adds `\"task\"` in Lesson 13.",
+    "keyPoints": [
+      "`resultType: \"complete\"` means the operation finished.",
+      "`resultType: \"input_required\"` means the client must fulfill embedded requests and retry.",
+      "Extensions may define additional result types. The Tasks extension adds `\"task\"` in Lesson 13."
+    ],
+    "commands": []
+  },
+  {
+    "id": "one-mrtr-round",
+    "title": "One MRTR Round",
+    "bodyMarkdown": "The server cannot call the client while handling the request. It returns this result instead:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": {\n    \"resultType\": \"input_required\",\n    \"inputRequests\": {\n      \"pick_files\": {\n        \"method\": \"sampling/createMessage\",\n        \"params\": {\n          \"messages\": [\n            {\n              \"role\": \"user\",\n              \"content\": {\n                \"type\": \"text\",\n                \"text\": \"Choose three representative files and return a JSON array.\"\n              }\n            }\n          ],\n          \"systemPrompt\": \"Return only the requested value.\",\n          \"modelPreferences\": {\n            \"costPriority\": 0.8,\n            \"intelligencePriority\": 0.2\n          },\n          \"maxTokens\": 400\n        }\n      }\n    },\n    \"requestState\": \"opaque-integrity-protected-value\"\n  }\n}\n```\n\nThe client verifies that it supports Sampling, applies its approval and model policies, and obtains a model response. Then it sends a new request with a different JSON-RPC id:\n\n```json\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"summarize_repo\",\n    \"arguments\": {\"audience\": \"developer\"},\n    \"inputResponses\": {\n      \"pick_files\": {\n        \"role\": \"assistant\",\n        \"content\": {\n          \"type\": \"text\",\n          \"text\": \"[\\\"README.md\\\", \\\"server.py\\\", \\\"docs/intro.md\\\"]\"\n        },\n        \"model\": \"host-model\",\n        \"stopReason\": \"endTurn\"\n      }\n    },\n    \"requestState\": \"opaque-integrity-protected-value\",\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {\"sampling\": {}}\n    }\n  }\n}\n```\n\nThe retry is not a continuation of a protocol session. It is a new request that repeats the original method and arguments, adds only the current round's `inputResponses`, and echoes `requestState` byte for byte.\n\nMRTR is allowed only on `tools/call`, `prompts/get`, and `resources/read`. A server must not return `input_required` from unrelated methods.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "multi-round-state",
+    "title": "Multi-Round State",
+    "bodyMarkdown": "This lesson needs two model calls:\n\n1. `pick_files` returns a JSON array.\n2. `summary` returns the final prose.\n\nEach retry carries only the responses for that round. The server therefore puts the phase and validated intermediate data into the next `requestState`.\n\nTreat that value as attacker-controlled. Signing a raw phase name is not enough. Bind the state to:\n\n- the authenticated principal, not self-reported `clientInfo`;\n- the originating method;\n- a digest of the original arguments;\n- a short expiry;\n- the current phase and validated intermediate values.\n\nUse HMAC when confidentiality is not required. Use authenticated encryption when the client must not read the state. Reject a bad signature, expired value, changed principal, or changed arguments with `-32602`.\n\nThe client must not parse or modify `requestState`. Its only job is to echo the exact string on the retry.",
+    "keyPoints": [
+      "the authenticated principal, not self-reported `clientInfo`;",
+      "the originating method;",
+      "a digest of the original arguments;",
+      "a short expiry;",
+      "the current phase and validated intermediate values."
+    ],
+    "commands": []
+  },
+  {
+    "id": "model-preferences-are-hints",
+    "title": "Model Preferences Are Hints",
+    "bodyMarkdown": "`costPriority`, `speedPriority`, and `intelligencePriority` are independent preferences. They are not a probability distribution and do not need to sum to one. The client may ignore them because the client owns model policy.\n\nKeep `includeContext` at `\"none\"` if you maintain a legacy Sampling flow. Other context modes increase leakage risk and are themselves deprecated. Pass the minimum explicit context in the request.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "safety-invariants",
+    "title": "Safety Invariants",
+    "bodyMarkdown": "The client is the trust boundary for embedded Sampling requests.\n\n- Show the user what the server is asking the model to do when policy requires approval.\n- Cap MRTR rounds. A malicious server can otherwise create a model-spend loop.\n- Validate every sampling response before using it as a filename, URL, or tool input.\n- Limit bytes and tokens per round.\n- Refuse an input request that was not declared in current client capabilities.\n- Keep model output out of authorization decisions.\n- Log the originating method and input-request key without logging sensitive prompt content.\n\n`clientInfo` and `serverInfo` are display and diagnostics metadata. Never use either as an authenticated identity.\n\n```figure\nt3-sampling-flip\n```",
+    "keyPoints": [
+      "Show the user what the server is asking the model to do when policy requires approval.",
+      "Cap MRTR rounds. A malicious server can otherwise create a model-spend loop.",
+      "Validate every sampling response before using it as a filename, URL, or tool input.",
+      "Limit bytes and tokens per round.",
+      "Refuse an input request that was not declared in current client capabilities.",
+      "Keep model output out of authorization decisions."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements the full two-round flow with no third-party package:\n\n- `server/discover` returns `supportedVersions`, advertises tool support, and returns cache hints.\n- `tools/list` returns a deterministic, cacheable `summarize_repo` descriptor with an object input schema.\n- `tools/call` validates per-request metadata.\n- The first result embeds `sampling/createMessage` for file selection.\n- The first retry validates the model result and embeds a second request.\n- HMAC-protected `requestState` carries the phase between independent requests.\n- The final result uses `resultType: \"complete\"`.\n\nThe fake host model makes the example deterministic. Replace only `fake_host_model` when connecting a real host. The server-side state machine should stay deterministic and testable.",
+    "keyPoints": [
+      "`server/discover` returns `supportedVersions`, advertises tool support, and returns cache hints.",
+      "`tools/list` returns a deterministic, cacheable `summarize_repo` descriptor with an object input schema.",
+      "`tools/call` validates per-request metadata.",
+      "The first result embeds `sampling/createMessage` for file selection.",
+      "The first retry validates the model result and embeds a second request.",
+      "HMAC-protected `requestState` carries the phase between independent requests."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "From the repository root:\n\n```bash\ncd phases/13-tools-and-protocols/11-mcp-sampling/code\npython3 main.py\npython3 -m unittest discover tests -v\n```\n\nExpected checkpoints:\n\n- Discovery returns a complete result with `ttlMs` and `cacheScope`.\n- Tool discovery returns the same sorted descriptor with `resultType`, server identity, and cache hints.\n- Missing capabilities and unsupported versions use exact `-32021` and `-32022` error data.\n- An id-less notification produces no JSON-RPC response.\n- Request ids are `[1, 2, 3]`, proving each MRTR round is independent.\n- The first two results are `input_required`.\n- The final result is `complete` and contains the selected files plus summary.\n- Changing the original arguments on a retry fails the request-state check.",
+    "keyPoints": [
+      "Discovery returns a complete result with `ttlMs` and `cacheScope`.",
+      "Tool discovery returns the same sorted descriptor with `resultType`, server identity, and cache hints.",
+      "Missing capabilities and unsupported versions use exact `-32021` and `-32022` error data.",
+      "An id-less notification produces no JSON-RPC response.",
+      "Request ids are `[1, 2, 3]`, proving each MRTR round is independent.",
+      "The first two results are `input_required`."
+    ],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/13-tools-and-protocols/11-mcp-sampling/code\npython3 main.py\npython3 -m unittest discover tests -v"
+      }
+    ]
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "`outputs/skill-sampling-loop-designer.md` is now a migration planner. It first decides whether Sampling should be removed in favor of direct model integration. If compatibility is required, it produces the MRTR rounds, state binding, capability gate, budget, validation, and removal plan.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Change the file-selection response to invalid JSON. Confirm the server returns `-32602` instead of trusting model output.\n2. Change `audience` between the first call and retry. Explain why the sealed state blocks cross-request reuse.\n3. Add a third round that asks the host to critique the summary. Carry the earlier summary inside signed state and cap the entire flow at three rounds.\n4. Remove Sampling by replacing the fake host callback with a server-owned model adapter. List which approval, billing, and observability responsibilities move to the server.\n5. Add an expiry test using a state value that is one second past its deadline.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | Meaning in 2026-07-28 |\n|------|------------------------|\n| Sampling | Deprecated feature that asks the client's model for a completion |\n| MRTR | Stateless retry pattern for client input required during a request |\n| `InputRequiredResult` | Result with `resultType: \"input_required\"` |\n| `inputRequests` | Server-assigned map of embedded elicitation, sampling, or roots requests |\n| `inputResponses` | Current round's client results keyed like `inputRequests` |\n| `requestState` | Opaque server state echoed exactly by the client and verified by the server |\n| `resultType` | Required discriminator for modern MCP results |\n| Direct model integration | Recommended replacement for new servers that need model inference |\n| Capability gate | Rule that prevents sending an embedded request the client did not advertise |\n| Loop budget | Maximum rounds, tokens, bytes, time, and spend allowed for the operation |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "legacy-compatibility",
+    "title": "Legacy Compatibility",
+    "bodyMarkdown": "A client pinned to 2025-11-25 may still use the older server-initiated `sampling/createMessage` flow over a live connection. Keep that behavior in a version-specific adapter only. Do not make the sessionful path the architecture for a 2026-07-28 server.\n\nOfficial SDKs can translate modern `input_required` handlers for older peers. That shim is a compatibility boundary, not permission to add new session-dependent logic.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [MCP 2026-07-28 Multi Round-Trip Requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)\n- [MCP 2026-07-28 changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)\n- [MCP Sampling deprecation](https://modelcontextprotocol.io/seps/2577-deprecate-roots-sampling-and-logging)\n- [MCP 2026-07-28 server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)",
+    "keyPoints": [
+      "[MCP 2026-07-28 Multi Round-Trip Requests](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)",
+      "[MCP 2026-07-28 changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)",
+      "[MCP Sampling deprecation](https://modelcontextprotocol.io/seps/2577-deprecate-roots-sampling-and-logging)",
+      "[MCP 2026-07-28 server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)"
+    ],
+    "commands": []
+  }
+]

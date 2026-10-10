@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/12-text-summarization",
+  "slug": "12-text-summarization",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 12,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Text Summarization",
+    "zh": ""
+  },
+  "hook": "Extractive systems tell you what the document said. Abstractive systems tell you what the author meant. Different tasks, different pitfalls.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 02 (BoW + TF-IDF)",
+    "Phase 5 · 11 (Machine Translation)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

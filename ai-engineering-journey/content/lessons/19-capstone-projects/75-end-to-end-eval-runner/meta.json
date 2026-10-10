@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/75-end-to-end-eval-runner",
+  "slug": "75-end-to-end-eval-runner",
+  "phase": "19-capstone-projects",
+  "order": 75,
+  "phaseOrder": 19,
+  "title": {
+    "en": "End-to-End Eval Runner",
+    "zh": ""
+  },
+  "hook": "Five lessons of plumbing, one lesson to glue them. The runner reads the task spec from lesson 70, calls a model through an adapter, scores with lessons 71 and 72, attaches the calibration report from lesson 73, and emits the leaderboard from lesson 74. Demo self-terminates.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 Track B foundations",
+    "lessons 70 through 74"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

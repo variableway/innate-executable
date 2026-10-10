@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/05-full-transformer",
+  "slug": "05-full-transformer",
+  "phase": "07-transformers-deep-dive",
+  "order": 5,
+  "phaseOrder": 7,
+  "title": {
+    "en": "The Full Transformer — Encoder + Decoder",
+    "zh": ""
+  },
+  "hook": "Attention is the star. Everything else — residuals, normalization, feed-forward, cross-attention — is the scaffolding that lets you stack it deep.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 02 (Self-Attention)",
+    "Phase 7 · 03 (Multi-Head Attention)",
+    "Phase 7 · 04 (Positional Encoding)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

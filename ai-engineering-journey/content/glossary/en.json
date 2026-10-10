@@ -1,0 +1,2937 @@
+[
+  {
+    "term": "Activation Checkpointing",
+    "category": "Math & training",
+    "meaning": "A training-memory technique that saves only selected forward-pass activations and recomputes the omitted ones during backpropagation.",
+    "why": "It lets you train larger models or sequences within a fixed memory budget by trading additional computation for lower activation storage.",
+    "related": [
+      "Autograd",
+      "Backpropagation",
+      "Checkpoint",
+      "Mixed Precision"
+    ]
+  },
+  {
+    "term": "Activation Function",
+    "category": "Math & training",
+    "meaning": "A function applied after a linear or affine layer that introduces nonlinearity. Without it, composing layers with weights and biases collapses to one affine transformation. ReLU, GELU, and SiLU are common choices. The choice directly affects whether gradients flow during training.",
+    "why": "",
+    "related": [
+      "ReLU",
+      "Gradient",
+      "Backpropagation"
+    ]
+  },
+  {
+    "term": "Adam (Optimizer)",
+    "category": "Math & training",
+    "meaning": "Adaptive Moment Estimation. It combines an exponential average of gradients with an exponential average of squared gradients, applies bias correction, and adapts the update scale per parameter. It is a useful baseline, but it still needs a suitable learning rate and schedule.",
+    "why": "",
+    "related": [
+      "AdamW",
+      "Optimizer",
+      "Learning Rate"
+    ]
+  },
+  {
+    "term": "AdamW",
+    "category": "Math & training",
+    "meaning": "An Adam variant that decouples weight decay from the gradient-based parameter update. That makes the shrinkage behavior easier to reason about than adding an L2 penalty inside Adam's adaptively scaled gradient.",
+    "why": "",
+    "related": [
+      "Adam (Optimizer)",
+      "Weight Decay",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Admission Control",
+    "category": "Reliability & operations",
+    "meaning": "A pre-acceptance gate that decides whether a request may enter a bounded queue or service under the system's current capacity, priority, and policy.",
+    "why": "Rejecting excess work at a controlled boundary protects admitted requests from queue growth, timeout cascades, and resource exhaustion.",
+    "related": [
+      "Load Shedding",
+      "Backpressure",
+      "Rate Limit",
+      "Saturation"
+    ]
+  },
+  {
+    "term": "Agent",
+    "category": "Agents & tools",
+    "meaning": "A software system that lets a model select actions toward a goal, observe tool or environment results, and continue under an orchestration policy. An agent may use a loop, a state machine, a workflow engine, or human approvals. The model is one component, not the entire system.",
+    "why": "Reliability comes from the harness, tool contracts, state, permissions, and verification around the model.",
+    "related": [
+      "Agent Harness",
+      "Agent State",
+      "Tool Contract",
+      "Human-in-the-Loop (HITL)"
+    ]
+  },
+  {
+    "term": "Agent Harness",
+    "category": "Agents & tools",
+    "meaning": "The runtime around a model that assembles context, exposes tools, manages state, enforces limits, records traces, and decides when the agent should continue, retry, ask, or stop.",
+    "why": "Two systems using the same model can perform very differently because their harnesses provide different context, tools, feedback, and safety boundaries.",
+    "related": [
+      "Agent",
+      "Tool Contract",
+      "Agent State",
+      "Verification Gate",
+      "Sandbox"
+    ]
+  },
+  {
+    "term": "Agent Memory",
+    "category": "Agents & tools",
+    "meaning": "Information stored outside the model and selected for use in later agent steps, such as prior decisions, user preferences, task episodes, or verified facts.",
+    "why": "It gives an agent continuity beyond one context window without forcing every past event into every prompt.",
+    "related": [
+      "Agent State",
+      "Context Engineering",
+      "Checkpoint",
+      "Semantic Cache"
+    ]
+  },
+  {
+    "term": "Agent State",
+    "category": "Agents & tools",
+    "meaning": "The explicit data an agent carries across steps, such as the current objective, completed actions, tool results, open questions, budgets, approvals, and artifact references.",
+    "why": "Explicit state makes long tasks resumable, inspectable, and less dependent on the model reconstructing progress from a transcript.",
+    "related": [
+      "Checkpoint",
+      "Durable Execution",
+      "Context Engineering",
+      "Handoff"
+    ]
+  },
+  {
+    "term": "Agent Skill",
+    "category": "Agents & tools",
+    "meaning": "A discoverable directory of procedural instructions whose entry point is `SKILL.md`, with optional references, scripts, and assets that a compatible runtime can load in stages.",
+    "why": "It packages reusable task knowledge separately from one conversation while keeping deeper context and deterministic helpers available on demand.",
+    "related": [
+      "Skill Bundle",
+      "Skill Catalog",
+      "Skill Invocation",
+      "Progressive Disclosure",
+      "MCP (Model Context Protocol)"
+    ]
+  },
+  {
+    "term": "AI Risk Assessment",
+    "category": "Security & governance",
+    "meaning": "A documented analysis of how an AI system can affect people, organizations, and environments, including context, hazards, likelihood, impact, controls, residual risk, and monitoring responsibilities.",
+    "why": "Model capability alone does not determine risk. Deployment context, affected groups, human authority, data, and system integrations change both the harms and the controls required.",
+    "related": [
+      "Threat Model",
+      "Guardrails",
+      "Human-in-the-Loop (HITL)",
+      "Data Classification"
+    ]
+  },
+  {
+    "term": "Alignment",
+    "category": "Evaluation & safety",
+    "meaning": "The effort to make a model or AI system behave in ways that match intended goals, constraints, and human preferences across both expected and adversarial situations.",
+    "why": "A system can optimize the stated metric while violating the user's real intent, so alignment requires evaluation, oversight, and system controls as well as model training.",
+    "related": [
+      "Guardrails",
+      "Evaluation (Eval)",
+      "Human-in-the-Loop (HITL)"
+    ]
+  },
+  {
+    "term": "Approval Gate",
+    "category": "Agents & tools",
+    "meaning": "A control point that blocks a consequential action until an authorized person or policy grants permission.",
+    "why": "It limits the blast radius of uncertain model decisions while preserving automation for reversible work.",
+    "related": [
+      "Human-in-the-Loop (HITL)",
+      "Verification Gate",
+      "Least Privilege"
+    ]
+  },
+  {
+    "term": "Approximate Nearest Neighbor (ANN)",
+    "category": "Retrieval & generation",
+    "meaning": "A search method that returns vectors likely to be among the nearest to a query without exhaustively comparing the query with every stored vector.",
+    "why": "Approximation makes large vector indexes practical, but it introduces a measurable tradeoff between search speed, memory, and retrieval recall.",
+    "related": [
+      "Vector Database",
+      "HNSW",
+      "Cosine Similarity",
+      "Recall@K"
+    ]
+  },
+  {
+    "term": "Attention",
+    "category": "Models & inference",
+    "meaning": "A mechanism that forms contextual representations by comparing query vectors with key vectors, normalizing the resulting scores, and using them to combine value vectors. Masks, position rules, or sparse patterns can restrict which positions participate.",
+    "why": "Attention lets a model route information between sequence positions, but it does not by itself explain or prove what the model understood.",
+    "related": [
+      "Self-Attention",
+      "Transformer",
+      "KV Cache"
+    ]
+  },
+  {
+    "term": "Audio Token",
+    "category": "Multimodal systems",
+    "meaning": "A discrete identifier produced by an audio codec or tokenizer for a short segment or feature of an audio signal, sometimes across several codebooks.",
+    "why": "Discrete audio representations let sequence models process, predict, store, or generate sound using token-oriented architectures.",
+    "related": [
+      "Token",
+      "Embedding",
+      "Automatic Speech Recognition (ASR)",
+      "Multimodal Model"
+    ]
+  },
+  {
+    "term": "Audit Log",
+    "category": "Security & governance",
+    "meaning": "A durable, access-controlled record of security- or accountability-relevant events, including who or what acted, what changed, when it happened, and the resulting status.",
+    "why": "Consequential agent actions need evidence that supports investigation, policy review, and responsibility beyond performance debugging.",
+    "related": [
+      "Trace",
+      "Observability",
+      "Approval Gate",
+      "Provenance Attestation"
+    ]
+  },
+  {
+    "term": "Autograd",
+    "category": "Math & training",
+    "meaning": "A system that records or transforms tensor operations so it can compute derivatives, usually with reverse-mode automatic differentiation. You write the forward computation and the framework derives the gradients needed for backpropagation.",
+    "why": "",
+    "related": [
+      "Backpropagation",
+      "Gradient",
+      "Tensor"
+    ]
+  },
+  {
+    "term": "Automatic Speech Recognition (ASR)",
+    "category": "Multimodal systems",
+    "meaning": "The task and system pipeline that maps a speech signal to a transcription, often with optional token or segment timing and confidence information.",
+    "why": "Speech interfaces depend on more than language modeling. Acoustic variation, segmentation, decoding, vocabulary, and domain conditions all affect the final transcript.",
+    "related": [
+      "Audio Token",
+      "Encoder",
+      "Tokenization",
+      "Multimodal Model"
+    ]
+  },
+  {
+    "term": "Autoregressive",
+    "category": "Models & inference",
+    "meaning": "A factorization in which each output token is predicted from the tokens that precede it. During generation, the selected token is appended to the sequence and becomes part of the next prediction's context.",
+    "why": "",
+    "related": [
+      "Token",
+      "Temperature",
+      "KV Cache"
+    ]
+  },
+  {
+    "term": "Autoscaling",
+    "category": "Infrastructure & serving",
+    "meaning": "A control loop that changes the number or capacity of serving workers from observed demand, resource use, or application metrics within configured bounds.",
+    "why": "AI workloads can change faster than manual provisioning, but scaling decisions must account for model-load time, accelerator availability, queueing, and request cost.",
+    "related": [
+      "Model Serving",
+      "Saturation",
+      "Readiness Probe",
+      "Backpressure"
+    ]
+  },
+  {
+    "term": "Availability",
+    "category": "Reliability & operations",
+    "meaning": "The proportion of eligible service interactions or time windows in which users can obtain the defined acceptable service under a stated measurement boundary.",
+    "why": "A service can be running while users still cannot complete useful requests, so availability must be tied to user-visible success rather than process uptime alone.",
+    "related": [
+      "Service Level Indicator (SLI)",
+      "Service Level Objective (SLO)",
+      "Error Budget",
+      "Incident Response"
+    ]
+  },
+  {
+    "term": "Backpressure",
+    "category": "AI-native development",
+    "meaning": "A flow-control mechanism that slows or rejects upstream work when a downstream component cannot process it safely at the current rate.",
+    "why": "Without backpressure, queued agent runs, tool calls, or streamed events can exhaust memory, exceed rate limits, and amplify retries.",
+    "related": [
+      "Rate Limit",
+      "Retry with Backoff",
+      "Circuit Breaker"
+    ]
+  },
+  {
+    "term": "Backpropagation",
+    "category": "Math & training",
+    "meaning": "An efficient application of the chain rule that propagates derivatives from a scalar loss backward through a computation graph. It computes gradients; an optimizer uses those gradients to update parameters.",
+    "why": "",
+    "related": [
+      "Autograd",
+      "Gradient",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Batch Size",
+    "category": "Math & training",
+    "meaning": "The number of examples whose losses contribute to one gradient estimate before an optimizer update. Larger batches can improve hardware utilization and reduce gradient noise, but they require more memory and may need different learning-rate or scheduling choices.",
+    "why": "",
+    "related": [
+      "Learning Rate",
+      "Gradient",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Benchmark Contamination",
+    "category": "Evaluation & safety",
+    "meaning": "Overlap or information leakage between evaluation examples and data used to pretrain, tune, prompt, select, or otherwise improve the evaluated system.",
+    "why": "Contamination can make a benchmark score reflect prior exposure rather than the ability to generalize to unseen tasks.",
+    "related": [
+      "Data Leakage",
+      "Data Deduplication",
+      "Eval Set",
+      "Exact Match (EM)"
+    ]
+  },
+  {
+    "term": "BM25",
+    "category": "Retrieval & generation",
+    "meaning": "A lexical ranking function that scores a document from query-term matches while accounting for term rarity, repeated occurrences, and document length.",
+    "why": "It is a strong exact-term retrieval baseline and complements dense retrieval for identifiers, rare words, and domain-specific phrases.",
+    "related": [
+      "Hybrid Retrieval",
+      "Dense Retrieval",
+      "Reranker",
+      "RAG (Retrieval-Augmented Generation)"
+    ]
+  },
+  {
+    "term": "Byte Pair Encoding (BPE)",
+    "category": "Data & representations",
+    "meaning": "A subword-tokenization method that repeatedly merges frequent adjacent units to construct a fixed vocabulary from training text.",
+    "why": "It balances vocabulary size with the ability to represent rare or unseen words as smaller units.",
+    "related": [
+      "Tokenization",
+      "Vocabulary",
+      "Token",
+      "Embedding"
+    ]
+  },
+  {
+    "term": "Calibration",
+    "category": "Evaluation & safety",
+    "meaning": "The agreement between a system's stated confidence and the observed frequency with which predictions at that confidence are correct.",
+    "why": "A system can be accurate on average yet dangerously overconfident on the cases where people rely on its score.",
+    "related": [
+      "Softmax",
+      "Evaluation (Eval)",
+      "Precision & Recall",
+      "Logits"
+    ]
+  },
+  {
+    "term": "Canary Release",
+    "category": "Reliability & operations",
+    "meaning": "A deployment strategy that exposes a new version to a limited slice of traffic or infrastructure before expanding the rollout.",
+    "why": "It limits the impact of defects and gives you production evidence before the new model, prompt, agent, or service reaches everyone.",
+    "related": [
+      "Evaluation (Eval)",
+      "Observability",
+      "Rollback",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "Chain of Thought (CoT)",
+    "category": "Prompting & context",
+    "meaning": "Intermediate reasoning used to decompose a task before producing an answer. A prompt can request a visible rationale, while some systems use internal reasoning that is not returned to the user.",
+    "why": "Decomposition can help on multi-step tasks, but a fluent rationale is not proof that the answer is correct or that the text faithfully represents the model's internal computation.",
+    "related": [
+      "Prompt Engineering",
+      "Verification Gate",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "Checkpoint",
+    "category": "Agents & tools",
+    "meaning": "A durable snapshot used to resume from a known boundary. In a workflow, it stores operational state and artifact references. In model training, it can store parameters, optimizer state, scheduler state, and the training position.",
+    "why": "Long-running workflows and training runs can recover from interruption without replaying completed work or losing expensive progress.",
+    "related": [
+      "Agent State",
+      "Durable Execution",
+      "Parameter",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Chunked Prefill",
+    "category": "Infrastructure & serving",
+    "meaning": "A serving technique that divides a long prompt's prefill work into smaller schedulable pieces so prompt processing can interleave with decode work from other requests.",
+    "why": "One long prompt can otherwise occupy the accelerator and delay active generations, producing poor tail latency even when total throughput looks healthy.",
+    "related": [
+      "Prefill",
+      "Decode Phase",
+      "Dynamic Batching",
+      "Tail Latency"
+    ]
+  },
+  {
+    "term": "Chunking",
+    "category": "Retrieval & generation",
+    "meaning": "Dividing source material into retrievable units before indexing. Chunk boundaries, overlap, metadata, and document structure determine whether retrieval returns enough context without flooding the prompt.",
+    "why": "The right chunking strategy depends on document shape, query type, embedding model, and evaluation results. There is no universal token size or overlap percentage.",
+    "related": [
+      "RAG (Retrieval-Augmented Generation)",
+      "Reranker",
+      "Grounding"
+    ]
+  },
+  {
+    "term": "Circuit Breaker",
+    "category": "AI-native development",
+    "meaning": "A reliability control that temporarily stops calls to a dependency after failures cross a threshold, then probes whether the dependency has recovered.",
+    "why": "It prevents repeated model or tool failures from consuming latency, budget, and capacity across the rest of the system.",
+    "related": [
+      "Retry with Backoff",
+      "Rate Limit",
+      "Model Router",
+      "Backpressure"
+    ]
+  },
+  {
+    "term": "CNN (Convolutional Neural Network)",
+    "category": "Models & inference",
+    "meaning": "A neural network that uses convolution operations (sliding filters over the input) to detect local patterns. Stacking convolutions detects increasingly complex features: edges, textures, objects.",
+    "why": "",
+    "related": [
+      "Feature",
+      "Inductive Bias",
+      "Activation Function"
+    ]
+  },
+  {
+    "term": "Coding Agent",
+    "category": "AI-native development",
+    "meaning": "An agent specialized for software work that can inspect a repository, edit files, run development tools, and use their outputs to advance a scoped engineering task.",
+    "why": "Its value depends on repository context, tool permissions, review boundaries, and verification, not only code generation quality.",
+    "related": [
+      "Agent Harness",
+      "Repository Map",
+      "Patch",
+      "Scope Contract",
+      "Reviewer Agent"
+    ]
+  },
+  {
+    "term": "Compensating Action",
+    "category": "Agents & tools",
+    "meaning": "A deliberate operation that semantically counteracts a completed side effect when the original operation cannot be rolled back atomically.",
+    "why": "Multi-step agent workflows cross databases and external services where a later failure cannot undo earlier writes through one transaction.",
+    "related": [
+      "Durable Execution",
+      "Idempotency",
+      "Checkpoint",
+      "Approval Gate"
+    ]
+  },
+  {
+    "term": "Content Provenance",
+    "category": "Security & governance",
+    "meaning": "Verifiable information about the origin and editing history of a piece of media or other digital content, including the actors, tools, transformations, and assertions attached to it.",
+    "why": "Generative systems make origin claims difficult to infer from appearance alone, so consumers and platforms need inspectable evidence about how content was produced.",
+    "related": [
+      "Data Provenance",
+      "Provenance Attestation",
+      "Audit Log",
+      "Grounding"
+    ]
+  },
+  {
+    "term": "Context Compression",
+    "category": "Prompting & context",
+    "meaning": "Reducing the token footprint of source material while attempting to preserve the information required for a later model decision.",
+    "why": "Compression can make long tasks fit within budget, but every omitted detail creates a risk that the model loses evidence, constraints, or unresolved state.",
+    "related": [
+      "Token Budget",
+      "Context Engineering",
+      "Progressive Disclosure",
+      "Handoff"
+    ]
+  },
+  {
+    "term": "Context Engineering",
+    "category": "Prompting & context",
+    "meaning": "Designing the full information environment supplied to a model at each step, including instructions, selected files, retrieved evidence, tool results, examples, state, and output constraints.",
+    "why": "Model performance often fails because relevant evidence is missing, stale, badly ordered, or overwhelmed by noise.",
+    "related": [
+      "Context Window",
+      "Progressive Disclosure",
+      "Agent State",
+      "Repository Map"
+    ]
+  },
+  {
+    "term": "Context Window",
+    "category": "Prompting & context",
+    "meaning": "The maximum token capacity available to one model inference under a specific model and API contract. The capacity may include system instructions, messages, retrieved content, tool exchanges, and generated output, with provider-specific accounting and output limits.",
+    "why": "Conversation history is only available when the application sends or reconstructs it. A large window does not guarantee that every included detail will be used reliably.",
+    "related": [
+      "Token Budget",
+      "Context Engineering",
+      "Prompt Cache",
+      "Agent State"
+    ]
+  },
+  {
+    "term": "Continuous Batching",
+    "category": "Infrastructure & serving",
+    "meaning": "A serving scheduler that adds and removes generation requests at iteration boundaries instead of waiting for every request in a fixed batch to finish.",
+    "why": "Autoregressive requests produce different output lengths, so continuous batching can keep accelerators utilized without forcing short requests to wait for the longest one.",
+    "related": [
+      "Dynamic Batching",
+      "Decode Phase",
+      "Backpressure",
+      "Rate Limit"
+    ]
+  },
+  {
+    "term": "Contrastive Learning",
+    "category": "Math & training",
+    "meaning": "Training by pulling similar pairs closer and pushing dissimilar pairs apart in embedding space. CLIP uses this: matching image-text pairs vs non-matching ones.",
+    "why": "",
+    "related": [
+      "Embedding",
+      "Cosine Similarity",
+      "Loss Function"
+    ]
+  },
+  {
+    "term": "Cosine Similarity",
+    "category": "Data & representations",
+    "meaning": "The normalized dot product of two vectors. It compares their direction rather than their magnitude and ranges from -1 to 1 for real-valued vectors.",
+    "why": "",
+    "related": [
+      "Embedding",
+      "Semantic Search",
+      "Reranker"
+    ]
+  },
+  {
+    "term": "Cost per Successful Task",
+    "category": "AI-native development",
+    "meaning": "Total system cost divided by the number of tasks that satisfy a defined success criterion, including retries, failed runs, tool use, and evaluation overhead.",
+    "why": "A cheap model call can produce an expensive workflow if it fails often or requires repeated human correction.",
+    "related": [
+      "Evaluation (Eval)",
+      "Retry with Backoff",
+      "Model Router",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "Cross-Attention",
+    "category": "Multimodal systems",
+    "meaning": "Attention in which the query representation comes from one sequence or representation while keys and values come from another.",
+    "why": "It gives one stream a learnable way to retrieve information from another, such as language tokens attending to visual features.",
+    "related": [
+      "Attention",
+      "Self-Attention",
+      "Vision-Language Model (VLM)",
+      "Multimodal Fusion"
+    ]
+  },
+  {
+    "term": "Cross-Entropy",
+    "category": "Math & training",
+    "meaning": "A loss based on the negative log probability assigned to the target outcome. In next-token training, it penalizes the model when it assigns low probability to the observed next token.",
+    "why": "",
+    "related": [
+      "Loss Function",
+      "Softmax",
+      "Perplexity"
+    ]
+  },
+  {
+    "term": "CUDA",
+    "category": "Models & inference",
+    "meaning": "NVIDIA's platform and programming model for general-purpose computation on compatible GPUs. Deep-learning frameworks use CUDA libraries and kernels to execute many tensor operations in parallel.",
+    "why": "",
+    "related": [
+      "Tensor",
+      "Mixed Precision",
+      "JAX"
+    ]
+  },
+  {
+    "term": "Data Augmentation",
+    "category": "Math & training",
+    "meaning": "Creating modified examples, such as transformed images, perturbed audio, or paraphrased text, to increase training diversity without collecting entirely new source data. It can reduce overfitting when the transformation preserves the task signal.",
+    "why": "",
+    "related": [
+      "Overfitting",
+      "Epoch",
+      "Eval Set"
+    ]
+  },
+  {
+    "term": "Data Classification",
+    "category": "Security & governance",
+    "meaning": "Assigning data to documented sensitivity or impact classes so handling, access, retention, sharing, and incident rules follow the consequences of disclosure or loss.",
+    "why": "An AI pipeline cannot apply proportionate controls if source documents, prompts, traces, and generated artifacts are treated as equally sensitive.",
+    "related": [
+      "Data Minimization",
+      "Trust Boundary",
+      "Least Privilege",
+      "Audit Log"
+    ]
+  },
+  {
+    "term": "Data Deduplication",
+    "category": "Data & representations",
+    "meaning": "Detecting and removing exact and near-duplicate examples within or across datasets.",
+    "why": "Repetition can distort the training distribution, increase memorization, leak test material, and make evaluation appear stronger than it is.",
+    "related": [
+      "Data Provenance",
+      "Benchmark Contamination",
+      "Dataset Split",
+      "Overfitting"
+    ]
+  },
+  {
+    "term": "Data Exfiltration",
+    "category": "Security & governance",
+    "meaning": "Unauthorized transfer of protected data from a system or trust zone to a person, tool, service, or storage location that is not permitted to receive it.",
+    "why": "An agent can expose secrets through generated text, tool arguments, URLs, logs, or side effects even when the original data store remains intact.",
+    "related": [
+      "Trust Boundary",
+      "Least Privilege",
+      "Indirect Prompt Injection",
+      "Audit Log"
+    ]
+  },
+  {
+    "term": "Data Leakage",
+    "category": "Data & representations",
+    "meaning": "Unintended use of information during training or feature construction that would not be available at the real prediction point or belongs to a held-out evaluation boundary.",
+    "why": "Leakage produces optimistic metrics that collapse when the system encounters genuinely unseen inputs.",
+    "related": [
+      "Dataset Split",
+      "Benchmark Contamination",
+      "Eval Set",
+      "Data Provenance"
+    ]
+  },
+  {
+    "term": "Data Lineage",
+    "category": "Security & governance",
+    "meaning": "A record of how a data artifact was derived across sources, transformations, joins, filters, versions, and downstream uses.",
+    "why": "When a source is corrected, revoked, or found unsafe, lineage identifies which datasets, embeddings, evaluations, and model artifacts may be affected.",
+    "related": [
+      "Data Provenance",
+      "Datasheet for Datasets",
+      "Audit Log",
+      "Content Provenance"
+    ]
+  },
+  {
+    "term": "Data Minimization",
+    "category": "Security & governance",
+    "meaning": "For personal data, limiting what is collected, processed, exposed, and retained to what is necessary for a specified purpose. Teams can apply the same discipline to sensitive non-personal data as an engineering control.",
+    "why": "Every unnecessary field placed in a prompt, trace, cache, or tool call increases privacy exposure and the possible impact of misuse or compromise.",
+    "related": [
+      "Purpose Limitation",
+      "Data Classification",
+      "Least Privilege",
+      "Context Engineering"
+    ]
+  },
+  {
+    "term": "Data Provenance",
+    "category": "Data & representations",
+    "meaning": "Traceable information about where data originated, who or what transformed it, which versions were used, and how derived artifacts relate to their sources.",
+    "why": "You need provenance to reproduce results, honor usage constraints, investigate contamination, and remove affected data when a source changes.",
+    "related": [
+      "Dataset Split",
+      "Data Deduplication",
+      "Provenance Attestation",
+      "Grounding"
+    ]
+  },
+  {
+    "term": "Dataset Split",
+    "category": "Data & representations",
+    "meaning": "A documented partition of examples into separate subsets for fitting, development decisions, and final evaluation.",
+    "why": "Separation prevents the evidence used to choose a system from also serving as independent proof that the chosen system generalizes.",
+    "related": [
+      "Eval Set",
+      "Overfitting",
+      "Data Leakage",
+      "Distribution Shift"
+    ]
+  },
+  {
+    "term": "Datasheet for Datasets",
+    "category": "Security & governance",
+    "meaning": "Structured documentation of a dataset's motivation, composition, collection process, preprocessing, uses, distribution, maintenance, and known limitations.",
+    "why": "A dataset is not safe or suitable merely because it is available. Downstream builders need evidence about how it was created and where its assumptions break.",
+    "related": [
+      "Data Lineage",
+      "Data Provenance",
+      "Model Card",
+      "Dataset Split"
+    ]
+  },
+  {
+    "term": "Deadline Propagation",
+    "category": "Reliability & operations",
+    "meaning": "Passing the remaining end-to-end time budget to downstream calls so each dependency knows how long the original request can still usefully wait.",
+    "why": "Independent timeouts can exceed the user's deadline and leave abandoned work consuming capacity after the result is no longer useful.",
+    "related": [
+      "Retry with Backoff",
+      "Retry Budget",
+      "Tail Latency",
+      "Service Level Objective (SLO)"
+    ]
+  },
+  {
+    "term": "Decode Phase",
+    "category": "Infrastructure & serving",
+    "meaning": "The iterative stage of autoregressive inference that generates new tokens one step at a time after the input prefix has been processed.",
+    "why": "Decode work has different compute, memory, and scheduling behavior from prefill, so one aggregate latency number can hide the actual serving bottleneck.",
+    "related": [
+      "Prefill",
+      "Autoregressive",
+      "KV Cache",
+      "Time per Output Token (TPOT)"
+    ]
+  },
+  {
+    "term": "Decoder",
+    "category": "Models & inference",
+    "meaning": "A component that maps a representation into an output. In an encoder-decoder transformer, the decoder uses masked self-attention and cross-attention to generate outputs. Decoder-only language models instead generate from a single causal stack.",
+    "why": "",
+    "related": [
+      "Encoder",
+      "Transformer",
+      "Autoregressive"
+    ]
+  },
+  {
+    "term": "Decoding Strategy",
+    "category": "Models & inference",
+    "meaning": "The algorithm that converts a model's sequence of next-token scores into selected tokens and a completed output.",
+    "why": "Greedy selection, sampling, truncation, and search can produce different quality, diversity, latency, and repeatability from the same logits.",
+    "related": [
+      "Autoregressive",
+      "Temperature",
+      "Top-k Sampling",
+      "Nucleus Sampling (Top-p)"
+    ]
+  },
+  {
+    "term": "Defense in Depth",
+    "category": "Security & governance",
+    "meaning": "Using independent preventive, detective, and corrective controls at several system boundaries so one failed control does not determine the outcome.",
+    "why": "AI systems combine probabilistic models, untrusted content, tools, and external services, making any single filter or prompt an inadequate security boundary.",
+    "related": [
+      "Guardrails",
+      "Sandbox",
+      "Least Privilege",
+      "Trust Boundary"
+    ]
+  },
+  {
+    "term": "Delegation",
+    "category": "Agents & tools",
+    "meaning": "Assigning a bounded subtask to another person or agent together with the needed context, authority, output contract, and return conditions.",
+    "why": "Explicit delegation enables specialization and parallel work without losing ownership, scope, or the ability to integrate results.",
+    "related": [
+      "Scope Contract",
+      "Handoff",
+      "Reviewer Agent",
+      "Orchestration"
+    ]
+  },
+  {
+    "term": "Dense Retrieval",
+    "category": "Retrieval & generation",
+    "meaning": "First-stage retrieval that embeds queries and candidates into vector representations and ranks candidates by a similarity function.",
+    "why": "It can retrieve paraphrases and semantic matches that share few exact words, complementing lexical methods such as BM25.",
+    "related": [
+      "Embedding",
+      "Semantic Search",
+      "BM25",
+      "Hybrid Retrieval"
+    ]
+  },
+  {
+    "term": "Diffusion Model",
+    "category": "Models & inference",
+    "meaning": "A generative model trained around a progressive noising process and a learned reverse process. Sampling usually begins from noise and applies repeated denoising steps, sometimes in a learned latent space.",
+    "why": "",
+    "related": [
+      "Latent Space",
+      "VAE (Variational Autoencoder)",
+      "Inference"
+    ]
+  },
+  {
+    "term": "Disaggregated Serving",
+    "category": "Infrastructure & serving",
+    "meaning": "A serving architecture that runs prefill and decode work in separately provisioned worker pools and transfers the required attention state between them.",
+    "why": "Prefill and decode stress hardware differently, so independent pools can be sized and scheduled for their own bottlenecks instead of competing in one queue.",
+    "related": [
+      "Prefill",
+      "Decode Phase",
+      "Model Serving",
+      "Goodput"
+    ]
+  },
+  {
+    "term": "Distribution Shift",
+    "category": "Evaluation & safety",
+    "meaning": "A difference between the data distribution used to build or evaluate a system and the distribution it encounters after deployment.",
+    "why": "A model can pass held-out tests yet fail when users, tasks, language, tools, or operating conditions change.",
+    "related": [
+      "Dataset Split",
+      "Eval Set",
+      "Overfitting",
+      "Model Card"
+    ]
+  },
+  {
+    "term": "DPO (Direct Preference Optimization)",
+    "category": "Math & training",
+    "meaning": "A preference-optimization objective that trains a policy directly from preferred and rejected response pairs relative to a reference policy. It avoids running an explicit reward model and reinforcement-learning loop during this stage.",
+    "why": "",
+    "related": [
+      "RLHF (Reinforcement Learning from Human Feedback)",
+      "SFT (Supervised Fine-Tuning)",
+      "Alignment"
+    ]
+  },
+  {
+    "term": "Dropout",
+    "category": "Math & training",
+    "meaning": "During training, randomly setting a fraction of activations to zero encourages the network not to rely on one activation path. It is normally disabled for standard inference, although Monte Carlo dropout deliberately keeps it active to estimate uncertainty.",
+    "why": "",
+    "related": [
+      "Overfitting",
+      "Weight Decay",
+      "Activation Function"
+    ]
+  },
+  {
+    "term": "Durable Execution",
+    "category": "Agents & tools",
+    "meaning": "Running a workflow so its state and completed steps survive process crashes, restarts, or long waits without redoing confirmed side effects.",
+    "why": "Agent tasks often span model calls, tools, approvals, and external systems. A transient process should not be the only record of progress.",
+    "related": [
+      "Checkpoint",
+      "Agent State",
+      "Idempotency",
+      "Approval Gate"
+    ]
+  },
+  {
+    "term": "Dynamic Batching",
+    "category": "Infrastructure & serving",
+    "meaning": "A runtime policy that forms inference batches from queued requests according to compatible shapes, maximum size, priority, and allowed queue delay.",
+    "why": "Grouping requests can improve hardware utilization, but waiting for a batch can make latency worse when traffic is sparse or requests differ sharply.",
+    "related": [
+      "Admission Control",
+      "Continuous Batching",
+      "Saturation",
+      "Tail Latency"
+    ]
+  },
+  {
+    "term": "Early Fusion",
+    "category": "Multimodal systems",
+    "meaning": "Combining raw or low-level representations from several modalities before most task-specific modeling occurs.",
+    "why": "Early interaction can expose fine-grained cross-modal relationships, but it also requires compatible representations and careful handling of alignment and missing inputs.",
+    "related": [
+      "Late Fusion",
+      "Multimodal Fusion",
+      "Modality Alignment",
+      "Token"
+    ]
+  },
+  {
+    "term": "Eigenvalue",
+    "category": "Math & training",
+    "meaning": "A scalar that describes how a linear transformation scales a corresponding nonzero eigenvector without changing its direction. In covariance-matrix PCA, larger eigenvalues correspond to directions with more variance.",
+    "why": "",
+    "related": [
+      "Tensor",
+      "Feature",
+      "Latent Space"
+    ]
+  },
+  {
+    "term": "Embedding",
+    "category": "Data & representations",
+    "meaning": "A learned mapping from discrete items (words, images, users) to dense vectors in continuous space, where similar items end up close together",
+    "why": "",
+    "related": [
+      "Cosine Similarity",
+      "Semantic Search",
+      "Vector Database"
+    ]
+  },
+  {
+    "term": "Encoder",
+    "category": "Models & inference",
+    "meaning": "A component that transforms input into a representation. A transformer encoder commonly uses non-causal self-attention, subject to any masks, so each position can incorporate context from across the input.",
+    "why": "",
+    "related": [
+      "Decoder",
+      "Transformer",
+      "Embedding"
+    ]
+  },
+  {
+    "term": "Epoch",
+    "category": "Math & training",
+    "meaning": "One traversal of the defined training dataset. In distributed or sampled training, the exact implementation of an epoch depends on the data loader and sampling policy.",
+    "why": "",
+    "related": [
+      "Batch Size",
+      "Overfitting",
+      "Eval Set"
+    ]
+  },
+  {
+    "term": "Error Budget",
+    "category": "Reliability & operations",
+    "meaning": "The amount of unsuccessful service allowed by a service-level objective over its measurement window before the objective is exhausted.",
+    "why": "It gives reliability and product work a shared decision boundary: teams can spend remaining budget on change while slowing risk when user-visible failure consumes it.",
+    "related": [
+      "Service Level Objective (SLO)",
+      "Service Level Indicator (SLI)",
+      "Availability",
+      "Incident Response"
+    ]
+  },
+  {
+    "term": "Eval Set",
+    "category": "Evaluation & safety",
+    "meaning": "A versioned collection of inputs, expected properties, scoring rules, and metadata used to measure an AI system against a defined capability or risk.",
+    "why": "A repeatable set turns vague quality claims into comparable evidence and catches regressions after prompts, models, tools, or retrieval change.",
+    "related": [
+      "Evaluation (Eval)",
+      "Regression Test",
+      "LLM-as-a-Judge",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "Evaluation (Eval)",
+    "category": "Evaluation & safety",
+    "meaning": "A defined process for measuring model or system behavior on representative tasks using explicit success criteria, data, scorers, and review procedures.",
+    "why": "You cannot improve reliability if success is only a subjective impression from a few demos.",
+    "related": [
+      "Eval Set",
+      "LLM-as-a-Judge",
+      "Cost per Successful Task",
+      "Regression Test"
+    ]
+  },
+  {
+    "term": "Exact Match (EM)",
+    "category": "Evaluation & safety",
+    "meaning": "A metric that counts an output as correct only when its normalized representation exactly equals an accepted reference answer.",
+    "why": "It is deterministic and easy to audit for tasks with one canonical answer, but it exposes no partial credit.",
+    "related": [
+      "ROUGE",
+      "Eval Set",
+      "Structured Output",
+      "Pass@k"
+    ]
+  },
+  {
+    "term": "Expert Parallelism",
+    "category": "Infrastructure & serving",
+    "meaning": "Distributing mixture-of-experts subnetworks across devices and routing each token's activations to the devices that host its selected experts.",
+    "why": "Sparse experts increase model capacity without executing every expert for every token, but routing introduces communication, load-balance, and placement constraints.",
+    "related": [
+      "MoE (Mixture of Experts)",
+      "Tensor Parallelism",
+      "Pipeline Parallelism",
+      "Model Serving"
+    ]
+  },
+  {
+    "term": "Feature",
+    "category": "Data & representations",
+    "meaning": "An individual measurable property of the data. In classical ML, you engineer features by hand. In deep learning, the network learns features automatically from raw data.",
+    "why": "",
+    "related": [
+      "Embedding",
+      "Latent Space",
+      "Inductive Bias"
+    ]
+  },
+  {
+    "term": "Few-Shot",
+    "category": "Prompting & context",
+    "meaning": "In-context learning that includes a small set of demonstrations before the target input so the model can infer the desired task, format, or decision boundary.",
+    "why": "Example quality and coverage matter more than a universal example count. Poor or contradictory demonstrations can reduce reliability.",
+    "related": [
+      "Zero-Shot",
+      "In-Context Learning",
+      "Prompt Engineering",
+      "Context Window"
+    ]
+  },
+  {
+    "term": "Fine-tuning",
+    "category": "Math & training",
+    "meaning": "Continuing training from pretrained parameters on a narrower dataset or objective. Depending on the method, you may update all parameters, selected parameters, or added adapter parameters.",
+    "why": "Fine-tuning can adapt behavior, style, format, or task performance, but it is not a dependable replacement for retrieval when facts must stay current or traceable.",
+    "related": [
+      "SFT (Supervised Fine-Tuning)",
+      "LoRA (Low-Rank Adaptation)",
+      "QLoRA",
+      "RAG (Retrieval-Augmented Generation)"
+    ]
+  },
+  {
+    "term": "Flaky Test",
+    "category": "AI-native development",
+    "meaning": "A test that can pass and fail across equivalent runs without a relevant change to the code or intended test environment.",
+    "why": "Flakiness weakens verification gates and can train people or agents to ignore real failures or retry until they obtain a false pass.",
+    "related": [
+      "Regression Test",
+      "Test Oracle",
+      "Retry with Backoff",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "FlashAttention",
+    "category": "Infrastructure & serving",
+    "meaning": "An exact attention algorithm that tiles the computation to reduce transfers between accelerator memory levels while avoiding materialization of the full attention matrix in high-bandwidth memory.",
+    "why": "Attention can be limited by memory movement rather than arithmetic, especially for long sequences, so an IO-aware kernel can improve usable speed and memory efficiency.",
+    "related": [
+      "Attention",
+      "Self-Attention",
+      "KV Cache",
+      "Mixed Precision"
+    ]
+  },
+  {
+    "term": "Function Calling",
+    "category": "Agents & tools",
+    "meaning": "A provider or application interface through which a model emits a structured request naming a tool and its arguments. Application code validates the request, performs the operation, and can return the result for another model step.",
+    "why": "",
+    "related": [
+      "Structured Output",
+      "Tool Contract",
+      "Agent",
+      "MCP (Model Context Protocol)"
+    ]
+  },
+  {
+    "term": "GAN (Generative Adversarial Network)",
+    "category": "Models & inference",
+    "meaning": "A generator network tries to create realistic data while a discriminator network tries to tell real from fake. They train together: the generator gets better at fooling the discriminator, and the discriminator gets better at detecting fakes.",
+    "why": "",
+    "related": [
+      "Loss Function",
+      "Latent Space",
+      "Diffusion Model"
+    ]
+  },
+  {
+    "term": "Goodput",
+    "category": "Infrastructure & serving",
+    "meaning": "The rate of completed requests that satisfy defined service constraints, such as both time-to-first-token and per-token latency objectives, under a stated workload.",
+    "why": "Raw throughput can rise while users experience more slow requests. Goodput counts only work that meets the service contract.",
+    "related": [
+      "Service Level Objective (SLO)",
+      "Time to First Token (TTFT)",
+      "Time per Output Token (TPOT)",
+      "Cost per Successful Task"
+    ]
+  },
+  {
+    "term": "GPT",
+    "category": "Models & inference",
+    "meaning": "Generative Pre-trained Transformer, a family label for generative transformer models pretrained on sequence-prediction objectives and adapted for downstream use. Product names and model architectures should not be treated as interchangeable.",
+    "why": "",
+    "related": [
+      "Transformer",
+      "Autoregressive",
+      "LLM (Large Language Model)"
+    ]
+  },
+  {
+    "term": "Graceful Degradation",
+    "category": "Reliability & operations",
+    "meaning": "Preserving a bounded core service when capacity or dependencies are impaired by reducing optional quality, features, freshness, or workload instead of failing every request.",
+    "why": "AI systems often depend on several slow or fallible components, so an explicit reduced mode can protect essential user outcomes during partial failure.",
+    "related": [
+      "Circuit Breaker",
+      "Load Shedding",
+      "Model Router",
+      "Availability"
+    ]
+  },
+  {
+    "term": "Gradient",
+    "category": "Math & training",
+    "meaning": "A vector of partial derivatives pointing in the direction of steepest increase. In ML, you go opposite to the gradient (gradient descent) to minimize the loss.",
+    "why": "",
+    "related": [
+      "Backpropagation",
+      "Gradient Descent",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Gradient Accumulation",
+    "category": "Math & training",
+    "meaning": "Summing or averaging gradients from several microbatches before performing one optimizer update.",
+    "why": "It lets you approximate a larger effective batch when one device cannot hold all examples and activations at once.",
+    "related": [
+      "Batch Size",
+      "Mixed Precision",
+      "Optimizer",
+      "Backpropagation"
+    ]
+  },
+  {
+    "term": "Gradient Clipping",
+    "category": "Math & training",
+    "meaning": "Limiting gradient values or their combined norm before an optimizer update when they exceed a chosen threshold.",
+    "why": "It can prevent an unusually large gradient from destabilizing a training step and producing non-finite values.",
+    "related": [
+      "Gradient",
+      "NaN (Not a Number)",
+      "Mixed Precision",
+      "Learning Rate"
+    ]
+  },
+  {
+    "term": "Gradient Descent",
+    "category": "Math & training",
+    "meaning": "A family of optimization updates that move parameters using the negative gradient of an objective, usually estimated from batches rather than the entire dataset.",
+    "why": "",
+    "related": [
+      "Gradient",
+      "Learning Rate",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Grounding",
+    "category": "Retrieval & generation",
+    "meaning": "Connecting a generated answer or action to evidence, state, or observations that the system can identify and check.",
+    "why": "Grounding gives the system a basis beyond unconstrained generation and makes unsupported claims easier to detect.",
+    "related": [
+      "RAG (Retrieval-Augmented Generation)",
+      "Hallucination",
+      "Verification Gate",
+      "Reranker"
+    ]
+  },
+  {
+    "term": "Guardrails",
+    "category": "Evaluation & safety",
+    "meaning": "System controls that constrain inputs, tool use, outputs, permissions, and escalation. They can include schemas, policy checks, classifiers, allowlists, sandboxing, approvals, and post-action verification.",
+    "why": "No single filter covers all failure modes, so controls should be layered according to risk.",
+    "related": [
+      "Least Privilege",
+      "Approval Gate",
+      "Sandbox",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "Hallucination",
+    "category": "Evaluation & safety",
+    "meaning": "Generated content that is false, unsupported by the available evidence, or inconsistent with the task's source of truth. It can arise even when the output is fluent and the model is not attempting to deceive.",
+    "why": "You usually cannot inspect whether a statement existed in training data, so production checks should focus on support, correctness, and traceability.",
+    "related": [
+      "Grounding",
+      "RAG (Retrieval-Augmented Generation)",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "Handoff",
+    "category": "AI-native development",
+    "meaning": "A structured transfer of a task between people or agents that preserves the objective, current state, evidence, decisions, constraints, and remaining work.",
+    "why": "A good handoff prevents the next worker from reconstructing the entire task from a long transcript or repeating completed actions.",
+    "related": [
+      "Agent State",
+      "Checkpoint",
+      "Scope Contract",
+      "Progressive Disclosure"
+    ]
+  },
+  {
+    "term": "HNSW",
+    "category": "Retrieval & generation",
+    "meaning": "An approximate-nearest-neighbor index that organizes vectors in layered proximity graphs and searches from coarse upper layers toward detailed lower layers.",
+    "why": "It is a common way to make high-recall vector search practical at scales where exhaustive comparison is too slow.",
+    "related": [
+      "Approximate Nearest Neighbor (ANN)",
+      "Vector Database",
+      "Embedding",
+      "Recall@K"
+    ]
+  },
+  {
+    "term": "Human-in-the-Loop (HITL)",
+    "category": "Agents & tools",
+    "meaning": "A workflow design in which a person supplies judgment, correction, approval, or escalation at defined points in an AI-driven process.",
+    "why": "Human involvement is most useful at high-impact, ambiguous, or irreversible boundaries, not as an undefined fallback after every step.",
+    "related": [
+      "Approval Gate",
+      "Verification Gate",
+      "Agent",
+      "Guardrails"
+    ]
+  },
+  {
+    "term": "Hybrid Retrieval",
+    "category": "Retrieval & generation",
+    "meaning": "Retrieval that combines signals from different methods, commonly lexical matching and dense-vector similarity, before merging or reranking results.",
+    "why": "Exact identifiers, rare terms, and semantic paraphrases behave differently, so one retrieval signal can miss useful evidence.",
+    "related": [
+      "Semantic Search",
+      "Reranker",
+      "RAG (Retrieval-Augmented Generation)",
+      "Embedding"
+    ]
+  },
+  {
+    "term": "Hyperparameter",
+    "category": "Math & training",
+    "meaning": "A configuration choice that shapes model structure, optimization, data processing, or inference rather than being learned as an ordinary model parameter. Examples include learning rate, batch size, layer count, and decoding settings.",
+    "why": "",
+    "related": [
+      "Parameter",
+      "Learning Rate",
+      "Batch Size",
+      "Temperature"
+    ]
+  },
+  {
+    "term": "Idempotency",
+    "category": "AI-native development",
+    "meaning": "The property that repeating the same operation with the same identity does not create additional side effects beyond the first successful application.",
+    "why": "Retries are normal in distributed agent systems. Without idempotency, one uncertain response can duplicate payments, comments, deployments, or records.",
+    "related": [
+      "Retry with Backoff",
+      "Durable Execution",
+      "Checkpoint"
+    ]
+  },
+  {
+    "term": "Image Token",
+    "category": "Multimodal systems",
+    "meaning": "A model-specific visual unit represented as a vector or discrete code, commonly derived from an image patch, region, or learned visual-codebook entry.",
+    "why": "Turning visual input into a sequence lets transformer-style components process images together with text or other tokenized modalities.",
+    "related": [
+      "Patch Embedding",
+      "Token",
+      "VAE (Variational Autoencoder)",
+      "Vision Transformer (ViT)"
+    ]
+  },
+  {
+    "term": "In-Context Learning",
+    "category": "Prompting & context",
+    "meaning": "A model adapting its behavior from instructions, examples, or patterns supplied in the current input without an ordinary parameter update.",
+    "why": "It explains how one pretrained model can perform a new task from context while keeping its weights unchanged.",
+    "related": [
+      "Few-Shot",
+      "Zero-Shot",
+      "Context Window",
+      "Prompt Engineering"
+    ]
+  },
+  {
+    "term": "Incident Response",
+    "category": "Reliability & operations",
+    "meaning": "The coordinated process for detecting, analyzing, containing, recovering from, communicating, and learning from an event that threatens service, data, safety, or security.",
+    "why": "During an incident, clear roles and evidence matter more than improvised heroics, especially when model behavior and distributed dependencies obscure the failing boundary.",
+    "related": [
+      "Observability",
+      "Audit Log",
+      "Postmortem",
+      "Availability"
+    ]
+  },
+  {
+    "term": "Indirect Prompt Injection",
+    "category": "Security & governance",
+    "meaning": "A prompt-injection attack delivered through content the system retrieves or observes, such as a webpage, document, email, image text, or tool result, rather than directly through the user's instruction.",
+    "why": "An agent can encounter attacker-controlled instructions while performing an authorized task and mistake that content for authority-bearing guidance.",
+    "related": [
+      "Prompt Injection",
+      "Instruction Hierarchy",
+      "Trust Boundary",
+      "Data Exfiltration"
+    ]
+  },
+  {
+    "term": "Inductive Bias",
+    "category": "Models & inference",
+    "meaning": "Structural or statistical assumptions that favor some functions or representations over others. Convolution favors locality and shared filters; causal masking favors prediction from preceding positions.",
+    "why": "",
+    "related": [
+      "CNN (Convolutional Neural Network)",
+      "Transformer",
+      "Feature"
+    ]
+  },
+  {
+    "term": "Inference",
+    "category": "Models & inference",
+    "meaning": "Executing a trained model to produce predictions, scores, embeddings, or generated tokens without performing an ordinary training update to its parameters.",
+    "why": "",
+    "related": [
+      "Autoregressive",
+      "Streaming",
+      "KV Cache"
+    ]
+  },
+  {
+    "term": "Instruction Following",
+    "category": "Prompting & context",
+    "meaning": "A model capability to map natural-language directions and supplied context to behavior that satisfies the stated task and constraints.",
+    "why": "Language generation can be fluent without obeying the user's requested operation, format, boundaries, or priorities.",
+    "related": [
+      "SFT (Supervised Fine-Tuning)",
+      "Prompt Engineering",
+      "Instruction Hierarchy",
+      "Alignment"
+    ]
+  },
+  {
+    "term": "Instruction Hierarchy",
+    "category": "Prompting & context",
+    "meaning": "A rule set for resolving conflicts among instructions from sources with different authority, such as application policy, users, and untrusted retrieved content.",
+    "why": "Agent systems mix trusted goals with external text, so the model and harness need a defined response when lower-authority content conflicts with higher-authority constraints.",
+    "related": [
+      "System Prompt",
+      "Prompt Injection",
+      "Least Privilege",
+      "Tool Contract"
+    ]
+  },
+  {
+    "term": "Inter-Token Latency (ITL)",
+    "category": "Infrastructure & serving",
+    "meaning": "The elapsed time between two consecutive output-token arrival events for one request, calculated as `t_i - t_(i-1)` for an output token after the first.",
+    "why": "Individual gaps expose decode stalls and streaming jitter that a per-request average can hide, especially under batching, preemption, or mixed workloads.",
+    "related": [
+      "Time per Output Token (TPOT)",
+      "Time to First Token (TTFT)",
+      "Decode Phase",
+      "Tail Latency"
+    ]
+  },
+  {
+    "term": "Jailbreak",
+    "category": "Security & governance",
+    "meaning": "An adversarial input or interaction strategy intended to make a model produce behavior that its training or application controls are designed to prevent.",
+    "why": "Successful jailbreaks expose gaps between stated policy and actual behavior, and they can become more consequential when the model controls tools or protected data.",
+    "related": [
+      "Prompt Injection",
+      "Red Teaming",
+      "Guardrails",
+      "Eval Set"
+    ]
+  },
+  {
+    "term": "JAX",
+    "category": "Math & training",
+    "meaning": "A Python library for transforming numerical functions with automatic differentiation, compilation, vectorization, and parallel execution across accelerators. Its transformations work best with explicit state and functional-style code.",
+    "why": "",
+    "related": [
+      "Autograd",
+      "Tensor",
+      "CUDA"
+    ]
+  },
+  {
+    "term": "Knowledge Distillation",
+    "category": "Math & training",
+    "meaning": "Training a student model to reproduce selected behavior or output distributions from a more capable teacher, often alongside ordinary target labels.",
+    "why": "It can transfer useful behavior into a smaller or cheaper model when serving the teacher directly is impractical.",
+    "related": [
+      "Fine-tuning",
+      "Loss Function",
+      "Logits",
+      "Quantization"
+    ]
+  },
+  {
+    "term": "KV Cache",
+    "category": "Models & inference",
+    "meaning": "Stored key and value tensors from earlier positions in autoregressive generation. Reusing them avoids recomputing attention projections for the unchanged prefix at every decoding step.",
+    "why": "It reduces repeated computation but consumes memory that grows with sequence length, layers, batch, and model configuration.",
+    "related": [
+      "Attention",
+      "Autoregressive",
+      "Prefix Caching",
+      "Prompt Cache"
+    ]
+  },
+  {
+    "term": "Late Fusion",
+    "category": "Multimodal systems",
+    "meaning": "Processing modalities through separate encoders or predictors and combining their high-level representations, scores, or decisions near the task output.",
+    "why": "Separate branches can use modality-specific architectures and tolerate missing inputs, though they may miss fine-grained interactions available to earlier fusion.",
+    "related": [
+      "Early Fusion",
+      "Multimodal Fusion",
+      "Modality",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "Latent Space",
+    "category": "Data & representations",
+    "meaning": "A learned representation space whose coordinates encode factors useful to a model. It may be lower-dimensional than the input, but compression is not required for every latent representation.",
+    "why": "",
+    "related": [
+      "Embedding",
+      "VAE (Variational Autoencoder)",
+      "Feature"
+    ]
+  },
+  {
+    "term": "Learning Rate",
+    "category": "Math & training",
+    "meaning": "A scale factor used by an optimizer to control parameter-update magnitude. Values that are too large can destabilize training; values that are too small can make useful progress impractically slow.",
+    "why": "",
+    "related": [
+      "Optimizer",
+      "Gradient Descent",
+      "Batch Size"
+    ]
+  },
+  {
+    "term": "Learning Rate Schedule",
+    "category": "Math & training",
+    "meaning": "A policy that changes the optimizer's learning rate as training progresses according to steps, epochs, metrics, or a predefined curve.",
+    "why": "Different training stages can benefit from different update scales, so one constant rate may be unstable early or wasteful late.",
+    "related": [
+      "Learning Rate",
+      "Warmup",
+      "Optimizer",
+      "Epoch"
+    ]
+  },
+  {
+    "term": "Least Privilege",
+    "category": "Evaluation & safety",
+    "meaning": "Giving a model, agent, tool, or user only the permissions required for the current task, for only as long as those permissions are needed.",
+    "why": "Models can make mistakes or follow malicious instructions. Narrow permissions reduce the damage any one failure can cause.",
+    "related": [
+      "Sandbox",
+      "Approval Gate",
+      "Prompt Injection",
+      "Tool Contract"
+    ]
+  },
+  {
+    "term": "LLM (Large Language Model)",
+    "category": "Models & inference",
+    "meaning": "A language model with enough capacity and broad training to perform many language tasks through prompting or adaptation. Most current LLMs use transformer architectures and sequence-prediction objectives, but size thresholds, data sources, and training recipes vary.",
+    "why": "",
+    "related": [
+      "Transformer",
+      "Autoregressive",
+      "Agent Harness"
+    ]
+  },
+  {
+    "term": "LLM-as-a-Judge",
+    "category": "Evaluation & safety",
+    "meaning": "Using a language model to score, compare, classify, or critique another system's output against a rubric.",
+    "why": "It can scale evaluation of qualities that are difficult to express as exact-match tests, such as clarity or instruction adherence.",
+    "related": [
+      "Evaluation (Eval)",
+      "Eval Set",
+      "Verification Gate",
+      "Precision & Recall"
+    ]
+  },
+  {
+    "term": "Load Shedding",
+    "category": "Reliability & operations",
+    "meaning": "Deliberately rejecting, dropping, or cancelling selected work at one or more overload boundaries when demand exceeds the capacity available to produce useful results.",
+    "why": "Continuing to accept every request during overload can increase queueing until nearly all requests miss their deadlines and recovery becomes harder.",
+    "related": [
+      "Admission Control",
+      "Backpressure",
+      "Rate Limit",
+      "Graceful Degradation"
+    ]
+  },
+  {
+    "term": "Logits",
+    "category": "Models & inference",
+    "meaning": "The model's unnormalized numeric scores for candidate outcomes before a normalization function or decoding rule converts them into selections.",
+    "why": "Temperature, softmax, top-k, and top-p operate on or derive from logits, so logits connect model computation to generated tokens.",
+    "related": [
+      "Softmax",
+      "Temperature",
+      "Token",
+      "Cross-Entropy"
+    ]
+  },
+  {
+    "term": "LoRA (Low-Rank Adaptation)",
+    "category": "Math & training",
+    "meaning": "A method that keeps base weights frozen and learns low-rank update matrices for selected layers. It reduces the number of trainable parameters and can lower training memory relative to full-parameter fine-tuning.",
+    "why": "",
+    "related": [
+      "Fine-tuning",
+      "QLoRA",
+      "Parameter"
+    ]
+  },
+  {
+    "term": "Loss Function",
+    "category": "Math & training",
+    "meaning": "An objective that maps predictions and targets, sometimes with regularization terms, to a value optimization tries to reduce. The loss determines which errors training directly rewards or penalizes.",
+    "why": "",
+    "related": [
+      "Cross-Entropy",
+      "Gradient",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "Lost in the Middle",
+    "category": "Prompting & context",
+    "meaning": "A long-context failure pattern in which model performance changes with evidence position and can degrade when relevant information sits between the beginning and end.",
+    "why": "Fitting evidence inside the context window does not guarantee that the model will use every position with equal reliability.",
+    "related": [
+      "Context Window",
+      "Context Engineering",
+      "Eval Set",
+      "Grounding"
+    ]
+  },
+  {
+    "term": "Maximum Marginal Relevance (MMR)",
+    "category": "Retrieval & generation",
+    "meaning": "A selection rule that balances relevance to the query with novelty relative to items already selected.",
+    "why": "It can reduce redundant chunks so a limited context budget covers more distinct evidence.",
+    "related": [
+      "Reranker",
+      "Chunking",
+      "RAG (Retrieval-Augmented Generation)",
+      "Grounding"
+    ]
+  },
+  {
+    "term": "MCP (Model Context Protocol)",
+    "category": "Agents & tools",
+    "meaning": "An open JSON-RPC protocol for a host to connect to servers that expose tools, resources, prompts, and extensions through defined request, result, discovery, and transport contracts. In revision 2026-07-28, every request carries its protocol version and client capabilities instead of relying on an initialization handshake or protocol session.",
+    "why": "",
+    "related": [
+      "Stateless MCP",
+      "Multi Round-Trip Request (MRTR)",
+      "Function Calling",
+      "Tool Contract",
+      "Least Privilege"
+    ]
+  },
+  {
+    "term": "Membership Inference",
+    "category": "Security & governance",
+    "meaning": "An attack that estimates whether a particular record or example was included in a model's training data by observing model outputs or other accessible signals.",
+    "why": "Even when the model does not reproduce a record verbatim, distinguishable behavior can reveal information about participation in a sensitive dataset.",
+    "related": [
+      "Data Leakage",
+      "Data Minimization",
+      "Eval Set",
+      "Data Classification"
+    ]
+  },
+  {
+    "term": "Mixed Precision",
+    "category": "Math & training",
+    "meaning": "A numerical strategy that uses different data types for different operations, often lower precision for many matrix operations and higher precision for values that need more range or stability.",
+    "why": "",
+    "related": [
+      "Tensor",
+      "CUDA",
+      "NaN (Not a Number)",
+      "Quantization"
+    ]
+  },
+  {
+    "term": "Modality",
+    "category": "Multimodal systems",
+    "meaning": "A form of information with its own structure and acquisition process, such as text, image, audio, video, depth, or sensor measurements.",
+    "why": "Different modalities have different sampling rates, noise, spatial or temporal structure, and missing-data behavior, so one preprocessing assumption rarely fits all of them.",
+    "related": [
+      "Multimodal Model",
+      "Token",
+      "Tensor",
+      "Embedding"
+    ]
+  },
+  {
+    "term": "Modality Alignment",
+    "category": "Multimodal systems",
+    "meaning": "Learning or establishing correspondences between representations from different modalities so semantically or temporally related items can be matched.",
+    "why": "Fusion and cross-modal retrieval fail when the system cannot connect the same event, object, or concept across differently structured inputs.",
+    "related": [
+      "Shared Embedding Space",
+      "Contrastive Learning",
+      "Grounding",
+      "Multimodal Fusion"
+    ]
+  },
+  {
+    "term": "Model Card",
+    "category": "Evaluation & safety",
+    "meaning": "A structured report describing a model's intended uses, evaluation conditions, performance characteristics, limitations, and relevant ethical or safety considerations.",
+    "why": "It gives downstream builders context for deciding whether reported evidence applies to their users and deployment conditions.",
+    "related": [
+      "Eval Set",
+      "Dataset Split",
+      "Distribution Shift",
+      "Alignment"
+    ]
+  },
+  {
+    "term": "Model Router",
+    "category": "AI-native development",
+    "meaning": "A component that selects a model or provider for a request using requirements such as capability, latency, cost, context size, policy, and current availability.",
+    "why": "Different tasks and failure conditions justify different models, and routing can improve outcome quality without sending every request to the largest option.",
+    "related": [
+      "Evaluation (Eval)",
+      "Circuit Breaker",
+      "Rate Limit",
+      "Cost per Successful Task"
+    ]
+  },
+  {
+    "term": "Model Serving",
+    "category": "Infrastructure & serving",
+    "meaning": "The runtime and API layer that loads versioned model artifacts, accepts inference requests, schedules execution, manages resources, and returns results under an operational contract.",
+    "why": "A capable model can still produce an unreliable product when queueing, batching, placement, versioning, cancellation, and response boundaries are not engineered explicitly.",
+    "related": [
+      "Inference",
+      "Model Router",
+      "Autoscaling",
+      "Observability"
+    ]
+  },
+  {
+    "term": "MoE (Mixture of Experts)",
+    "category": "Models & inference",
+    "meaning": "An architecture with multiple expert subnetworks and a learned router that selects a subset for each input unit, often each token. Sparse activation can increase total parameter capacity without using every expert on every forward pass.",
+    "why": "Compute, memory, communication, routing balance, and quality depend on the specific architecture and serving system.",
+    "related": [
+      "Transformer",
+      "Model Router",
+      "Parameter"
+    ]
+  },
+  {
+    "term": "Multimodal Fusion",
+    "category": "Multimodal systems",
+    "meaning": "Combining evidence or learned representations from more than one modality to produce a joint representation, prediction, or generated output.",
+    "why": "Modalities can supply complementary evidence, but naïve combination can amplify noise, timing errors, or one dominant stream.",
+    "related": [
+      "Early Fusion",
+      "Late Fusion",
+      "Cross-Attention",
+      "Modality Alignment"
+    ]
+  },
+  {
+    "term": "Multimodal Model",
+    "category": "Multimodal systems",
+    "meaning": "A model that learns from, relates, or generates more than one modality through representation, alignment, fusion, translation, or coordinated prediction.",
+    "why": "Multimodal capability depends on how modalities interact, not simply on accepting several input types, and failures can occur at each representation boundary.",
+    "related": [
+      "Modality",
+      "Vision-Language Model (VLM)",
+      "Multimodal Fusion",
+      "Transformer"
+    ]
+  },
+  {
+    "term": "Multi Round-Trip Request (MRTR)",
+    "category": "Agents & tools",
+    "meaning": "An MCP request pattern in which an operation returns `resultType: input_required` with one or more `inputRequests`, then the client retries the original method with `inputResponses` and the exact returned `requestState`.",
+    "why": "It lets a stateless server request user, model, or root input without opening a server-initiated JSON-RPC exchange or storing protocol session state.",
+    "related": [
+      "Stateless MCP",
+      "MCP (Model Context Protocol)",
+      "Human-in-the-Loop (HITL)",
+      "Tool Contract"
+    ]
+  },
+  {
+    "term": "NaN (Not a Number)",
+    "category": "Math & training",
+    "meaning": "A floating-point value representing an undefined or unrepresentable numerical result. In training, NaNs can come from invalid operations, overflow, unstable normalization, excessive updates, or earlier corrupted values.",
+    "why": "",
+    "related": [
+      "Mixed Precision",
+      "Learning Rate",
+      "Gradient"
+    ]
+  },
+  {
+    "term": "Normalization",
+    "category": "Math & training",
+    "meaning": "A family of transformations that rescale or recenter inputs, activations, or features using defined statistics. Batch normalization and layer normalization use different axes and behave differently across training and inference.",
+    "why": "",
+    "related": [
+      "Tensor",
+      "Activation Function",
+      "Mixed Precision"
+    ]
+  },
+  {
+    "term": "Nucleus Sampling (Top-p)",
+    "category": "Models & inference",
+    "meaning": "A decoding method that samples from the smallest set of next-token candidates whose cumulative probability reaches a chosen threshold.",
+    "why": "The candidate-set size adapts to the distribution, retaining more options when uncertainty is broad and fewer when probability is concentrated.",
+    "related": [
+      "Top-k Sampling",
+      "Temperature",
+      "Decoding Strategy",
+      "Softmax"
+    ]
+  },
+  {
+    "term": "Observability",
+    "category": "AI-native development",
+    "meaning": "The ability to understand an AI system's behavior from recorded inputs, outputs, state transitions, tool calls, timings, costs, errors, and evaluation signals.",
+    "why": "AI failures often span model, retrieval, tools, and orchestration. You need correlated evidence to locate the failing boundary.",
+    "related": [
+      "Trace",
+      "Evaluation (Eval)",
+      "Agent State",
+      "Time to First Token (TTFT)"
+    ]
+  },
+  {
+    "term": "Optimizer",
+    "category": "Math & training",
+    "meaning": "An algorithm that transforms gradients into parameter updates. Plain stochastic gradient descent is a simple baseline; momentum, Adam, and other optimizers change the update using history or adaptive scaling. Each choice has different memory, stability, and tuning behavior.",
+    "why": "",
+    "related": [
+      "Adam (Optimizer)",
+      "AdamW",
+      "Gradient",
+      "Learning Rate"
+    ]
+  },
+  {
+    "term": "Orchestration",
+    "category": "Agents & tools",
+    "meaning": "The control logic that sequences, branches, delegates, retries, pauses, resumes, and terminates work across model and tool steps.",
+    "why": "Reliable agent behavior depends on explicit workflow decisions outside the model, especially when tasks have dependencies or consequential side effects.",
+    "related": [
+      "Agent Harness",
+      "Planning",
+      "Delegation",
+      "Durable Execution"
+    ]
+  },
+  {
+    "term": "Overfitting",
+    "category": "Math & training",
+    "meaning": "A generalization gap in which performance on training data is substantially better than performance on representative unseen data. Memorization can contribute, but the operational symptom is poor generalization.",
+    "why": "",
+    "related": [
+      "Underfitting",
+      "Dropout",
+      "Weight Decay",
+      "Eval Set"
+    ]
+  },
+  {
+    "term": "Paged KV Cache",
+    "category": "Infrastructure & serving",
+    "meaning": "A KV-cache memory manager that stores attention state in fixed-size blocks and maps logical sequence positions to physical blocks instead of requiring one contiguous allocation per sequence.",
+    "why": "Variable sequence lengths create fragmentation and unpredictable growth, so block-based allocation can improve usable memory and enable flexible sharing.",
+    "related": [
+      "KV Cache",
+      "Prefix Caching",
+      "Context Window",
+      "Model Serving"
+    ]
+  },
+  {
+    "term": "Parameter",
+    "category": "Models & inference",
+    "meaning": "A value learned during training, commonly a weight, bias, embedding element, or normalization parameter. Parameter count is one measure of model capacity, but it does not directly determine quality, memory, or serving cost.",
+    "why": "",
+    "related": [
+      "Weight",
+      "MoE (Mixture of Experts)",
+      "Quantization"
+    ]
+  },
+  {
+    "term": "Pass@k",
+    "category": "Evaluation & safety",
+    "meaning": "Across a task set, the fraction of tasks for which at least one of k sampled candidates passes a defined correctness test.",
+    "why": "It measures the value of sampling several attempts for tasks such as code generation where an automatic verifier can check each candidate.",
+    "related": [
+      "Coding Agent",
+      "Regression Test",
+      "Eval Set",
+      "Test Oracle"
+    ]
+  },
+  {
+    "term": "Patch",
+    "category": "AI-native development",
+    "meaning": "A reviewable representation of changes to one or more files, usually expressed as additions and deletions against a known base revision.",
+    "why": "A patch gives people and agents a narrow artifact to inspect, test, apply, or reject without accepting an entire working directory.",
+    "related": [
+      "Coding Agent",
+      "Worktree",
+      "Scope Contract",
+      "Regression Test"
+    ]
+  },
+  {
+    "term": "Patch Embedding",
+    "category": "Multimodal systems",
+    "meaning": "A learned projection that converts an image patch into a fixed-width vector used as one element of a transformer input sequence.",
+    "why": "It creates the interface between a spatial image grid and a sequence model, with patch size controlling token count and retained local detail.",
+    "related": [
+      "Vision Transformer (ViT)",
+      "Image Token",
+      "Embedding",
+      "Token"
+    ]
+  },
+  {
+    "term": "Perplexity",
+    "category": "Models & inference",
+    "meaning": "The exponentiated average negative log-likelihood under a stated tokenization and logarithm convention. Lower values mean the model assigned higher probability to the evaluated sequence.",
+    "why": "",
+    "related": [
+      "Cross-Entropy",
+      "Token",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "Pipeline Parallelism",
+    "category": "Infrastructure & serving",
+    "meaning": "Partitioning sequential groups of model layers across devices and moving microbatches or requests through those stages as a pipeline.",
+    "why": "It lets models exceed one device's memory, but stage imbalance, pipeline bubbles, activation transfers, and failure coordination affect usable performance.",
+    "related": [
+      "Tensor Parallelism",
+      "Expert Parallelism",
+      "Batch Size",
+      "Model Serving"
+    ]
+  },
+  {
+    "term": "Planning",
+    "category": "Agents & tools",
+    "meaning": "Constructing, selecting, or revising a sequence of actions and dependencies intended to move from the current state to a goal.",
+    "why": "Explicit plans make assumptions and ordering visible before an agent commits to expensive or irreversible actions.",
+    "related": [
+      "Agent State",
+      "ReAct",
+      "Orchestration",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "Postmortem",
+    "category": "Reliability & operations",
+    "meaning": "A durable incident record that explains impact, detection, response, contributing conditions, recovery, and owned follow-up actions without assigning blame as a substitute for analysis.",
+    "why": "A resolved outage still has value as evidence. Capturing system conditions and decisions turns one event into improvements that reduce recurrence and response time.",
+    "related": [
+      "Incident Response",
+      "Regression Test",
+      "Audit Log",
+      "Observability"
+    ]
+  },
+  {
+    "term": "Precision & Recall",
+    "category": "Evaluation & safety",
+    "meaning": "Precision asks how many flagged items were correct; recall asks how many relevant items were found. When you change the decision threshold for one fixed scoring model, improving recall often lowers precision and vice versa. A better model can improve both. F1 is their harmonic mean.",
+    "why": "",
+    "related": [
+      "Eval Set",
+      "Semantic Search",
+      "Guardrails"
+    ]
+  },
+  {
+    "term": "Prefill",
+    "category": "Infrastructure & serving",
+    "meaning": "The initial inference stage that processes all supplied input tokens to produce their representations and the attention state required for subsequent autoregressive generation.",
+    "why": "Prompt shape, queueing, and cache reuse affect prefill cost, and prefill competes differently for compute than decode, so it strongly influences startup latency and serving schedules.",
+    "related": [
+      "Decode Phase",
+      "KV Cache",
+      "Time to First Token (TTFT)",
+      "Chunked Prefill"
+    ]
+  },
+  {
+    "term": "Prefix Caching",
+    "category": "Infrastructure & serving",
+    "meaning": "Reusing KV-cache blocks produced for an identical eligible token prefix across requests so the serving runtime can skip repeated prefix computation.",
+    "why": "Shared system instructions, templates, or documents can consume substantial prefill work, but reuse only helps when token sequences and cache eligibility match.",
+    "related": [
+      "Prompt Cache",
+      "Semantic Cache",
+      "KV Cache",
+      "Paged KV Cache"
+    ]
+  },
+  {
+    "term": "Progressive Disclosure",
+    "category": "AI-native development",
+    "meaning": "Supplying a person or model with the minimum useful context first, then revealing deeper detail when the task or evidence requires it.",
+    "why": "It limits context noise and cost while keeping authoritative detail available on demand.",
+    "related": [
+      "Context Engineering",
+      "Repository Map",
+      "Token Budget",
+      "Handoff"
+    ]
+  },
+  {
+    "term": "Prompt Cache",
+    "category": "Prompting & context",
+    "meaning": "Reuse of provider-side or application-side computation for an identical or eligible prompt prefix so repeated inference avoids some preprocessing work.",
+    "why": "Stable instructions and large shared documents can become cheaper or faster across repeated calls when the provider's cache contract is satisfied.",
+    "related": [
+      "Semantic Cache",
+      "Prefix Caching",
+      "KV Cache",
+      "Time to First Token (TTFT)"
+    ]
+  },
+  {
+    "term": "Prompt Engineering",
+    "category": "Prompting & context",
+    "meaning": "Designing model-facing instructions, examples, constraints, and output requirements to improve behavior on a defined task.",
+    "why": "",
+    "related": [
+      "Context Engineering",
+      "Few-Shot",
+      "System Prompt",
+      "Structured Output"
+    ]
+  },
+  {
+    "term": "Prompt Injection",
+    "category": "Evaluation & safety",
+    "meaning": "An attack or failure mode in which untrusted content influences a model to disregard intended instructions, expose data, misuse tools, or take actions outside the user's goal. The content can arrive directly from a user or indirectly through retrieved pages, files, messages, or tool output.",
+    "why": "Models process instructions and data through the same language channel, so input filtering alone cannot reliably separate every malicious instruction from legitimate content.",
+    "related": [
+      "Least Privilege",
+      "Sandbox",
+      "Approval Gate",
+      "Tool Contract"
+    ]
+  },
+  {
+    "term": "Prompt Sensitivity",
+    "category": "Prompting & context",
+    "meaning": "Variation in model output or measured performance caused by changes to prompt wording, order, formatting, or examples that preserve the intended task.",
+    "why": "A system that succeeds under one convenient phrasing may be unreliable for real users or misleading in evaluation.",
+    "related": [
+      "Prompt Engineering",
+      "Eval Set",
+      "Regression Test",
+      "Few-Shot"
+    ]
+  },
+  {
+    "term": "Provenance Attestation",
+    "category": "Security & governance",
+    "meaning": "Authenticated, machine-readable metadata that binds an artifact to claims about how, where, when, and from which inputs it was produced.",
+    "why": "It lets automated policy and reviewers verify supply-chain claims instead of trusting an unsigned build note.",
+    "related": [
+      "Data Provenance",
+      "Reproducible Build",
+      "Audit Log",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "Purpose Limitation",
+    "category": "Security & governance",
+    "meaning": "For personal data, collecting and using it only for specified, explicit purposes unless a new use has an appropriate compatible or authorized basis.",
+    "why": "Data that was acceptable for one workflow can create privacy and governance risk when silently reused for model training, evaluation, personalization, or unrelated analytics.",
+    "related": [
+      "Data Minimization",
+      "Data Classification",
+      "AI Risk Assessment",
+      "Audit Log"
+    ]
+  },
+  {
+    "term": "QLoRA",
+    "category": "Math & training",
+    "meaning": "A parameter-efficient fine-tuning method that keeps a pretrained base model frozen in a low-bit quantized representation while training LoRA adapters with higher-precision computation where needed.",
+    "why": "It can reduce the memory needed to adapt large models, but savings and quality depend on model, rank, optimizer, sequence length, hardware, and implementation.",
+    "related": [
+      "LoRA (Low-Rank Adaptation)",
+      "Quantization",
+      "Fine-tuning"
+    ]
+  },
+  {
+    "term": "Quantization",
+    "category": "Models & inference",
+    "meaning": "Representing weights, activations, or caches with lower-precision formats to reduce memory, bandwidth, or compute cost. Methods differ in calibration, granularity, data type, and whether conversion happens before, during, or after training.",
+    "why": "",
+    "related": [
+      "QLoRA",
+      "Mixed Precision",
+      "Parameter"
+    ]
+  },
+  {
+    "term": "RAG (Retrieval-Augmented Generation)",
+    "category": "Retrieval & generation",
+    "meaning": "A system pattern that retrieves evidence relevant to a request and supplies selected content to a generative model before it answers or acts. Retrieval can use lexical, vector, structured, or hybrid methods.",
+    "why": "RAG can make current or private evidence available without encoding it into model weights, but retrieval and grounding must be evaluated separately.",
+    "related": [
+      "Grounding",
+      "Hybrid Retrieval",
+      "Reranker",
+      "Hallucination"
+    ]
+  },
+  {
+    "term": "Rate Limit",
+    "category": "AI-native development",
+    "meaning": "A policy that caps requests, tokens, concurrent work, or another resource within a defined time or capacity window.",
+    "why": "It protects providers and your own system from overload, uncontrolled spend, and unfair resource use.",
+    "related": [
+      "Backpressure",
+      "Retry with Backoff",
+      "Circuit Breaker"
+    ]
+  },
+  {
+    "term": "ReAct",
+    "category": "Agents & tools",
+    "meaning": "An agent pattern that interleaves task reasoning, a concrete action, and an observation returned by the environment before deciding the next step.",
+    "why": "Environment feedback can correct assumptions and ground later decisions instead of forcing the model to complete the entire task from internal generation alone.",
+    "related": [
+      "Agent",
+      "Function Calling",
+      "Planning",
+      "Grounding"
+    ]
+  },
+  {
+    "term": "Readiness Probe",
+    "category": "Reliability & operations",
+    "meaning": "A diagnostic that tells the traffic-routing layer whether a service instance is currently able to accept requests.",
+    "why": "A process can be alive while its model is unloaded, dependencies are unavailable, or warmup is incomplete, so sending traffic too early creates avoidable failures.",
+    "related": [
+      "Autoscaling",
+      "Model Serving",
+      "Availability",
+      "Graceful Degradation"
+    ]
+  },
+  {
+    "term": "Recall@K",
+    "category": "Retrieval & generation",
+    "meaning": "For one query, Recall@K is `|relevant items intersecting the top k| / |relevant items|`. A dataset score aggregates those per-query values under a stated rule.",
+    "why": "It tells you whether a retrieval stage supplies downstream generation or reranking with enough relevant candidates.",
+    "related": [
+      "Precision & Recall",
+      "Eval Set",
+      "Reranker",
+      "Approximate Nearest Neighbor (ANN)"
+    ]
+  },
+  {
+    "term": "Reciprocal Rank Fusion (RRF)",
+    "category": "Retrieval & generation",
+    "meaning": "A rank-fusion method that combines several result lists by summing contributions that decrease with each item's rank in each list.",
+    "why": "It can merge lexical, dense, or multi-query rankings without assuming their raw scores share the same scale.",
+    "related": [
+      "Hybrid Retrieval",
+      "BM25",
+      "Dense Retrieval",
+      "Reranker"
+    ]
+  },
+  {
+    "term": "Red Teaming",
+    "category": "Security & governance",
+    "meaning": "A structured adversarial testing process in which authorized testers seek failures using documented objectives, threat assumptions, cases, and evidence.",
+    "why": "Ordinary quality tests rarely explore how a system behaves under manipulation, misuse, conflicting goals, or determined attempts to bypass controls.",
+    "related": [
+      "Threat Model",
+      "Guardrails",
+      "Prompt Injection",
+      "Eval Set"
+    ]
+  },
+  {
+    "term": "Regression Test",
+    "category": "AI-native development",
+    "meaning": "A repeatable check that protects behavior known to work, especially after code, prompt, model, retrieval, or tool changes.",
+    "why": "AI system changes can improve average quality while silently reintroducing a previously fixed failure.",
+    "related": [
+      "Eval Set",
+      "Verification Gate",
+      "Patch",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "ReLU",
+    "category": "Math & training",
+    "meaning": "Rectified Linear Unit, defined as `f(x) = max(0, x)`. It is inexpensive and has a non-saturating positive branch, though zero gradients on negative inputs can create inactive units.",
+    "why": "",
+    "related": [
+      "Activation Function",
+      "Gradient",
+      "CNN (Convolutional Neural Network)"
+    ]
+  },
+  {
+    "term": "Repository Instructions",
+    "category": "AI-native development",
+    "meaning": "Version-controlled guidance that tells coding agents how a repository is organized, which commands and conventions apply, what boundaries to respect, and how to verify work.",
+    "why": "It turns repeated tribal knowledge into local context that travels with the code and can vary by subproject.",
+    "related": [
+      "Repository Map",
+      "Scope Contract",
+      "Coding Agent",
+      "Progressive Disclosure"
+    ]
+  },
+  {
+    "term": "Repository Map",
+    "category": "AI-native development",
+    "meaning": "A compact, maintained description of a repository's important directories, ownership boundaries, entry points, build commands, tests, generated files, and local instructions.",
+    "why": "It helps a coding agent find the right evidence before loading large files or editing the wrong subsystem.",
+    "related": [
+      "Coding Agent",
+      "Progressive Disclosure",
+      "Scope Contract",
+      "Context Engineering"
+    ]
+  },
+  {
+    "term": "Reproducible Build",
+    "category": "AI-native development",
+    "meaning": "A build whose declared source, environment, and instructions can be independently rerun to produce bit-for-bit identical specified artifacts.",
+    "why": "It makes an artifact verifiable beyond the machine or agent that originally produced it and exposes hidden build inputs.",
+    "related": [
+      "Repository Instructions",
+      "Verification Gate",
+      "Provenance Attestation",
+      "Software Bill of Materials (SBOM)"
+    ]
+  },
+  {
+    "term": "Reranker",
+    "category": "Retrieval & generation",
+    "meaning": "A second-stage model or scoring function that reorders a small candidate set using a richer comparison between the query and each candidate.",
+    "why": "Fast first-stage retrieval maximizes candidate coverage, while reranking can improve which evidence reaches the limited context window.",
+    "related": [
+      "Hybrid Retrieval",
+      "Semantic Search",
+      "RAG (Retrieval-Augmented Generation)"
+    ]
+  },
+  {
+    "term": "Retry Budget",
+    "category": "Reliability & operations",
+    "meaning": "A bound on retry traffic, usually expressed relative to original requests or over a time window, that prevents retries from consuming unbounded capacity.",
+    "why": "When a dependency slows or fails, unrestricted retries multiply load exactly when the system has the least spare capacity.",
+    "related": [
+      "Retry with Backoff",
+      "Error Budget",
+      "Rate Limit",
+      "Admission Control"
+    ]
+  },
+  {
+    "term": "Retry with Backoff",
+    "category": "AI-native development",
+    "meaning": "Repeating a failed transient operation after progressively longer delays, usually with randomized jitter and a strict retry limit.",
+    "why": "Immediate synchronized retries can worsen an outage, consume rate limits, and duplicate side effects.",
+    "related": [
+      "Idempotency",
+      "Rate Limit",
+      "Circuit Breaker",
+      "Backpressure"
+    ]
+  },
+  {
+    "term": "Reviewer Agent",
+    "category": "AI-native development",
+    "meaning": "An agent assigned to inspect another agent's artifact or decision against explicit criteria and return findings or a verdict.",
+    "why": "Separation of roles can catch omissions, but it only helps when the reviewer receives independent evidence and a concrete rubric.",
+    "related": [
+      "Coding Agent",
+      "Verification Gate",
+      "Scope Contract",
+      "LLM-as-a-Judge"
+    ]
+  },
+  {
+    "term": "RLHF (Reinforcement Learning from Human Feedback)",
+    "category": "Math & training",
+    "meaning": "A family of pipelines that uses human feedback to learn a reward or preference signal and then optimizes a model policy against that signal. Implementations vary and need not all use the same reinforcement-learning algorithm.",
+    "why": "",
+    "related": [
+      "DPO (Direct Preference Optimization)",
+      "SFT (Supervised Fine-Tuning)",
+      "Alignment"
+    ]
+  },
+  {
+    "term": "Rollback",
+    "category": "Reliability & operations",
+    "meaning": "Restoring a previously known deployment or configuration when the current release violates operational, quality, or safety criteria.",
+    "why": "Agent and model changes can fail in production despite pre-deployment evaluation, so recovery must be designed before rollout.",
+    "related": [
+      "Canary Release",
+      "Checkpoint",
+      "Regression Test",
+      "Durable Execution"
+    ]
+  },
+  {
+    "term": "ROUGE",
+    "category": "Evaluation & safety",
+    "meaning": "A family of metrics that compares generated text with reference text using units such as n-gram overlap or longest common subsequence.",
+    "why": "",
+    "related": [
+      "Evaluation (Eval)",
+      "Precision & Recall",
+      "LLM-as-a-Judge"
+    ]
+  },
+  {
+    "term": "Sandbox",
+    "category": "Agents & tools",
+    "meaning": "An isolated execution environment that restricts an agent's access to files, processes, network destinations, credentials, and host resources.",
+    "why": "Generated code and tool calls can be wrong or malicious. Isolation limits their reach and makes disposable verification practical.",
+    "related": [
+      "Least Privilege",
+      "Approval Gate",
+      "Coding Agent",
+      "Guardrails"
+    ]
+  },
+  {
+    "term": "Saturation",
+    "category": "Reliability & operations",
+    "meaning": "The degree to which a constrained resource or service has exhausted its capacity, including queued work that cannot begin promptly.",
+    "why": "Utilization alone can appear acceptable while memory, accelerator slots, queue depth, or a downstream quota is already limiting useful throughput.",
+    "related": [
+      "Observability",
+      "Autoscaling",
+      "Backpressure",
+      "Tail Latency"
+    ]
+  },
+  {
+    "term": "Scope Contract",
+    "category": "AI-native development",
+    "meaning": "A concrete agreement that defines a task's goal, allowed and forbidden surfaces, expected artifacts, verification requirements, and stopping conditions.",
+    "why": "It prevents an agent from turning a narrow fix into an unreviewable refactor or from claiming completion without evidence.",
+    "related": [
+      "Coding Agent",
+      "Patch",
+      "Verification Gate",
+      "Handoff"
+    ]
+  },
+  {
+    "term": "Self-Attention",
+    "category": "Models & inference",
+    "meaning": "Attention in which queries, keys, and values are derived from the same sequence representation. Scaled similarity scores are normalized and used to combine values, subject to causal, padding, local, or other masks.",
+    "why": "It builds context-sensitive token representations, but the permitted attention pattern depends on the architecture.",
+    "related": [
+      "Attention",
+      "Transformer",
+      "Context Window"
+    ]
+  },
+  {
+    "term": "Semantic Cache",
+    "category": "AI-native development",
+    "meaning": "A cache that reuses a previous result when a new request is judged sufficiently similar under a chosen representation and threshold.",
+    "why": "It can reduce latency and cost for repeated intents, but an incorrect match can return stale or user-inappropriate output.",
+    "related": [
+      "Prompt Cache",
+      "Embedding",
+      "Cost per Successful Task",
+      "Grounding"
+    ]
+  },
+  {
+    "term": "Semantic Search",
+    "category": "Retrieval & generation",
+    "meaning": "Retrieval that represents a query and candidates in an embedding space and ranks candidates using a vector-similarity function.",
+    "why": "It can retrieve paraphrases and conceptually related text, but exact identifiers and rare strings may still need lexical search.",
+    "related": [
+      "Embedding",
+      "Hybrid Retrieval",
+      "Vector Database",
+      "Reranker"
+    ]
+  },
+  {
+    "term": "Separation of Duties",
+    "category": "Security & governance",
+    "meaning": "Dividing conflicting responsibilities or authority across independent roles so one principal cannot complete a high-risk action without another authorized decision.",
+    "why": "A compromised account or mistaken agent should not be able to propose, approve, execute, and conceal the same consequential change.",
+    "related": [
+      "Approval Gate",
+      "Reviewer Agent",
+      "Audit Log",
+      "Least Privilege"
+    ]
+  },
+  {
+    "term": "Service Level Indicator (SLI)",
+    "category": "Reliability & operations",
+    "meaning": "A quantitative measure of service behavior at a defined user-relevant boundary, such as successful request ratio or latency below a threshold.",
+    "why": "Reliability discussions become actionable only when the observed behavior, eligible events, and measurement point are explicit.",
+    "related": [
+      "Service Level Objective (SLO)",
+      "Availability",
+      "Tail Latency",
+      "Observability"
+    ]
+  },
+  {
+    "term": "Service Level Objective (SLO)",
+    "category": "Reliability & operations",
+    "meaning": "A target range or threshold for a service-level indicator over a stated population and measurement window.",
+    "why": "It translates an expected user outcome into an operating boundary for monitoring, capacity, release risk, and incident decisions.",
+    "related": [
+      "Service Level Indicator (SLI)",
+      "Error Budget",
+      "Availability",
+      "Goodput"
+    ]
+  },
+  {
+    "term": "SFT (Supervised Fine-Tuning)",
+    "category": "Math & training",
+    "meaning": "Fine-tuning a pretrained model on paired inputs and desired responses so it learns the demonstrated behavior under the training distribution.",
+    "why": "",
+    "related": [
+      "Fine-tuning",
+      "DPO (Direct Preference Optimization)",
+      "RLHF (Reinforcement Learning from Human Feedback)"
+    ]
+  },
+  {
+    "term": "Shadow Traffic",
+    "category": "Reliability & operations",
+    "meaning": "A copy of live request traffic sent to a candidate system for observation while the candidate response remains outside the primary user response path. Because the copied request still executes, its side effects must be isolated.",
+    "why": "It exposes the candidate to real input shapes and load while limiting user impact, which can reveal failures absent from synthetic tests.",
+    "related": [
+      "Canary Release",
+      "Evaluation (Eval)",
+      "Trace",
+      "Model Serving"
+    ]
+  },
+  {
+    "term": "Shared Embedding Space",
+    "category": "Multimodal systems",
+    "meaning": "A common vector space in which representations from different modalities can be compared with the same similarity function.",
+    "why": "It enables cross-modal retrieval and matching, such as finding images from text, without requiring both items to share a raw representation.",
+    "related": [
+      "Embedding",
+      "Cosine Similarity",
+      "Modality Alignment",
+      "Semantic Search"
+    ]
+  },
+  {
+    "term": "Skill Bundle",
+    "category": "Agents & tools",
+    "meaning": "The complete installable skill directory, including `SKILL.md` and every reference, script, asset, fixture, or companion file required by the workflow.",
+    "why": "Copying only the entry file can leave valid-looking instructions that point to missing resources or lose the deterministic code the workflow depends on.",
+    "related": [
+      "Agent Skill",
+      "Skill Catalog",
+      "Reproducible Build",
+      "Provenance Attestation"
+    ]
+  },
+  {
+    "term": "Skill Catalog",
+    "category": "Agents & tools",
+    "meaning": "The compact model-visible inventory of eligible skills, usually containing routing metadata such as name, description, and an internal source identifier rather than every skill body.",
+    "why": "A catalog lets an agent discover relevant procedures without loading every installed package into the working context.",
+    "related": [
+      "Skill Discovery",
+      "Skill Invocation",
+      "Progressive Disclosure",
+      "Token Budget"
+    ]
+  },
+  {
+    "term": "Skill Discovery",
+    "category": "Agents & tools",
+    "meaning": "A runtime pipeline that searches configured roots, identifies candidate skill directories, validates their package contract, attaches scope and provenance, resolves collisions, and publishes eligible catalog entries.",
+    "why": "Deterministic discovery makes missing, malformed, shadowed, and unsafe packages diagnosable before model routing begins.",
+    "related": [
+      "Skill Catalog",
+      "Skill Bundle",
+      "Progressive Disclosure",
+      "Trust Boundary"
+    ]
+  },
+  {
+    "term": "Skill Invocation",
+    "category": "Agents & tools",
+    "meaning": "The runtime-mediated process in which an eligible human, model, application, or other skill selects a skill and causes its instructions to enter the working context.",
+    "why": "Explicit user access, implicit model routing, activation, argument binding, tool permission, and execution are separate decisions with different failure modes.",
+    "related": [
+      "Agent Skill",
+      "Skill Catalog",
+      "Approval Gate",
+      "Sandbox"
+    ]
+  },
+  {
+    "term": "Softmax",
+    "category": "Math & training",
+    "meaning": "A function defined by `softmax(x_i) = exp(x_i) / sum(exp(x_j))`, implemented with numerical stabilization. Its outputs are positive and sum to one, so they can parameterize a categorical distribution.",
+    "why": "",
+    "related": [
+      "Temperature",
+      "Cross-Entropy",
+      "Attention"
+    ]
+  },
+  {
+    "term": "Software Bill of Materials (SBOM)",
+    "category": "Security & governance",
+    "meaning": "A structured inventory of software components and relationships associated with a product or artifact, often including versions, suppliers, licenses, and identifiers.",
+    "why": "You need a component inventory to assess affected dependencies, license obligations, and supply-chain exposure when software changes or vulnerabilities emerge.",
+    "related": [
+      "Provenance Attestation",
+      "Reproducible Build",
+      "Data Provenance",
+      "Audit Log"
+    ]
+  },
+  {
+    "term": "Speculative Decoding",
+    "category": "Models & inference",
+    "meaning": "An inference method in which a cheaper draft process proposes several tokens and the target model scores those draft positions in parallel. In exact sampling variants, an acceptance and correction rule preserves the target model's output distribution.",
+    "why": "It can reduce serial target-model decoding work when drafts are accepted, without requiring a change to the target model's trained weights.",
+    "related": [
+      "Autoregressive",
+      "KV Cache",
+      "Decoding Strategy",
+      "Tokens per Second (TPS)"
+    ]
+  },
+  {
+    "term": "Stateless MCP",
+    "category": "Agents & tools",
+    "meaning": "The MCP 2026-07-28 request model in which every request carries the protocol version and client capabilities in `params._meta`, while results carry an explicit `resultType`; no protocol state is keyed by an initialization handshake, connection, or `Mcp-Session-Id`.",
+    "why": "Any worker can validate and process a request from its contents and authorization context, which avoids hidden connection affinity and makes horizontal routing easier to reason about.",
+    "related": [
+      "MCP (Model Context Protocol)",
+      "Multi Round-Trip Request (MRTR)",
+      "Tool Contract",
+      "Idempotency"
+    ]
+  },
+  {
+    "term": "Stochastic Gradient Descent (SGD)",
+    "category": "Math & training",
+    "meaning": "An optimizer family that updates parameters from a gradient estimated on a sampled example or minibatch rather than the complete training dataset.",
+    "why": "It is the baseline for understanding gradient noise, momentum, batch scaling, and the adaptive optimizers used in modern training.",
+    "related": [
+      "Gradient Descent",
+      "Batch Size",
+      "Learning Rate",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Stop Sequence",
+    "category": "Models & inference",
+    "meaning": "An application-specified token or text pattern that causes generation to stop when the decoding system encounters it.",
+    "why": "Stop sequences bound output protocols and multi-part generation without waiting for the model to decide semantically that it is finished.",
+    "related": [
+      "Decoding Strategy",
+      "Structured Output",
+      "Token",
+      "Termination Condition"
+    ]
+  },
+  {
+    "term": "Streaming",
+    "category": "Models & inference",
+    "meaning": "Delivering incremental response events before the complete result is ready. A stream may contain token text, structured deltas, tool-call arguments, usage metadata, or status events depending on the API.",
+    "why": "It improves perceived responsiveness, but it does not reduce the model's actual time to produce a complete answer.",
+    "related": [
+      "Time to First Token (TTFT)",
+      "Autoregressive",
+      "Observability"
+    ]
+  },
+  {
+    "term": "Structured Output",
+    "category": "Agents & tools",
+    "meaning": "Model output constrained or validated against a machine-readable schema so application code can consume fields without parsing free-form prose.",
+    "why": "It reduces format ambiguity at the model-to-software boundary and enables field-level validation and retries.",
+    "related": [
+      "Function Calling",
+      "Tool Contract",
+      "Verification Gate"
+    ]
+  },
+  {
+    "term": "Swarm",
+    "category": "Agents & tools",
+    "meaning": "A loosely coordinated multi-agent pattern in which local agent decisions and message exchange produce system-level behavior. The term is used inconsistently, so the actual topology, state ownership, and termination rules must be specified.",
+    "why": "",
+    "related": [
+      "Agent",
+      "Reviewer Agent",
+      "Handoff",
+      "Agent State"
+    ]
+  },
+  {
+    "term": "System Prompt",
+    "category": "Prompting & context",
+    "meaning": "A provider-defined instruction message or configuration supplied by the application to establish behavior and constraints within that provider's instruction hierarchy.",
+    "why": "System instructions can guide behavior, but they are not guaranteed to remain secret and should not be treated as a security boundary.",
+    "related": [
+      "Prompt Engineering",
+      "Prompt Injection",
+      "Context Engineering",
+      "Guardrails"
+    ]
+  },
+  {
+    "term": "Tail Latency",
+    "category": "Reliability & operations",
+    "meaning": "The latency experienced by the slowest portion of requests, commonly summarized with a high percentile under a stated workload and time window.",
+    "why": "Averages can look healthy while a meaningful group of users waits much longer because of queueing, contention, retries, or variable request cost.",
+    "related": [
+      "Time to First Token (TTFT)",
+      "Time per Output Token (TPOT)",
+      "Saturation",
+      "Goodput"
+    ]
+  },
+  {
+    "term": "Temperature",
+    "category": "Models & inference",
+    "meaning": "A decoding parameter that rescales logits before a probability distribution is formed. Higher positive values usually flatten the distribution; lower positive values sharpen it.",
+    "why": "Temperature changes sampling behavior, not the model's knowledge or factuality.",
+    "related": [
+      "Softmax",
+      "Autoregressive",
+      "Token"
+    ]
+  },
+  {
+    "term": "Tensor",
+    "category": "Data & representations",
+    "meaning": "A typed array with a shape, data type, and device placement that frameworks use to represent inputs, parameters, activations, and gradients. Automatic-differentiation metadata is framework- and operation-dependent, not an inherent property of every tensor.",
+    "why": "",
+    "related": [
+      "Autograd",
+      "Parameter",
+      "Mixed Precision"
+    ]
+  },
+  {
+    "term": "Tensor Parallelism",
+    "category": "Infrastructure & serving",
+    "meaning": "Partitioning tensor operations within a model layer across devices, with collective communication combining partial results during the layer computation.",
+    "why": "It lets one layer use memory and compute from several devices, but frequent communication can dominate when the interconnect or partition is unsuitable.",
+    "related": [
+      "Tensor",
+      "Pipeline Parallelism",
+      "Expert Parallelism",
+      "Parameter"
+    ]
+  },
+  {
+    "term": "Termination Condition",
+    "category": "Agents & tools",
+    "meaning": "An explicit rule that ends or pauses an agent run when it succeeds, fails, exhausts a budget, reaches a safe boundary, or requires escalation.",
+    "why": "Without a termination condition, an agent can loop, repeat side effects, waste budget, or claim completion without satisfying the goal.",
+    "related": [
+      "Agent Harness",
+      "Token Budget",
+      "Verification Gate",
+      "Stop Sequence"
+    ]
+  },
+  {
+    "term": "Test Oracle",
+    "category": "AI-native development",
+    "meaning": "The mechanism, specification, reference, invariant, or human judgment used to decide whether observed program behavior is correct.",
+    "why": "Generating test inputs is not enough; automated verification requires an independent basis for classifying each result.",
+    "related": [
+      "Regression Test",
+      "Verification Gate",
+      "Eval Set",
+      "Human-in-the-Loop (HITL)"
+    ]
+  },
+  {
+    "term": "Threat Model",
+    "category": "Security & governance",
+    "meaning": "A documented account of protected assets, trust boundaries, potential adversaries, assumed capabilities, attack paths, impacts, and planned controls.",
+    "why": "Security controls cannot be judged without stating what they defend, against whom, and under which assumptions.",
+    "related": [
+      "Least Privilege",
+      "Prompt Injection",
+      "Sandbox",
+      "Red Teaming"
+    ]
+  },
+  {
+    "term": "Time per Output Token (TPOT)",
+    "category": "Infrastructure & serving",
+    "meaning": "For one request with `N > 1` output tokens, the average post-first-token interval: `(t_N - t_1) / (N - 1)`. System distributions then aggregate those per-request averages.",
+    "why": "Users can receive the first token quickly while the rest of the answer streams slowly, so startup latency alone does not describe generation responsiveness.",
+    "related": [
+      "Decode Phase",
+      "Time to First Token (TTFT)",
+      "Streaming",
+      "Goodput"
+    ]
+  },
+  {
+    "term": "Time to First Token (TTFT)",
+    "category": "Models & inference",
+    "meaning": "The elapsed time from submitting a generation request until the client receives the first output token or content event under a defined measurement boundary.",
+    "why": "TTFT strongly affects perceived responsiveness and can reveal queueing, prompt processing, cache, or network delays.",
+    "related": [
+      "Streaming",
+      "Prompt Cache",
+      "Observability",
+      "Token Budget"
+    ]
+  },
+  {
+    "term": "Token",
+    "category": "Data & representations",
+    "meaning": "An integer identifier produced by a model-specific tokenizer from text, bytes, images, audio, or another input representation. A token can be a whole word, part of a word, punctuation, whitespace, a byte sequence, or a special control symbol.",
+    "why": "",
+    "related": [
+      "Token Budget",
+      "Context Window",
+      "Autoregressive"
+    ]
+  },
+  {
+    "term": "Token Budget",
+    "category": "Prompting & context",
+    "meaning": "An explicit allocation of token capacity across instructions, evidence, history, tool results, reasoning or working space, and output.",
+    "why": "Every included token competes for context capacity, latency, and cost. Budgeting forces you to preserve high-value evidence first.",
+    "related": [
+      "Context Window",
+      "Context Engineering",
+      "Progressive Disclosure",
+      "Cost per Successful Task"
+    ]
+  },
+  {
+    "term": "Tokenization",
+    "category": "Data & representations",
+    "meaning": "Converting an input representation into the ordered token identifiers a specific model or tokenizer accepts.",
+    "why": "Tokenization determines sequence length, vocabulary boundaries, cost accounting, truncation behavior, and how text or code is represented before embedding.",
+    "related": [
+      "Token",
+      "Vocabulary",
+      "Byte Pair Encoding (BPE)",
+      "Embedding"
+    ]
+  },
+  {
+    "term": "Tokens per Second (TPS)",
+    "category": "Infrastructure & serving",
+    "meaning": "A throughput measure reporting how many output tokens a serving system produces per unit time under a stated scope and workload.",
+    "why": "It complements startup latency by showing how quickly generation proceeds after output begins and how serving behaves under load.",
+    "related": [
+      "Time to First Token (TTFT)",
+      "Streaming",
+      "Prefill",
+      "Observability"
+    ]
+  },
+  {
+    "term": "Tool Contract",
+    "category": "Agents & tools",
+    "meaning": "The complete agreement for a tool boundary: purpose, typed inputs, outputs, validation, permissions, side effects, errors, timeouts, idempotency, and evidence returned to the caller.",
+    "why": "A schema tells a model what fields exist; a contract tells the system when the tool is safe and how failures must be handled.",
+    "related": [
+      "Function Calling",
+      "Structured Output",
+      "Least Privilege",
+      "Idempotency"
+    ]
+  },
+  {
+    "term": "Top-k Sampling",
+    "category": "Models & inference",
+    "meaning": "A decoding method that restricts the next-token distribution to the k highest-scoring candidates, renormalizes their probabilities, and samples from that set.",
+    "why": "It removes the long low-probability tail from sampling while keeping a fixed maximum candidate count.",
+    "related": [
+      "Nucleus Sampling (Top-p)",
+      "Temperature",
+      "Decoding Strategy",
+      "Logits"
+    ]
+  },
+  {
+    "term": "Trace",
+    "category": "AI-native development",
+    "meaning": "A correlated record of one request or task across model calls, retrieval, tools, state transitions, retries, approvals, and evaluations.",
+    "why": "It lets you reconstruct where time, cost, and failure entered a multi-step workflow.",
+    "related": [
+      "Observability",
+      "Agent State",
+      "Time to First Token (TTFT)",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "Transfer Learning",
+    "category": "Math & training",
+    "meaning": "Starting from representations or parameters learned on one data distribution or objective and adapting them for another. The transferable components and update strategy depend on architecture and task.",
+    "why": "",
+    "related": [
+      "Fine-tuning",
+      "Feature",
+      "SFT (Supervised Fine-Tuning)"
+    ]
+  },
+  {
+    "term": "Transformer",
+    "category": "Models & inference",
+    "meaning": "A neural-network architecture built from attention, position information, feed-forward sublayers, residual connections, and normalization. Encoder, decoder, and encoder-decoder variants use different masks and information flows.",
+    "why": "Training can process many sequence positions in parallel, while autoregressive generation still produces outputs step by step.",
+    "related": [
+      "Attention",
+      "Self-Attention",
+      "Encoder",
+      "Decoder"
+    ]
+  },
+  {
+    "term": "Trust Boundary",
+    "category": "Security & governance",
+    "meaning": "An interface where data, instructions, identity, or authority crosses between components or principals that operate under different trust assumptions.",
+    "why": "A boundary crossing is where the system must authenticate actors, validate data, constrain permissions, and decide which claims can influence action.",
+    "related": [
+      "Threat Model",
+      "Least Privilege",
+      "Sandbox",
+      "Indirect Prompt Injection"
+    ]
+  },
+  {
+    "term": "Underfitting",
+    "category": "Math & training",
+    "meaning": "A model or training setup has insufficient effective capacity, optimization, features, or training signal to capture useful patterns in the training data.",
+    "why": "",
+    "related": [
+      "Overfitting",
+      "Loss Function",
+      "Hyperparameter"
+    ]
+  },
+  {
+    "term": "VAE (Variational Autoencoder)",
+    "category": "Models & inference",
+    "meaning": "A latent-variable model trained with a reconstruction objective and a regularization term that keeps an approximate posterior close to a chosen prior. The reparameterization estimator allows gradients through stochastic latent sampling.",
+    "why": "",
+    "related": [
+      "Latent Space",
+      "Encoder",
+      "Decoder",
+      "Diffusion Model"
+    ]
+  },
+  {
+    "term": "Vector Database",
+    "category": "Retrieval & generation",
+    "meaning": "A storage and indexing system that supports nearest-neighbor queries over vector representations, often with metadata filtering, persistence, and approximate indexes.",
+    "why": "",
+    "related": [
+      "Embedding",
+      "Semantic Search",
+      "Hybrid Retrieval"
+    ]
+  },
+  {
+    "term": "Verification Gate",
+    "category": "Evaluation & safety",
+    "meaning": "A control point that blocks progress until defined evidence satisfies a correctness or quality criterion.",
+    "why": "It converts a model's claim of completion into an evidence-backed decision.",
+    "related": [
+      "Approval Gate",
+      "Regression Test",
+      "Scope Contract",
+      "Structured Output"
+    ]
+  },
+  {
+    "term": "Vision-Language Model (VLM)",
+    "category": "Multimodal systems",
+    "meaning": "A model that learns relationships between, or jointly processes, visual and language representations for tasks such as retrieval, description, question answering, or grounded generation.",
+    "why": "VLM performance depends on the visual encoder, language component, connection mechanism, training data, and resolution policy rather than one generic capability label.",
+    "related": [
+      "Multimodal Model",
+      "Vision Transformer (ViT)",
+      "Cross-Attention",
+      "Visual Grounding"
+    ]
+  },
+  {
+    "term": "Vision Transformer (ViT)",
+    "category": "Multimodal systems",
+    "meaning": "A vision architecture that represents an image as a sequence of patch embeddings with position information and processes that sequence with transformer encoder blocks.",
+    "why": "It provides a sequence-model interface for visual data, but performance and compute depend on patch size, resolution, pretraining, and inductive biases.",
+    "related": [
+      "Transformer",
+      "Patch Embedding",
+      "Self-Attention",
+      "Encoder"
+    ]
+  },
+  {
+    "term": "Visual Grounding",
+    "category": "Multimodal systems",
+    "meaning": "Connecting a language expression to spatial evidence in an image or video, such as a region, object, mask, or tracked entity.",
+    "why": "A fluent visual answer can be unsupported, while grounding makes the claimed referent inspectable and enables region-level evaluation.",
+    "related": [
+      "Grounding",
+      "Vision-Language Model (VLM)",
+      "Attention",
+      "Evaluation (Eval)"
+    ]
+  },
+  {
+    "term": "Vocabulary",
+    "category": "Data & representations",
+    "meaning": "The finite mapping between token identifiers and the units a tokenizer can emit, including ordinary, byte-level, and special control tokens.",
+    "why": "Vocabulary design affects sequence length, multilingual coverage, code representation, embedding size, and compatibility between tokenizers and model weights.",
+    "related": [
+      "Tokenization",
+      "Byte Pair Encoding (BPE)",
+      "Token",
+      "Embedding"
+    ]
+  },
+  {
+    "term": "Warmup",
+    "category": "Math & training",
+    "meaning": "An initial training phase in which the learning rate rises from a smaller value toward the main schedule's target value.",
+    "why": "Early gradients and optimizer statistics can be unstable, especially in large-batch or transformer training, so abrupt full-size updates may damage optimization.",
+    "related": [
+      "Learning Rate Schedule",
+      "Learning Rate",
+      "Batch Size",
+      "AdamW"
+    ]
+  },
+  {
+    "term": "Weight",
+    "category": "Math & training",
+    "meaning": "A trainable coefficient in a model transformation. Weights are usually organized into tensors, and optimization adjusts them to reduce the training objective.",
+    "why": "",
+    "related": [
+      "Parameter",
+      "Tensor",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Weight Decay",
+    "category": "Math & training",
+    "meaning": "An update rule that reduces selected parameter magnitudes over training, often by multiplying weights by a shrinkage factor separate from the gradient update.",
+    "why": "It can improve generalization, but the useful coefficient and excluded parameter groups depend on model, optimizer, schedule, and data.",
+    "related": [
+      "AdamW",
+      "Overfitting",
+      "Optimizer"
+    ]
+  },
+  {
+    "term": "Worktree",
+    "category": "AI-native development",
+    "meaning": "In Git, a working directory attached to a repository and branch or commit, with shared object storage but its own checked-out files and index.",
+    "why": "Separate worktrees let people and agents work concurrently without constantly switching or overwriting one checkout.",
+    "related": [
+      "Coding Agent",
+      "Patch",
+      "Scope Contract",
+      "Handoff"
+    ]
+  },
+  {
+    "term": "Zero-Shot",
+    "category": "Prompting & context",
+    "meaning": "Performing a task from instructions or task framing without including task-specific demonstrations in the immediate input.",
+    "why": "",
+    "related": [
+      "Few-Shot",
+      "Prompt Engineering",
+      "Transfer Learning"
+    ]
+  },
+  {
+    "term": "Zero Trust",
+    "category": "Security & governance",
+    "meaning": "A security model that grants no implicit trust from network location or asset ownership and instead evaluates each access request against identity, device, resource, policy, and current context.",
+    "why": "AI tools and agents span local files, cloud services, models, and external content, so a trusted internal network is too broad a basis for authority.",
+    "related": [
+      "Least Privilege",
+      "Trust Boundary",
+      "Approval Gate",
+      "Audit Log"
+    ]
+  }
+]

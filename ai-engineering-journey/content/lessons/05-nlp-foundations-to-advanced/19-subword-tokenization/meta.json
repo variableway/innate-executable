@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/19-subword-tokenization",
+  "slug": "19-subword-tokenization",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 19,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Subword Tokenization — BPE, WordPiece, Unigram, SentencePiece",
+    "zh": ""
+  },
+  "hook": "Word tokenizers choke on unseen words. Character tokenizers blow up sequence length. Subword tokenizers split the difference. Every modern LLM ships on one.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 01 (Text Processing)",
+    "Phase 5 · 04 (GloVe / FastText / Subword)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

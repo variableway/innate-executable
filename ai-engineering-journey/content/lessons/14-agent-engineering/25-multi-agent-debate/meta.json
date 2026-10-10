@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/25-multi-agent-debate",
+  "slug": "25-multi-agent-debate",
+  "phase": "14-agent-engineering",
+  "order": 25,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Multi-Agent Debate and Collaboration",
+    "zh": ""
+  },
+  "hook": "Du et al. (ICML 2024, \"Society of Minds\") run N model instances that independently propose answers, then iteratively critique each other over R rounds to converge. Improves factuality, rule-following, reasoning. Sparse topology beats full mesh on token cost.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 12 (Workflow Patterns)",
+    "Phase 14 · 05 (Self-Refine and CRITIC)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

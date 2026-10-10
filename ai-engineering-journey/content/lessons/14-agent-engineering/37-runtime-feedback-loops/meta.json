@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/37-runtime-feedback-loops",
+  "slug": "37-runtime-feedback-loops",
+  "phase": "14-agent-engineering",
+  "order": 37,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Runtime Feedback Loops",
+    "zh": ""
+  },
+  "hook": "Agents that do not see real command output guess. A feedback runner captures stdout, stderr, exit code, and timing into a structured record the next turn can read. Then the agent reacts to facts instead of to its own prediction of facts.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 32 (Minimal Workbench)",
+    "Phase 14 · 35 (Init Script)"
+  ],
+  "timeMinutes": 50,
+  "needsTranslation": true
+}

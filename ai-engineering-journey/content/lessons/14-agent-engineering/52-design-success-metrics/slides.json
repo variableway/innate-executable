@@ -1,0 +1,107 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Design Success Metrics Before the Result Exists\n\n> Measurement should answer a decision, not decorate a dashboard. Start with the goal, derive questions, then choose the smallest metrics that answer them.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lessons 47 and 51\n**Time:** ~70 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Derive questions and metrics from an outcome goal.\n- Define thresholds, windows, sources, and directions before observing results.\n- Pair outcome metrics with guardrails and counter-metrics.\n- Match evaluation evidence to the decision the build must support.",
+    "keyPoints": [
+      "Derive questions and metrics from an outcome goal.",
+      "Define thresholds, windows, sources, and directions before observing results.",
+      "Pair outcome metrics with guardrails and counter-metrics.",
+      "Match evaluation evidence to the decision the build must support."
+    ],
+    "commands": []
+  },
+  {
+    "id": "goal-question-metric",
+    "title": "Goal, Question, Metric",
+    "bodyMarkdown": "Start with a goal:\n\n> Reduce time to identify the affected service without increasing unsafe actions.\n\nDerive questions:\n\n- How quickly is the correct service identified?\n- How often is the identified service correct?\n- Does diagnosis remain read-only?\n- Does the workflow increase alert dismissal or operator workload?\n\nThen choose metrics that operationalize those questions.\n\n```mermaid\nflowchart LR\n  G[Goal] --> Q1[Question about outcome]\n  G --> Q2[Question about risk]\n  Q1 --> M1[Outcome metric]\n  Q2 --> M2[Guardrail metric]\n  M1 --> D[Decision rule]\n  M2 --> D\n```",
+    "keyPoints": [
+      "How quickly is the correct service identified?",
+      "How often is the identified service correct?",
+      "Does diagnosis remain read-only?",
+      "Does the workflow increase alert dismissal or operator workload?"
+    ],
+    "commands": []
+  },
+  {
+    "id": "a-metric-needs-a-contract",
+    "title": "A Metric Needs a Contract",
+    "bodyMarkdown": "Every metric needs:\n\n| Field | Example |\n|---|---|\n| Name | `median_identification_seconds` |\n| Direction | at most |\n| Threshold | 120 |\n| Window | ten incident replays |\n| Source | replay event log |\n| Population | on-call engineers in the pilot |\n| Kind | outcome or guardrail |\n\nWithout source and window, a number cannot be reproduced. Without a threshold, it cannot drive a decision.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "outcome-guardrail-and-counter-metric",
+    "title": "Outcome, Guardrail, and Counter-Metric",
+    "bodyMarkdown": "- **Outcome metric:** did the desired state improve?\n- **Guardrail:** did a fixed constraint remain true?\n- **Counter-metric:** did the local improvement shift cost or harm elsewhere?\n\nFor an incident workflow, speed is not enough. Correctness, production writes, operator workload, and missed alerts protect against a fast but unsafe result.",
+    "keyPoints": [
+      "Outcome metric:: did the desired state improve?",
+      "Guardrail:: did a fixed constraint remain true?",
+      "Counter-metric:: did the local improvement shift cost or harm elsewhere?"
+    ],
+    "commands": []
+  },
+  {
+    "id": "offline-and-online-evidence",
+    "title": "Offline and Online Evidence",
+    "bodyMarkdown": "Offline replay is useful for repeatability and edge coverage. A bounded pilot is useful for real behavior, trust, and workflow effects. Neither substitutes for the other.\n\nUse the cheapest evidence that can answer the current decision. Do not expose real users merely because the implementation is ready.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "decide-before-you-measure",
+    "title": "Decide Before You Measure",
+    "bodyMarkdown": "Write the pass, fail, and ambiguous paths before seeing results. Otherwise the team will move the threshold to protect the build.\n\nExample:\n\n- pass: correct service rate at least 0.9 and median time at most 120 seconds;\n- fail: any production write or correct rate below 0.75;\n- ambiguous: small improvement with wide variance, requiring a larger replay set.",
+    "keyPoints": [
+      "pass: correct service rate at least 0.9 and median time at most 120 seconds;",
+      "fail: any production write or correct rate below 0.75;",
+      "ambiguous: small improvement with wide variance, requiring a larger replay set."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab validates a measurement plan, evaluates inclusive thresholds, records missing values, and writes `outputs/measurement-report.json`.\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nRemove the guardrail metric and observe why the plan becomes invalid even when the outcome metrics remain.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Derive three questions from one outcome goal.\n2. Add a counter-metric that catches cost shifted to another role.\n3. Define the source, population, and window for every metric.\n4. Write pass, fail, and ambiguous decisions before generating values.\n5. Identify one metric that is easy to collect but cannot change the decision. Remove it.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Basili, Software Modeling and Measurement: The Goal/Question/Metric Paradigm](https://drum.lib.umd.edu/items/8119803a-362b-42ec-b6ce-2311713e7236), for deriving operational measurements from explicit goals.\n- [Basili, Caldiera, and Rombach, The Goal Question Metric Approach](https://www.cs.toronto.edu/~sme/CSC444F/handouts/GQM-paper.pdf), for applying the method as a feedback and improvement system.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/measurement-report.json`. It defines the evidence gate for the prototype, pilot, or production stage.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

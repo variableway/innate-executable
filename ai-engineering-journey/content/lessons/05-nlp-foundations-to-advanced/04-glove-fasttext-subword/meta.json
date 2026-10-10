@@ -1,0 +1,21 @@
+{
+  "id": "05-nlp-foundations-to-advanced/04-glove-fasttext-subword",
+  "slug": "04-glove-fasttext-subword",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 4,
+  "phaseOrder": 5,
+  "title": {
+    "en": "GloVe, FastText, and Subword Embeddings",
+    "zh": ""
+  },
+  "hook": "Word2Vec trained one embedding per word. GloVe factorized the co-occurrence matrix. FastText embedded the pieces. BPE bridged to transformers.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 03 (Word2Vec from Scratch)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

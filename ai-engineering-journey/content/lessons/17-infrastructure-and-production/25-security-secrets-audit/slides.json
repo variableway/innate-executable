@@ -1,0 +1,89 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Security — Secrets, API Key Rotation, Audit Logs, Guardrails\n\n> Eliminate secret sprawl via centralized vaults (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault). Never store credentials in config files, env files in VCS, spreadsheets. Use IAM roles over static keys; OIDC for CI/CD. The AI-gateway pattern is the 2026 solution: apps → gateway → model provider, with gateway pulling credentials from vault at runtime. Rotate in vault and all apps pick up in minutes — no redeploys, no Slack \"who has the new key\" messages. Rotation policy ≤90 days; scan with TruffleHog / GitGuardian / Gitleaks on every commit. Zero-trust: MFA, SSO, RBAC/ABAC, short-lived tokens, device posture. PII scrubbing uses entity recognition to mask PHI/PII before forwarding; consistent tokenization (Mesh approach) maps sensitive values to stable placeholders so the LLM preserves code/relationship semantics. Network egress: LLM services in dedicated VPC/VNet subnet whitelisting only `api.openai.com`, `api.anthropic.com` etc; block all other outbound. The 2026 incident driver: Vercel supply-chain attack via compromised CI/CD credentials exfiltrated env vars across thousands of customer deployments.\n\n**Type:** Learn\n**Languages:** Python (stdlib, toy PII-scrubber + audit-log writer)\n**Prerequisites:** Phase 17 · 19 (AI Gateways), Phase 17 · 13 (Observability)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Enumerate the four secret-management anti-patterns (config files in VCS, hardcoded env, spreadsheets, static keys) and name their replacements.\n- Explain the AI-gateway-pulls-from-vault pattern as 2026 production standard.\n- Implement a PII scrubber with consistent tokenization (same value → same placeholder) so semantics survive.\n- Name the 2026 Vercel supply-chain incident and what it taught about CI/CD credential hygiene.",
+    "keyPoints": [
+      "Enumerate the four secret-management anti-patterns (config files in VCS, hardcoded env, spreadsheets, static keys) and name their replacements.",
+      "Explain the AI-gateway-pulls-from-vault pattern as 2026 production standard.",
+      "Implement a PII scrubber with consistent tokenization (same value → same placeholder) so semantics survive.",
+      "Name the 2026 Vercel supply-chain incident and what it taught about CI/CD credential hygiene."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "An intern commits `.env` with API keys. They delete it quickly. The keys are already in git history — GitGuardian scan catches it, your rotation process is \"Slack the team, update 40 config files, redeploy all services.\" 8 hours later, half your services are live and half are waiting for deploy windows.\n\nSeparately, user prompts include \"My SSN is 123-45-6789.\" Prompt goes to OpenAI. You have a BAA but your internal policy is to mask PII before forwarding. You didn't.\n\nSeparately, your EKS cluster's LLM pod can reach any internet host. Someone exfils data via DNS lookup to an attacker-controlled domain. Nothing blocked it.\n\nSecurity for LLM services has to address all three vectors. Vault-backed credentials. PII scrubbing. Network egress filtering. Audit logs.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Centralized vault + IAM-role pull\n\n**Vault**: HashiCorp Vault, AWS Secrets Manager, Azure Key Vault, GCP Secret Manager. One source of truth.\n\n**IAM role**: app/gateway authenticates via its IAM identity, not a static key. Vault returns the secret for the lifetime of the token.\n\n**The AI-gateway pattern**: gateway pulls `OPENAI_API_KEY` from vault at request time. Rotate in vault; next request gets the new key. No redeploys.\n\n### Rotation policy ≤ 90 days\n\nAll API keys, vault root tokens, CI/CD credentials. Automated rotation where possible. Manual rotation logged and tracked.\n\n### Secret scanning\n\n- **TruffleHog** — regex + entropy on commits.\n- **GitGuardian** — commercial, high accuracy.\n- **Gitleaks** — OSS, runs in CI.\n\nRun on every commit. Block PR if new secret detected.\n\n### Zero-trust posture\n\n- MFA required on all accounts.\n- SSO via SAML/OIDC.\n- RBAC (role-based) or ABAC (attribute-based) for fine grained access.\n- Short-lived tokens (hours, not days).\n- Device posture — only corp devices with disk encryption.\n\n### PII / PHI scrubbing\n\nBefore the prompt leaves your infra:\n\n1. Entity recognition (spaCy NER, Presidio, commercial).\n2. Mask matched entities: `\"My SSN is 123-45-6789\"` → `\"My SSN is [SSN_TOKEN_A3F]\"`.\n3. Consistent tokenization (Mesh approach): same value maps to the same placeholder so the LLM preserves relationships.\n4. Optional reverse mapping for LLM response.\n\nStatic regex filters catch basic patterns; NER catches more. Use both.\n\n### Input + output guardrails\n\nInput: block known jailbreaks, forbidden topics; rate-limit per-user.\n\nOutput: regex scrub for leaked secrets (API key patterns, email patterns in refusal contexts), classifier for policy violations.\n\n### Network egress whitelist\n\nLLM services in a dedicated subnet:\n- Whitelist: `api.openai.com`, `api.anthropic.com`, vector DB endpoints, vault endpoints.\n- Everything else: drop.\n- DNS via allowlist-only resolver (avoid DNS-tunneling exfil).\n\n### Audit log\n\nImmutable log of every LLM call with:\n- Timestamp.\n- User / tenant.\n- Prompt hash (not raw prompt for privacy).\n- Model + version.\n- Token counts.\n- Cost.\n- Response hash.\n- Any guardrail trips.\n\nRetain per regulatory requirement (SOC 2 1 year, HIPAA 6 years).\n\n### The 2026 Vercel incident\n\nSupply-chain attack: compromised CI/CD credentials exfiltrated env vars across thousands of customer deployments. Lesson: CI/CD credentials are prod-equivalent. Store in vault. Scope narrowly. Rotate aggressively.\n\n### Numbers you should remember\n\n- Rotation policy: ≤ 90 days.\n- Scan on every commit: TruffleHog / GitGuardian / Gitleaks.\n- Vercel 2026: CI/CD creds compromised → thousands of customer env vars leaked.\n- Audit log retention: SOC 2 = 1 year, HIPAA = 6 years.\n\n```figure\ni4-vault-rotation\n```",
+    "keyPoints": [
+      "Vault",
+      "IAM role",
+      "The AI-gateway pattern",
+      "TruffleHog: — regex + entropy on commits.",
+      "GitGuardian: — commercial, high accuracy.",
+      "Gitleaks: — OSS, runs in CI."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`code/main.py` implements a toy PII scrubber with consistent tokenization and an append-only audit log.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces `outputs/skill-llm-security-plan.md`. Given regulatory scope and current state, plans the vault migration, scrubber, egress, audit log.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Run `code/main.py`. Send two prompts referencing the same SSN. Confirm both get the same placeholder.\n2. Design the network egress policy for a vLLM-on-EKS deployment calling OpenAI + Anthropic + Weaviate.\n3. You discover a key in git history (2 years old). What's the correct response — rotate the key, scrub history, or both? Justify.\n4. Your audit log grows 10 GB/day. Design retention tiers (hot 30d, warm 12mo, cold 6yr).\n5. Argue whether reverse-tokenization (substituting real values back into LLM response) is worth the complexity versus keeping placeholders visible.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| Vault | \"secrets store\" | Centralized credential management service |\n| IAM role | \"identity-based auth\" | Role assumed by app; returns short-lived creds |\n| OIDC for CI/CD | \"cloud-issued tokens\" | No static keys in CI — identity via OIDC |\n| TruffleHog / GitGuardian / Gitleaks | \"secret scanners\" | Commit-time secret detection |\n| RBAC / ABAC | \"access control\" | Role-based vs attribute-based |\n| PII scrubbing | \"data masking\" | Remove or tokenize sensitive entities |\n| Consistent tokenization | \"stable placeholders\" | Same value → same token each time |\n| Mesh approach | \"Mesh tokenization\" | Semantic-preserving tokenization pattern |\n| Egress whitelist | \"outbound allowlist\" | Only permitted domains reachable |\n| Audit log | \"immutable history\" | Append-only record for compliance |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Doppler — Advanced LLM Security](https://www.doppler.com/blog/advanced-llm-security)\n- [Portkey — Manage LLM API keys with secret references](https://portkey.ai/blog/secret-references-ai-api-key-management/)\n- [Datadog — LLM Guardrails Best Practices](https://www.datadoghq.com/blog/llm-guardrails-best-practices/)\n- [JumpServer — Secrets Management Best Practices 2026](https://www.jumpserver.com/blog/secret-management-best-practices-2026)\n- [Microsoft Presidio](https://github.com/microsoft/presidio) — PII detection and anonymization.\n- [HashiCorp Vault docs](https://developer.hashicorp.com/vault/docs)",
+    "keyPoints": [
+      "[Doppler — Advanced LLM Security](https://www.doppler.com/blog/advanced-llm-security)",
+      "[Portkey — Manage LLM API keys with secret references](https://portkey.ai/blog/secret-references-ai-api-key-management/)",
+      "[Datadog — LLM Guardrails Best Practices](https://www.datadoghq.com/blog/llm-guardrails-best-practices/)",
+      "[JumpServer — Secrets Management Best Practices 2026](https://www.jumpserver.com/blog/secret-management-best-practices-2026)",
+      "[Microsoft Presidio](https://github.com/microsoft/presidio) — PII detection and anonymization.",
+      "[HashiCorp Vault docs](https://developer.hashicorp.com/vault/docs)"
+    ],
+    "commands": []
+  }
+]

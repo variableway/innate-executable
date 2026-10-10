@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/29-mcp-reliability-cancellation-and-flow-control",
+  "slug": "29-mcp-reliability-cancellation-and-flow-control",
+  "phase": "13-tools-and-protocols",
+  "order": 29,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Reliability, Cancellation, and Flow Control",
+    "zh": ""
+  },
+  "hook": "A request ID correlates a message. It does not make a side effect safe, stop a worker, or protect a stream from a slow consumer.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13",
+    "Lessons 09 and 13"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

@@ -1,0 +1,23 @@
+{
+  "id": "12-multimodal-ai/11-chameleon-early-fusion-tokens",
+  "slug": "11-chameleon-early-fusion-tokens",
+  "phase": "12-multimodal-ai",
+  "order": 11,
+  "phaseOrder": 12,
+  "title": {
+    "en": "Chameleon and Early-Fusion Token-Only Multimodal Models",
+    "zh": ""
+  },
+  "hook": "Every VLM we have seen so far keeps images and text separate. Visual tokens come from a vision encoder, flow into a projector, then meet text inside the LLM. The vision and text vocabularies never overlap. Chameleon (Meta, May 2024) asked: what if they did? Train a VQ-VAE that turns an image into a sequence of discrete tokens from a shared vocabulary. Every multimodal document is now one sequence — text tokens and image tokens interleaved, a single autoregressive loss. Side effect: the model can generate mixed-modality outputs — alternating text and image tokens in a single inference call. This lesson reads the early-fusion thesis and builds a toy version end to end.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib",
+    "VQ-VAE tokenizer + interleaved decoder)"
+  ],
+  "prerequisites": [
+    "Phase 12 · 05",
+    "Phase 8 (Generative AI)"
+  ],
+  "timeMinutes": 180,
+  "needsTranslation": true
+}

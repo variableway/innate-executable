@@ -1,0 +1,38 @@
+---
+title: "Email Drafting Agent"
+description: "Drafts professional emails from short prompts using a CrewAI writer + editor."
+framework: "crewai"
+llm: "gpt-4o"
+industry: "Communication"
+difficulty: "beginner"
+tags: ["email", "writing", "crewai"]
+language: "Python"
+entrypoint: "agent.py"
+requirements: "requirements.txt"
+githubPath: "agents/05-email-drafting-agent"
+publishedAt: 2024-10-12
+order: 5
+objectives:
+  - "Take a short email brief"
+  - "Draft an email with a Writer agent"
+  - "Polish tone and clarity with an Editor agent"
+---
+
+A two-agent CrewAI flow that turns a one-line brief into a polished email.
+
+## Quick start
+
+```bash
+cd agents/05-email-drafting-agent
+pip install -r requirements.txt
+export OPENAI_API_KEY=...
+python agent.py --brief "follow up on Q3 invoice to ACME Corp"
+```
+
+## Flow
+
+```
+Brief ──▶ Writer ──▶ Editor ──▶ Polished email
+```
+
+Each agent has a tight `role` / `goal` / `backstory` so the tone stays consistent regardless of input.

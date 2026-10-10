@@ -1,0 +1,22 @@
+{
+  "id": "16-multi-agent-and-swarms/04-primitive-model",
+  "slug": "04-primitive-model",
+  "phase": "16-multi-agent-and-swarms",
+  "order": 4,
+  "phaseOrder": 16,
+  "title": {
+    "en": "The Multi-Agent Primitive Model",
+    "zh": ""
+  },
+  "hook": "Four primitives, nothing more — the agent, the handoff, the shared state, the orchestrator — span a four-dimensional design space, and the major multi-agent frameworks shipping in 2026 (AutoGen, LangGraph, CrewAI, OpenAI Agents SDK, Microsoft Agent Framework) are points in it. This lesson builds them from zero, runs a toy system on all four, then maps every major framework onto the same axes so you can read any new release in one paragraph.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 (Agent Engineering)",
+    "Phase 16 · 01 (Why Multi-Agent)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

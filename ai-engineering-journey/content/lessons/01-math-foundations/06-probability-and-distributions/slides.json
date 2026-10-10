@@ -1,0 +1,164 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# 概率与分布\n\n> 概率是 AI 用来表达不确定性的语言。\n\n**类型:** Learn\n**语言:** Python\n**先修:** Phase 1, Lessons 01-04\n**时长:** ~75 分钟",
+    "keyPoints": [
+      "类型:",
+      "语言:",
+      "先修:",
+      "时长:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "学习目标",
+    "title": "学习目标",
+    "bodyMarkdown": "- 从零实现伯努利、类别、泊松、均匀和正态分布的 PMF 与 PDF\n- 计算期望与方差，并用中心极限定理解释为什么高斯分布无处不在\n- 用数值稳定技巧（减去最大 logit）构建 softmax 和 log-softmax 函数\n- 从 logits 计算交叉熵损失，并把它与负对数似然联系起来",
+    "keyPoints": [
+      "从零实现伯努利、类别、泊松、均匀和正态分布的 PMF 与 PDF",
+      "计算期望与方差，并用中心极限定理解释为什么高斯分布无处不在",
+      "用数值稳定技巧（减去最大 logit）构建 softmax 和 log-softmax 函数",
+      "从 logits 计算交叉熵损失，并把它与负对数似然联系起来"
+    ],
+    "commands": []
+  },
+  {
+    "id": "问题",
+    "title": "问题",
+    "bodyMarkdown": "一个分类器输出 `[0.03, 0.91, 0.06]`。一个语言模型从 5 万个候选词中挑出下一个词。一个扩散模型通过从学到的分布中采样来生成图像。这些都是概率在起作用。\n\n模型做出的每一个预测都是一个概率分布。每个损失函数衡量预测分布与真实分布有多远。每一步训练都在调整参数，让一个分布更像另一个分布。没有概率，你一篇 ML 论文都读不懂，一个模型都调不通，也弄不清为什么训练损失是 NaN。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "概念",
+    "title": "概念",
+    "bodyMarkdown": "### 事件、样本空间与概率\n\n样本空间 S 是所有可能结果的集合。事件是样本空间的一个子集。概率把事件映射到 0 与 1 之间的数。\n\n```\nCoin flip:\n  S = {H, T}\n  P(H) = 0.5,  P(T) = 0.5\n\nSingle die roll:\n  S = {1, 2, 3, 4, 5, 6}\n  P(even) = P({2, 4, 6}) = 3/6 = 0.5\n```\n\n三条公理定义了全部概率论：\n1. 对任意事件 A，P(A) >= 0\n2. P(S) = 1（总会有事发生）\n3. 当 A 与 B 不可能同时发生时，P(A or B) = P(A) + P(B)\n\n其他一切（贝叶斯定理、期望、分布）都由这三条规则推出。\n\n### 条件概率与独立性\n\nP(A|B) 表示在 B 已发生的条件下 A 的概率。\n\n```\nP(A|B) = P(A and B) / P(B)\n\nExample: deck of cards\n  P(King | Face card) = P(King and Face card) / P(Face card)\n                      = (4/52) / (12/52)\n                      = 4/12 = 1/3\n```\n\n当知道其中一个事件不能告诉你另一个事件的任何信息时，两事件独立：\n\n```\nIndependent:   P(A|B) = P(A)\nEquivalent to: P(A and B) = P(A) * P(B)\n```\n\n抛硬币是独立的。不放回抽牌不是。\n\n### 概率质量函数 vs 概率密度函数\n\n离散随机变量有概率质量函数（PMF）。每个结果有一个可直接读出的具体概率。\n\n```\nPMF: P(X = k)\n\nFair die:\n  P(X = 1) = 1/6\n  P(X = 2) = 1/6\n  ...\n  P(X = 6) = 1/6\n\n  Sum of all probabilities = 1\n```\n\n连续随机变量有概率密度函数（PDF）。单点上的密度不是概率。概率来自在区间上对密度积分。\n\n```\nPDF: f(x)\n\nP(a <= X <= b) = integral of f(x) from a to b\n\nf(x) can be greater than 1 (density, not probability)\nintegral from -inf to +inf of f(x) dx = 1\n```\n\n这个区分在 ML 里很重要。分类输出是 PMF（离散选择）。VAE 的隐空间用 PDF（连续）。\n\n### 常见分布\n\n**伯努利分布（Bernoulli）：** 一次试验，两种结果。对二分类建模。\n\n```\nP(X = 1) = p\nP(X = 0) = 1 - p\nMean = p,  Variance = p(1-p)\n```\n\n**类别分布（Categorical）：** 一次试验，k 种结果。对多分类建模（softmax 输出）。\n\n```\nP(X = i) = p_i,  where sum of p_i = 1\nExample: P(cat) = 0.7,  P(dog) = 0.2,  P(bird) = 0.1\n```\n\n**均匀分布（Uniform）：** 所有结果等可能。用于随机初始化。\n\n```\nDiscrete: P(X = k) = 1/n for k in {1, ..., n}\nContinuous: f(x) = 1/(b-a) for x in [a, b]\n```\n\n**正态分布（Normal / Gaussian）：** 钟形曲线。由均值（mu）和方差（sigma^2）参数化。\n\n```\nf(x) = (1 / sqrt(2*pi*sigma^2)) * exp(-(x - mu)^2 / (2*sigma^2))\n\nStandard normal: mu = 0, sigma = 1\n  68% of data within 1 sigma\n  95% within 2 sigma\n  99.7% within 3 sigma\n```\n\n**泊松分布（Poisson）：** 固定区间内稀有事件的计数。对事件速率建模。\n\n```\nP(X = k) = (lambda^k * e^(-lambda)) / k!\nMean = lambda,  Variance = lambda\n```\n\n### 期望与方差\n\n期望是按概率加权的平均结果。\n\n```\nDiscrete:   E[X] = sum of x_i * P(X = x_i)\nContinuous: E[X] = integral of x * f(x) dx\n```\n\n方差衡量围绕均值的分散程度。\n\n```\nVar(X) = E[(X - E[X])^2] = E[X^2] - (E[X])^2\nStandard deviation = sqrt(Var(X))\n```\n\n在 ML 里，期望以损失函数的形式出现（数据分布上的平均损失）。方差告诉你模型的稳定性。梯度方差高意味着训练噪声大。\n\n### 联合分布与边缘分布\n\n联合分布 P(X, Y) 描述两个随机变量一起的行为。\n\n联合 PMF 例子（X = 天气，Y = 带伞）：\n\n| | Y=0 (no umbrella) | Y=1 (umbrella) | 边缘 P(X) |\n|---|---|---|---|\n| X=0 (sun) | 0.40 | 0.10 | P(X=0) = 0.50 |\n| X=1 (rain) | 0.05 | 0.45 | P(X=1) = 0.50 |\n| **边缘 P(Y)** | P(Y=0) = 0.45 | P(Y=1) = 0.55 | 1.00 |\n\n边缘分布把另一个变量求和消去：\n\n```\nP(X = x) = sum over all y of P(X = x, Y = y)\n```\n\n上表中的行和列总计就是边缘分布。\n\n### 正态分布为何无处不在\n\n中心极限定理：许多独立随机变量之和（或平均）收敛到正态分布，与原始分布无关。\n\n```\nRoll 1 die:  uniform distribution (flat)\nAverage of 2 dice:  triangular (peaked)\nAverage of 30 dice: nearly perfect bell curve\n\nThis works for ANY starting distribution.\n```\n\n这就是为什么：\n- 测量误差近似正态（许多微小的独立来源）\n- 神经网络的权重初始化用正态分布\n- SGD 中的梯度噪声近似正态（许多样本梯度之和）\n- 正态分布是给定均值和方差下的最大熵分布\n\n### 对数概率\n\n原始概率会引起数值问题。把许多很小的概率连乘会很快下溢到零。\n\n```\nP(sentence) = P(word1) * P(word2) * ... * P(word_n)\n            = 0.01 * 0.003 * 0.02 * ...\n            -> 0.0 (underflow after ~30 terms)\n```\n\n对数概率解决了这个问题。乘法变成加法。\n\n```\nlog P(sentence) = log P(word1) + log P(word2) + ... + log P(word_n)\n                = -4.6 + -5.8 + -3.9 + ...\n                -> finite number (no underflow)\n```\n\n规则：\n- log(a * b) = log(a) + log(b)\n- 对数概率总是 <= 0（因为 0 < P <= 1）\n- 越负 = 越不可能\n- 交叉熵损失就是正确类别的负对数概率\n\n### Softmax 作为概率分布\n\n神经网络输出原始分数（logits）。Softmax 把它们转成合法的概率分布。\n\n```\nsoftmax(z_i) = exp(z_i) / sum(exp(z_j) for all j)\n\nProperties:\n  - All outputs are in (0, 1)\n  - All outputs sum to 1\n  - Preserves relative ordering of inputs\n  - exp() amplifies differences between logits\n```\n\nSoftmax 技巧：在指数化之前减去最大 logit，以防溢出。\n\n```\nz = [100, 101, 102]\nexp(102) = overflow\n\nz_shifted = z - max(z) = [-2, -1, 0]\nexp(0) = 1  (safe)\n\nSame result, no overflow.\n```\n\nLog-softmax 把 softmax 和 log 结合起来以获得数值稳定性。PyTorch 内部就用它计算交叉熵损失。\n\n### 采样\n\n采样就是从分布中抽取随机值。在 ML 里：\n- Dropout 随机采样哪些神经元置零\n- 数据增强采样随机变换\n- 语言模型从预测分布中采样下一个 token\n- 扩散模型采样噪声并逐步去噪\n\n从任意分布采样需要逆变换采样、拒绝采样或重参数化技巧（VAE 中使用）等技术。\n\n```figure\ngaussian-pdf\n```",
+    "keyPoints": [
+      "对任意事件 A，P(A) >= 0",
+      "P(S) = 1（总会有事发生）",
+      "当 A 与 B 不可能同时发生时，P(A or B) = P(A) + P(B)",
+      "伯努利分布（Bernoulli）：",
+      "类别分布（Categorical）：",
+      "均匀分布（Uniform）："
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "Coin flip:\n  S = {H, T}\n  P(H) = 0.5,  P(T) = 0.5\n\nSingle die roll:\n  S = {1, 2, 3, 4, 5, 6}\n  P(even) = P({2, 4, 6}) = 3/6 = 0.5"
+      },
+      {
+        "lang": "text",
+        "code": "P(A|B) = P(A and B) / P(B)\n\nExample: deck of cards\n  P(King | Face card) = P(King and Face card) / P(Face card)\n                      = (4/52) / (12/52)\n                      = 4/12 = 1/3"
+      },
+      {
+        "lang": "text",
+        "code": "Independent:   P(A|B) = P(A)\nEquivalent to: P(A and B) = P(A) * P(B)"
+      },
+      {
+        "lang": "text",
+        "code": "PMF: P(X = k)\n\nFair die:\n  P(X = 1) = 1/6\n  P(X = 2) = 1/6\n  ...\n  P(X = 6) = 1/6\n\n  Sum of all probabilities = 1"
+      },
+      {
+        "lang": "text",
+        "code": "PDF: f(x)\n\nP(a <= X <= b) = integral of f(x) from a to b\n\nf(x) can be greater than 1 (density, not probability)\nintegral from -inf to +inf of f(x) dx = 1"
+      },
+      {
+        "lang": "text",
+        "code": "P(X = 1) = p\nP(X = 0) = 1 - p\nMean = p,  Variance = p(1-p)"
+      },
+      {
+        "lang": "text",
+        "code": "P(X = i) = p_i,  where sum of p_i = 1\nExample: P(cat) = 0.7,  P(dog) = 0.2,  P(bird) = 0.1"
+      },
+      {
+        "lang": "text",
+        "code": "Discrete: P(X = k) = 1/n for k in {1, ..., n}\nContinuous: f(x) = 1/(b-a) for x in [a, b]"
+      },
+      {
+        "lang": "text",
+        "code": "f(x) = (1 / sqrt(2*pi*sigma^2)) * exp(-(x - mu)^2 / (2*sigma^2))\n\nStandard normal: mu = 0, sigma = 1\n  68% of data within 1 sigma\n  95% within 2 sigma\n  99.7% within 3 sigma"
+      },
+      {
+        "lang": "text",
+        "code": "P(X = k) = (lambda^k * e^(-lambda)) / k!\nMean = lambda,  Variance = lambda"
+      },
+      {
+        "lang": "text",
+        "code": "Discrete:   E[X] = sum of x_i * P(X = x_i)\nContinuous: E[X] = integral of x * f(x) dx"
+      },
+      {
+        "lang": "text",
+        "code": "Var(X) = E[(X - E[X])^2] = E[X^2] - (E[X])^2\nStandard deviation = sqrt(Var(X))"
+      },
+      {
+        "lang": "text",
+        "code": "P(X = x) = sum over all y of P(X = x, Y = y)"
+      },
+      {
+        "lang": "text",
+        "code": "Roll 1 die:  uniform distribution (flat)\nAverage of 2 dice:  triangular (peaked)\nAverage of 30 dice: nearly perfect bell curve\n\nThis works for ANY starting distribution."
+      },
+      {
+        "lang": "text",
+        "code": "P(sentence) = P(word1) * P(word2) * ... * P(word_n)\n            = 0.01 * 0.003 * 0.02 * ...\n            -> 0.0 (underflow after ~30 terms)"
+      },
+      {
+        "lang": "text",
+        "code": "log P(sentence) = log P(word1) + log P(word2) + ... + log P(word_n)\n                = -4.6 + -5.8 + -3.9 + ...\n                -> finite number (no underflow)"
+      },
+      {
+        "lang": "text",
+        "code": "softmax(z_i) = exp(z_i) / sum(exp(z_j) for all j)\n\nProperties:\n  - All outputs are in (0, 1)\n  - All outputs sum to 1\n  - Preserves relative ordering of inputs\n  - exp() amplifies differences between logits"
+      },
+      {
+        "lang": "text",
+        "code": "z = [100, 101, 102]\nexp(102) = overflow\n\nz_shifted = z - max(z) = [-2, -1, 0]\nexp(0) = 1  (safe)\n\nSame result, no overflow."
+      }
+    ]
+  },
+  {
+    "id": "动手做",
+    "title": "动手做",
+    "bodyMarkdown": "### 步骤 1：概率基础\n\n```python\nimport math\nimport random\n\ndef factorial(n):\n    result = 1\n    for i in range(2, n + 1):\n        result *= i\n    return result\n\ndef combinations(n, k):\n    return factorial(n) // (factorial(k) * factorial(n - k))\n\ndef conditional_probability(p_a_and_b, p_b):\n    return p_a_and_b / p_b\n\np_king_given_face = conditional_probability(4/52, 12/52)\nprint(f\"P(King | Face card) = {p_king_given_face:.4f}\")\n```\n\n### 步骤 2：从零实现 PMF 与 PDF\n\n```python\ndef bernoulli_pmf(k, p):\n    return p if k == 1 else (1 - p)\n\ndef categorical_pmf(k, probs):\n    return probs[k]\n\ndef poisson_pmf(k, lam):\n    return (lam ** k) * math.exp(-lam) / factorial(k)\n\ndef uniform_pdf(x, a, b):\n    if a <= x <= b:\n        return 1.0 / (b - a)\n    return 0.0\n\ndef normal_pdf(x, mu, sigma):\n    coeff = 1.0 / (sigma * math.sqrt(2 * math.pi))\n    exponent = -0.5 * ((x - mu) / sigma) ** 2\n    return coeff * math.exp(exponent)\n```\n\n### 步骤 3：期望与方差\n\n```python\ndef expected_value(values, probabilities):\n    return sum(v * p for v, p in zip(values, probabilities))\n\ndef variance(values, probabilities):\n    mu = expected_value(values, probabilities)\n    return sum(p * (v - mu) ** 2 for v, p in zip(values, probabilities))\n\ndie_values = [1, 2, 3, 4, 5, 6]\ndie_probs = [1/6] * 6\nmu = expected_value(die_values, die_probs)\nvar = variance(die_values, die_probs)\nprint(f\"Die: E[X] = {mu:.4f}, Var(X) = {var:.4f}, SD = {var**0.5:.4f}\")\n```\n\n### 步骤 4：从分布采样\n\n```python\ndef sample_bernoulli(p, n=1):\n    return [1 if random.random() < p else 0 for _ in range(n)]\n\ndef sample_categorical(probs, n=1):\n    cumulative = []\n    total = 0\n    for p in probs:\n        total += p\n        cumulative.append(total)\n    samples = []\n    for _ in range(n):\n        r = random.random()\n        for i, c in enumerate(cumulative):\n            if r <= c:\n                samples.append(i)\n                break\n    return samples\n\ndef sample_normal_box_muller(mu, sigma, n=1):\n    samples = []\n    for _ in range(n):\n        u1 = random.random()\n        u2 = random.random()\n        z = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)\n        samples.append(mu + sigma * z)\n    return samples\n```\n\n### 步骤 5：Softmax 与对数概率\n\n```python\ndef softmax(logits):\n    max_logit = max(logits)\n    shifted = [z - max_logit for z in logits]\n    exps = [math.exp(z) for z in shifted]\n    total = sum(exps)\n    return [e / total for e in exps]\n\ndef log_softmax(logits):\n    max_logit = max(logits)\n    shifted = [z - max_logit for z in logits]\n    log_sum_exp = max_logit + math.log(sum(math.exp(z) for z in shifted))\n    return [z - log_sum_exp for z in logits]\n\ndef cross_entropy_loss(logits, target_index):\n    log_probs = log_softmax(logits)\n    return -log_probs[target_index]\n```\n\n### 步骤 6：中心极限定理演示\n\n```python\ndef demonstrate_clt(dist_fn, n_samples, n_averages):\n    averages = []\n    for _ in range(n_averages):\n        samples = [dist_fn() for _ in range(n_samples)]\n        averages.append(sum(samples) / len(samples))\n    return averages\n```\n\n### 步骤 7：可视化\n\n```python\nimport matplotlib.pyplot as plt\n\nxs = [mu + sigma * (i - 500) / 100 for i in range(1001)]\nys = [normal_pdf(x, mu, sigma) for x, mu, sigma in ...]\nplt.plot(xs, ys)\n```\n\n带全部可视化的完整实现见 `code/probability.py`。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "用起来",
+    "title": "用起来",
+    "bodyMarkdown": "用 NumPy 和 SciPy，上面的一切都是一行代码：\n\n```python\nimport numpy as np\nfrom scipy import stats\n\nnormal = stats.norm(loc=0, scale=1)\nsamples = normal.rvs(size=10000)\nprint(f\"Mean: {np.mean(samples):.4f}, Std: {np.std(samples):.4f}\")\nprint(f\"P(X < 1.96) = {normal.cdf(1.96):.4f}\")\n\nlogits = np.array([2.0, 1.0, 0.1])\nfrom scipy.special import softmax, log_softmax\nprobs = softmax(logits)\nlog_probs = log_softmax(logits)\nprint(f\"Softmax: {probs}\")\nprint(f\"Log-softmax: {log_probs}\")\n```\n\n你已经从零实现过这些。现在你知道库函数在做什么了。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "练习",
+    "title": "练习",
+    "bodyMarkdown": "1. 为指数分布实现逆变换采样。采样 10,000 个值，把直方图与真实 PDF 比较以验证。\n\n2. 为两个不均匀的骰子构建联合分布表。计算边缘分布，并检查两个骰子是否独立。\n\n3. 计算一个 5 类分类器的交叉熵损失：它输出 logits `[2.0, 0.5, -1.0, 3.0, 0.1]`，正确类别是索引 3。然后用 PyTorch 的 `nn.CrossEntropyLoss` 验证你的答案。\n\n4. 写一个函数，接受一组对数概率，返回最可能的序列、总对数概率，以及等价的原始概率。用一个 50 词的句子测试，每个词的概率为 0.01。",
+    "keyPoints": [
+      "为指数分布实现逆变换采样。采样 10,000 个值，把直方图与真实 PDF 比较以验证。",
+      "为两个不均匀的骰子构建联合分布表。计算边缘分布，并检查两个骰子是否独立。",
+      "计算一个 5 类分类器的交叉熵损失：它输出 logits `[2.0, 0.5, -1.0, 3.0, 0.1]`，正确类别是索引 3。然后用 PyTorch 的 `nn.CrossEntropyLoss` 验证你的答案。",
+      "写一个函数，接受一组对数概率，返回最可能的序列、总对数概率，以及等价的原始概率。用一个 50 词的句子测试，每个词的概率为 0.01。"
+    ],
+    "commands": []
+  },
+  {
+    "id": "关键术语",
+    "title": "关键术语",
+    "bodyMarkdown": "| 术语 | 人们常说 | 它真正的意思 |\n|------|----------|--------------|\n| 样本空间（Sample space） | \"所有可能性\" | 一次试验每个可能结果组成的集合 S |\n| PMF | \"概率函数\" | 给出每个离散结果确切概率的函数，总和为 1 |\n| PDF | \"概率曲线\" | 连续变量的密度函数。在区间上积分得到概率 |\n| 条件概率（Conditional probability） | \"在某事发生下的概率\" | P(A\\|B) = P(A and B) / P(B)。贝叶斯思维与贝叶斯定理的基础 |\n| 独立性（Independence） | \"互不影响\" | P(A and B) = P(A) * P(B)。知道一个事件不能告诉你另一个事件的信息 |\n| 期望（Expected value） | \"平均\" | 所有结果按概率加权之和。损失函数就是一个期望 |\n| 方差（Variance） | \"有多分散\" | 相对均值的期望平方偏差。方差高 = 噪声大、估计不稳定 |\n| 正态分布（Normal distribution） | \"钟形曲线\" | f(x) = (1/sqrt(2*pi*sigma^2)) * exp(-(x-mu)^2/(2*sigma^2))。因中心极限定理而无处不在 |\n| 中心极限定理（Central Limit Theorem） | \"平均变成正态\" | 无论来源如何，许多独立样本的均值收敛到正态分布 |\n| 联合分布（Joint distribution） | \"两个变量一起\" | P(X, Y) 描述 X 与 Y 每种结果组合的概率 |\n| 边缘分布（Marginal distribution） | \"把另一个变量求和消掉\" | P(X) = sum_y P(X, Y)。从联合分布还原单个变量的分布 |\n| 对数概率（Log probability） | \"概率的对数\" | log P(x)。把连乘变成连加，防止长序列的数值下溢 |\n| Softmax | \"把分数变成概率\" | softmax(z_i) = exp(z_i) / sum(exp(z_j))。把实值 logits 映射为合法概率分布 |\n| 交叉熵（Cross-entropy） | \"损失函数\" | -sum(p_true * log(p_predicted))。衡量两个分布的差异。越低越好 |\n| Logits | \"模型原始输出\" | softmax 之前的未归一化分数。得名于 logistic 函数 |\n| 采样（Sampling） | \"抽取随机值\" | 按概率分布生成数值。模型生成输出的方式 |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "延伸阅读",
+    "title": "延伸阅读",
+    "bodyMarkdown": "- [3Blue1Brown: But what is the Central Limit Theorem?](https://www.youtube.com/watch?v=zeJD6dqJ5lo) - 为什么平均会变成正态的可视化证明\n- [Stanford CS229 Probability Review](https://cs229.stanford.edu/section/cs229-prob.pdf) - 覆盖本文内容及更多的简明参考\n- [The Log-Sum-Exp Trick](https://gregorygundersen.com/blog/2020/02/09/log-sum-exp/) - 数值稳定性为何重要以及如何实现",
+    "keyPoints": [
+      "[3Blue1Brown: But what is the Central Limit Theorem?](https://www.youtube.com/watch?v=zeJD6dqJ5lo) - 为什么平均会变成正态的可视化证明",
+      "[Stanford CS229 Probability Review](https://cs229.stanford.edu/section/cs229-prob.pdf) - 覆盖本文内容及更多的简明参考",
+      "[The Log-Sum-Exp Trick](https://gregorygundersen.com/blog/2020/02/09/log-sum-exp/) - 数值稳定性为何重要以及如何实现"
+    ],
+    "commands": []
+  }
+]

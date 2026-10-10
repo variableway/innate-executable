@@ -1,0 +1,21 @@
+{
+  "id": "19-capstone-projects/49-lm-eval-harness",
+  "slug": "49-lm-eval-harness",
+  "phase": "19-capstone-projects",
+  "order": 49,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Language Model Evaluation Harness",
+    "zh": ""
+  },
+  "hook": "A model that does well on a task you cannot define is a model that does well by accident. The harness is the task definition, the metric, the runner, and the leaderboard, in one short, swappable shape.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 42 to 45"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,80 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Git 与协作\n\n> 版本控制不是可选项。这里的每一个实验、每一个模型、每一课，都要被记录下来。\n\n**类型:** Learn\n**语言:** --\n**先修:** 阶段 0、第 01 课\n**时长:** ~30 分钟",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "学习目标",
+    "title": "学习目标",
+    "bodyMarkdown": "- 配置 Git 身份，并掌握 add、commit、push 的日常流程\n- 创建和合并分支，在不影响 main 的前提下做隔离实验\n- 编写 `.gitignore`，排除模型检查点和大型二进制文件\n- 用 `git log` 浏览提交历史，理解项目演进",
+    "keyPoints": [
+      "配置 Git 身份，并掌握 add、commit、push 的日常流程",
+      "创建和合并分支，在不影响 main 的前提下做隔离实验",
+      "编写 `.gitignore`，排除模型检查点和大型二进制文件",
+      "用 `git log` 浏览提交历史，理解项目演进"
+    ],
+    "commands": []
+  },
+  {
+    "id": "问题",
+    "title": "问题",
+    "bodyMarkdown": "接下来的 20 个阶段里，你会写上百个代码文件。没有版本控制，你会丢掉成果、弄坏无法撤销的东西，也没法和别人协作。\n\nGit 是工具，GitHub 是代码的存放地。本课只讲这门课需要的部分，不多不少。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "概念",
+    "title": "概念",
+    "bodyMarkdown": "```mermaid\nsequenceDiagram\n    participant WD as 工作区\n    participant SA as 暂存区\n    participant LR as 本地仓库\n    participant R as 远程仓库（GitHub）\n    WD->>SA: git add\n    SA->>LR: git commit\n    LR->>R: git push\n    R->>LR: git fetch\n    LR->>WD: git pull\n```\n\n记住三件事：\n1. 经常保存（`git commit`）\n2. 推送到远程（`git push`）\n3. 用分支做实验（`git checkout -b experiment`）\n\n```figure\ns0-commit-dag\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "动手做",
+    "title": "动手做",
+    "bodyMarkdown": "### 步骤 1：配置 Git\n\n```bash\ngit config --global user.name \"Your Name\"\ngit config --global user.email \"you@example.com\"\n```\n\n### 步骤 2：日常工作流\n\n```bash\ngit status\ngit add file.py\ngit commit -m \"Add perceptron implementation\"\ngit push origin main\n```\n\n### 步骤 3：用分支做实验\n\n```bash\ngit checkout -b experiment/new-optimizer\n\n# ... make changes, commit ...\n\ngit checkout main\ngit merge experiment/new-optimizer\n```\n\n### 步骤 4：使用本课程仓库\n\n你无法直接推送到课程仓库——只有维护者有写权限。先在 GitHub 上 Fork（右上角的 Fork 按钮），让 `origin` 指向你自己的副本：\n\n```bash\ngit clone https://github.com/YOUR-USERNAME/ai-engineering-from-scratch.git\ncd ai-engineering-from-scratch\n\ngit checkout -b my-progress\n# work through lessons, commit your code\ngit push origin my-progress\n```",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "git config --global user.name \"Your Name\"\ngit config --global user.email \"you@example.com\""
+      },
+      {
+        "lang": "bash",
+        "code": "git status\ngit add file.py\ngit commit -m \"Add perceptron implementation\"\ngit push origin main"
+      },
+      {
+        "lang": "bash",
+        "code": "git checkout -b experiment/new-optimizer\n\n# ... make changes, commit ...\n\ngit checkout main\ngit merge experiment/new-optimizer"
+      },
+      {
+        "lang": "bash",
+        "code": "git clone https://github.com/YOUR-USERNAME/ai-engineering-from-scratch.git\ncd ai-engineering-from-scratch\n\ngit checkout -b my-progress\n# work through lessons, commit your code\ngit push origin my-progress"
+      }
+    ]
+  },
+  {
+    "id": "用起来",
+    "title": "用起来",
+    "bodyMarkdown": "这门课只需要这几条命令：\n\n| 命令 | 何时用 |\n|---------|------|\n| `git clone` | 获取课程仓库 |\n| `git add` + `git commit` | 保存你的成果 |\n| `git push` | 备份到 GitHub |\n| `git checkout -b` | 尝试新东西而不弄坏 main |\n| `git log --oneline` | 看看你做了什么 |\n\n就这样。这门课不需要 rebase、cherry-pick 或 submodule。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "练习",
+    "title": "练习",
+    "bodyMarkdown": "1. Fork 本仓库，克隆你的 fork，创建名为 `my-progress` 的分支，新建一个文件，提交并推送\n2. 编写一个 `.gitignore`，排除模型检查点文件（`.pt`、`.pth`、`.safetensors`）\n3. 用 `git log --oneline` 查看本仓库的提交历史，了解课程是如何逐步加入的",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "关键术语",
+    "title": "关键术语",
+    "bodyMarkdown": "| 术语 | 人们常说 | 实际含义 |\n|------|----------------|----------------------|\n| Commit | “保存” | 项目在某一时刻的完整快照 |\n| Branch | “一个副本” | 指向某个 commit 的指针，随你的工作向前移动 |\n| Merge | “合并代码” | 把一个分支上的变更应用到另一个分支 |\n| Remote | “云端” | 托管在别处的仓库副本（GitHub、GitLab） |",
+    "keyPoints": [],
+    "commands": []
+  }
+]

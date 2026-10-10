@@ -1,0 +1,22 @@
+{
+  "id": "10-llms-from-scratch/11-quantization",
+  "slug": "11-quantization",
+  "phase": "10-llms-from-scratch",
+  "order": 11,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Quantization: Making Models Fit",
+    "zh": ""
+  },
+  "hook": "A 70B model in FP16 needs 140GB. Two A100s just for weights. Quantize to FP8: one 80GB GPU. INT4: a MacBook.",
+  "type": "Build",
+  "languages": [
+    "Python (with numpy)"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lessons 01-10 (LLMs from Scratch)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

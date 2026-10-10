@@ -1,0 +1,32 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { buttonVariants } from '@atlas/ui/components/ui/button';
+import { useTranslations } from '@/i18n/ui';
+
+// 404 sits outside locale routing, so both languages render on one page.
+const zh = useTranslations('zh');
+const en = useTranslations('en');
+---
+
+<BaseLayout title={zh('notFound.title')} description={zh('notFound.body')} noindex>
+  <section class="mx-auto max-w-xl space-y-10 py-16 text-center">
+    <p class="text-sm uppercase tracking-wider text-muted-foreground">404</p>
+    <div class="space-y-3">
+      <h1 class="text-4xl font-bold tracking-tight">{zh('notFound.title')}</h1>
+      <p class="text-lg text-muted-foreground">{zh('notFound.body')}</p>
+      <div class="flex justify-center gap-3 pt-2">
+        <a href="/" class={buttonVariants()}>{zh('notFound.back')}</a>
+        <a href="/lessons" class={buttonVariants({ variant: 'outline' })}>{zh('notFound.browse')}</a>
+      </div>
+    </div>
+    <hr class="border-border" />
+    <div class="space-y-3">
+      <h2 class="text-2xl font-bold tracking-tight">{en('notFound.title')}</h2>
+      <p class="text-muted-foreground">{en('notFound.body')}</p>
+      <div class="flex justify-center gap-3 pt-2">
+        <a href="/en" class={buttonVariants()}>{en('notFound.back')}</a>
+        <a href="/en/lessons" class={buttonVariants({ variant: 'outline' })}>{en('notFound.browse')}</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

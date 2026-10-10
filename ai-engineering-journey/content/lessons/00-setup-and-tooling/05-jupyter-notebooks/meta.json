@@ -1,0 +1,22 @@
+{
+  "id": "00-setup-and-tooling/05-jupyter-notebooks",
+  "slug": "05-jupyter-notebooks",
+  "phase": "00-setup-and-tooling",
+  "order": 5,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Jupyter Notebooks",
+    "zh": "Jupyter Notebook"
+  },
+  "hook": "Notebooks are the lab bench of AI engineering. You prototype here, then move what works into production.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 0",
+    "Lesson 01"
+  ],
+  "timeMinutes": 30,
+  "needsTranslation": false
+}

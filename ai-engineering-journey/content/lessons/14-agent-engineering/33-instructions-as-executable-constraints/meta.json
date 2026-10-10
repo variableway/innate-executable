@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/33-instructions-as-executable-constraints",
+  "slug": "33-instructions-as-executable-constraints",
+  "phase": "14-agent-engineering",
+  "order": 33,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Agent Instructions as Executable Constraints",
+    "zh": ""
+  },
+  "hook": "Instructions written as prose are wishes. Instructions written as constraints are tests. The workbench turns each rule into something an agent can check at runtime and a reviewer can verify after the fact.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 32 (Minimal Workbench)"
+  ],
+  "timeMinutes": 50,
+  "needsTranslation": true
+}

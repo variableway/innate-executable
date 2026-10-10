@@ -1,0 +1,125 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Logistic Regression\n\n> Logistic regression bends a straight line into an S-curve to answer yes-or-no questions with probabilities.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 2 Lesson 1-2 (What Is ML, Linear Regression)\n**Time:** ~90 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement logistic regression from scratch using the sigmoid function and binary cross-entropy loss\n- Compute and interpret precision, recall, F1 score, and the confusion matrix for binary classification\n- Explain why MSE fails for classification and why binary cross-entropy produces a convex cost surface\n- Build a softmax regression model for multi-class classification and evaluate threshold tuning tradeoffs",
+    "keyPoints": [
+      "Implement logistic regression from scratch using the sigmoid function and binary cross-entropy loss",
+      "Compute and interpret precision, recall, F1 score, and the confusion matrix for binary classification",
+      "Explain why MSE fails for classification and why binary cross-entropy produces a convex cost surface",
+      "Build a softmax regression model for multi-class classification and evaluate threshold tuning tradeoffs"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You want to predict whether a tumor is malignant or benign given its size. You try linear regression. It outputs numbers like 0.3 or 1.7 or -0.5. What do those mean? Is 1.7 \"very malignant\"? Is -0.5 \"very benign\"? Linear regression outputs unbounded numbers. Classification needs bounded probabilities between 0 and 1, and a clear decision: yes or no.\n\nLogistic regression solves this. It takes the same linear combination (wx + b) and passes it through the sigmoid function, which squashes any number into the range (0, 1). The output is a probability. You set a threshold (usually 0.5) and make a decision.\n\nThis is one of the most widely used algorithms in practice. Despite its name, logistic regression is a classification algorithm, not a regression algorithm. The name comes from the logistic (sigmoid) function it uses.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Why Linear Regression Fails for Classification\n\nImagine predicting pass/fail (1/0) based on study hours. Linear regression fits a line through the data:\n\n```\nhours:  1   2   3   4   5   6   7   8   9   10\nactual: 0   0   0   0   1   1   1   1   1   1\n```\n\nA linear fit might produce predictions like -0.2 at hour 1 and 1.3 at hour 10. These values are not probabilities. They go below 0 and above 1. Worse, a single outlier (someone who studied 50 hours) would drag the entire line, changing predictions for everyone.\n\nClassification needs a function that:\n- Outputs values between 0 and 1 (probabilities)\n- Creates a sharp transition (a decision boundary)\n- Is not distorted by outliers far from the boundary\n\n### The Sigmoid Function\n\nThe sigmoid function does exactly this:\n\n```\nsigmoid(z) = 1 / (1 + e^(-z))\n```\n\nProperties:\n- When z is large and positive, sigmoid(z) approaches 1\n- When z is large and negative, sigmoid(z) approaches 0\n- When z = 0, sigmoid(z) = 0.5\n- The output is always between 0 and 1\n- The function is smooth and differentiable everywhere\n\nThe derivative has a convenient form: sigmoid'(z) = sigmoid(z) * (1 - sigmoid(z)). This makes gradient computation efficient.\n\n### Logistic Regression = Linear Model + Sigmoid\n\nThe model computes z = wx + b (same as linear regression), then applies sigmoid:\n\n```mermaid\nflowchart LR\n    X[Input features x] --> L[\"Linear: z = wx + b\"]\n    L --> S[\"Sigmoid: p = 1/(1+e^-z)\"]\n    S --> D{\"p >= 0.5?\"}\n    D -->|Yes| P[Predict 1]\n    D -->|No| N[Predict 0]\n```\n\nThe output p is interpreted as P(y=1 | x), the probability that the input belongs to class 1. The decision boundary is where wx + b = 0, which makes sigmoid output exactly 0.5.\n\n### Binary Cross-Entropy Loss\n\nYou cannot use MSE for logistic regression. MSE with a sigmoid creates a non-convex cost surface with many local minima. Instead, use binary cross-entropy (log loss):\n\n```\nLoss = -(1/n) * sum(y * log(p) + (1-y) * log(1-p))\n```\n\nWhy this works:\n- When y=1 and p is close to 1: log(1) = 0, so loss is near 0 (correct, low cost)\n- When y=1 and p is close to 0: log(0) approaches negative infinity, so loss is huge (wrong, high cost)\n- When y=0 and p is close to 0: log(1) = 0, so loss is near 0 (correct, low cost)\n- When y=0 and p is close to 1: log(0) approaches negative infinity, so loss is huge (wrong, high cost)\n\nThis loss function is convex for logistic regression, guaranteeing a single global minimum.\n\n### Gradient Descent for Logistic Regression\n\nThe gradients for binary cross-entropy with sigmoid have a clean form:\n\n```\ndL/dw = (1/n) * sum((p - y) * x)\ndL/db = (1/n) * sum(p - y)\n```\n\nThese look identical to the linear regression gradients. The difference is that p = sigmoid(wx + b) instead of p = wx + b. The sigmoid introduces the nonlinearity, but the gradient update rule stays the same.\n\n```mermaid\nflowchart TD\n    A[Initialize w=0, b=0] --> B[Forward pass: z = wx+b, p = sigmoid z]\n    B --> C[Compute loss: binary cross-entropy]\n    C --> D[\"Compute gradients: dw = (1/n) * sum((p-y)*x)\"]\n    D --> E[Update: w = w - lr*dw, b = b - lr*db]\n    E --> F{Converged?}\n    F -->|No| B\n    F -->|Yes| G[Model trained]\n```\n\n### The Decision Boundary\n\nFor a 2D input (two features), the decision boundary is the line where:\n\n```\nw1*x1 + w2*x2 + b = 0\n```\n\nPoints on one side get classified as 1, points on the other side as 0. Logistic regression always produces a linear decision boundary. If you need a curved boundary, you either add polynomial features or use a nonlinear model.\n\n### Multi-Class Classification with Softmax\n\nBinary logistic regression handles two classes. For k classes, use the softmax function:\n\n```\nsoftmax(z_i) = e^(z_i) / sum(e^(z_j) for all j)\n```\n\nEach class has its own weight vector. The model computes a score z_i for each class, then softmax converts scores to probabilities that sum to 1. The predicted class is the one with the highest probability.\n\nThe loss function becomes categorical cross-entropy:\n\n```\nLoss = -(1/n) * sum(sum(y_k * log(p_k)))\n```\n\nwhere y_k is 1 for the true class and 0 for all others (one-hot encoding).\n\n### Evaluation Metrics\n\nAccuracy alone is not enough. For a dataset with 95% negative and 5% positive, a model that always predicts negative gets 95% accuracy but is useless.\n\n**Confusion Matrix**:\n\n| | Predicted Positive | Predicted Negative |\n|---|---|---|\n| Actually Positive | True Positive (TP) | False Negative (FN) |\n| Actually Negative | False Positive (FP) | True Negative (TN) |\n\n**Precision**: Of all predicted positives, how many are actually positive?\n```\nPrecision = TP / (TP + FP)\n```\n\n**Recall** (Sensitivity): Of all actual positives, how many did we catch?\n```\nRecall = TP / (TP + FN)\n```\n\n**F1 Score**: Harmonic mean of precision and recall. Balances both metrics.\n```\nF1 = 2 * (Precision * Recall) / (Precision + Recall)\n```\n\nWhen to prioritize:\n- **Precision**: when false positives are costly (spam filter, you do not want to block legitimate email)\n- **Recall**: when false negatives are costly (cancer screening, you do not want to miss a tumor)\n- **F1**: when you need a single balanced metric\n\n```figure\nlogistic-sigmoid\n```",
+    "keyPoints": [
+      "Outputs values between 0 and 1 (probabilities)",
+      "Creates a sharp transition (a decision boundary)",
+      "Is not distorted by outliers far from the boundary",
+      "When z is large and positive, sigmoid(z) approaches 1",
+      "When z is large and negative, sigmoid(z) approaches 0",
+      "When z = 0, sigmoid(z) = 0.5"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "hours:  1   2   3   4   5   6   7   8   9   10\nactual: 0   0   0   0   1   1   1   1   1   1"
+      },
+      {
+        "lang": "text",
+        "code": "sigmoid(z) = 1 / (1 + e^(-z))"
+      },
+      {
+        "lang": "text",
+        "code": "Loss = -(1/n) * sum(y * log(p) + (1-y) * log(1-p))"
+      },
+      {
+        "lang": "text",
+        "code": "dL/dw = (1/n) * sum((p - y) * x)\ndL/db = (1/n) * sum(p - y)"
+      },
+      {
+        "lang": "text",
+        "code": "w1*x1 + w2*x2 + b = 0"
+      },
+      {
+        "lang": "text",
+        "code": "softmax(z_i) = e^(z_i) / sum(e^(z_j) for all j)"
+      },
+      {
+        "lang": "text",
+        "code": "Loss = -(1/n) * sum(sum(y_k * log(p_k)))"
+      },
+      {
+        "lang": "text",
+        "code": "Precision = TP / (TP + FP)"
+      },
+      {
+        "lang": "text",
+        "code": "Recall = TP / (TP + FN)"
+      },
+      {
+        "lang": "text",
+        "code": "F1 = 2 * (Precision * Recall) / (Precision + Recall)"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: Sigmoid function and data generation\n\n```python\nimport random\nimport math\n\ndef sigmoid(z):\n    z = max(-500, min(500, z))\n    return 1.0 / (1.0 + math.exp(-z))\n\n\nrandom.seed(42)\nN = 200\nX = []\ny = []\n\nfor _ in range(N // 2):\n    X.append([random.gauss(2, 1), random.gauss(2, 1)])\n    y.append(0)\n\nfor _ in range(N // 2):\n    X.append([random.gauss(5, 1), random.gauss(5, 1)])\n    y.append(1)\n\ncombined = list(zip(X, y))\nrandom.shuffle(combined)\nX, y = zip(*combined)\nX = list(X)\ny = list(y)\n\nprint(f\"Generated {N} samples (2 classes, 2 features)\")\nprint(f\"Class 0 center: (2, 2), Class 1 center: (5, 5)\")\nprint(f\"First 5 samples:\")\nfor i in range(5):\n    print(f\"  Features: [{X[i][0]:.2f}, {X[i][1]:.2f}], Label: {y[i]}\")\n```\n\n### Step 2: Logistic regression from scratch\n\n```python\nclass LogisticRegression:\n    def __init__(self, n_features, learning_rate=0.01):\n        self.weights = [0.0] * n_features\n        self.bias = 0.0\n        self.lr = learning_rate\n        self.loss_history = []\n\n    def predict_proba(self, x):\n        z = sum(w * xi for w, xi in zip(self.weights, x)) + self.bias\n        return sigmoid(z)\n\n    def predict(self, x, threshold=0.5):\n        return 1 if self.predict_proba(x) >= threshold else 0\n\n    def compute_loss(self, X, y):\n        n = len(y)\n        total = 0.0\n        for i in range(n):\n            p = self.predict_proba(X[i])\n            p = max(1e-15, min(1 - 1e-15, p))\n            total += y[i] * math.log(p) + (1 - y[i]) * math.log(1 - p)\n        return -total / n\n\n    def fit(self, X, y, epochs=1000, print_every=200):\n        n = len(y)\n        n_features = len(X[0])\n        for epoch in range(epochs):\n            dw = [0.0] * n_features\n            db = 0.0\n            for i in range(n):\n                p = self.predict_proba(X[i])\n                error = p - y[i]\n                for j in range(n_features):\n                    dw[j] += error * X[i][j]\n                db += error\n            for j in range(n_features):\n                self.weights[j] -= self.lr * (dw[j] / n)\n            self.bias -= self.lr * (db / n)\n            loss = self.compute_loss(X, y)\n            self.loss_history.append(loss)\n            if epoch % print_every == 0:\n                print(f\"  Epoch {epoch:4d} | Loss: {loss:.4f} | w: [{self.weights[0]:.3f}, {self.weights[1]:.3f}] | b: {self.bias:.3f}\")\n        return self\n\n    def accuracy(self, X, y):\n        correct = sum(1 for i in range(len(y)) if self.predict(X[i]) == y[i])\n        return correct / len(y)\n\n\nsplit = int(0.8 * N)\nX_train, X_test = X[:split], X[split:]\ny_train, y_test = y[:split], y[split:]\n\nprint(\"\\n=== Training Logistic Regression ===\")\nmodel = LogisticRegression(n_features=2, learning_rate=0.1)\nmodel.fit(X_train, y_train, epochs=1000, print_every=200)\n\nprint(f\"\\nTrain accuracy: {model.accuracy(X_train, y_train):.4f}\")\nprint(f\"Test accuracy:  {model.accuracy(X_test, y_test):.4f}\")\nprint(f\"Weights: [{model.weights[0]:.4f}, {model.weights[1]:.4f}]\")\nprint(f\"Bias: {model.bias:.4f}\")\n```\n\n### Step 3: Confusion matrix and metrics from scratch\n\n```python\nclass ClassificationMetrics:\n    def __init__(self, y_true, y_pred):\n        self.tp = sum(1 for t, p in zip(y_true, y_pred) if t == 1 and p == 1)\n        self.tn = sum(1 for t, p in zip(y_true, y_pred) if t == 0 and p == 0)\n        self.fp = sum(1 for t, p in zip(y_true, y_pred) if t == 0 and p == 1)\n        self.fn = sum(1 for t, p in zip(y_true, y_pred) if t == 1 and p == 0)\n\n    def accuracy(self):\n        total = self.tp + self.tn + self.fp + self.fn\n        return (self.tp + self.tn) / total if total > 0 else 0\n\n    def precision(self):\n        denom = self.tp + self.fp\n        return self.tp / denom if denom > 0 else 0\n\n    def recall(self):\n        denom = self.tp + self.fn\n        return self.tp / denom if denom > 0 else 0\n\n    def f1(self):\n        p = self.precision()\n        r = self.recall()\n        return 2 * p * r / (p + r) if (p + r) > 0 else 0\n\n    def print_confusion_matrix(self):\n        print(f\"\\n  Confusion Matrix:\")\n        print(f\"                  Predicted\")\n        print(f\"                  Pos   Neg\")\n        print(f\"  Actual Pos     {self.tp:4d}  {self.fn:4d}\")\n        print(f\"  Actual Neg     {self.fp:4d}  {self.tn:4d}\")\n\n    def print_report(self):\n        self.print_confusion_matrix()\n        print(f\"\\n  Accuracy:  {self.accuracy():.4f}\")\n        print(f\"  Precision: {self.precision():.4f}\")\n        print(f\"  Recall:    {self.recall():.4f}\")\n        print(f\"  F1 Score:  {self.f1():.4f}\")\n\n\ny_pred_test = [model.predict(x) for x in X_test]\nprint(\"\\n=== Classification Report (Test Set) ===\")\nmetrics = ClassificationMetrics(y_test, y_pred_test)\nmetrics.print_report()\n```\n\n### Step 4: Decision boundary analysis\n\n```python\nprint(\"\\n=== Decision Boundary ===\")\nw1, w2 = model.weights\nb = model.bias\nprint(f\"Decision boundary: {w1:.4f}*x1 + {w2:.4f}*x2 + {b:.4f} = 0\")\nif abs(w2) > 1e-10:\n    print(f\"Solved for x2:     x2 = {-w1/w2:.4f}*x1 + {-b/w2:.4f}\")\n\nprint(\"\\nSample predictions near the boundary:\")\ntest_points = [\n    [3.0, 3.0],\n    [3.5, 3.5],\n    [4.0, 4.0],\n    [2.5, 2.5],\n    [5.0, 5.0],\n]\nfor point in test_points:\n    prob = model.predict_proba(point)\n    pred = model.predict(point)\n    print(f\"  [{point[0]}, {point[1]}] -> prob={prob:.4f}, class={pred}\")\n```\n\n### Step 5: Multi-class with softmax\n\n```python\nclass SoftmaxRegression:\n    def __init__(self, n_features, n_classes, learning_rate=0.01):\n        self.n_features = n_features\n        self.n_classes = n_classes\n        self.lr = learning_rate\n        self.weights = [[0.0] * n_features for _ in range(n_classes)]\n        self.biases = [0.0] * n_classes\n\n    def softmax(self, scores):\n        max_score = max(scores)\n        exp_scores = [math.exp(s - max_score) for s in scores]\n        total = sum(exp_scores)\n        return [e / total for e in exp_scores]\n\n    def predict_proba(self, x):\n        scores = [\n            sum(self.weights[k][j] * x[j] for j in range(self.n_features)) + self.biases[k]\n            for k in range(self.n_classes)\n        ]\n        return self.softmax(scores)\n\n    def predict(self, x):\n        probs = self.predict_proba(x)\n        return probs.index(max(probs))\n\n    def fit(self, X, y, epochs=1000, print_every=200):\n        n = len(y)\n        for epoch in range(epochs):\n            grad_w = [[0.0] * self.n_features for _ in range(self.n_classes)]\n            grad_b = [0.0] * self.n_classes\n            total_loss = 0.0\n            for i in range(n):\n                probs = self.predict_proba(X[i])\n                for k in range(self.n_classes):\n                    target = 1.0 if y[i] == k else 0.0\n                    error = probs[k] - target\n                    for j in range(self.n_features):\n                        grad_w[k][j] += error * X[i][j]\n                    grad_b[k] += error\n                true_prob = max(probs[y[i]], 1e-15)\n                total_loss -= math.log(true_prob)\n            for k in range(self.n_classes):\n                for j in range(self.n_features):\n                    self.weights[k][j] -= self.lr * (grad_w[k][j] / n)\n                self.biases[k] -= self.lr * (grad_b[k] / n)\n            if epoch % print_every == 0:\n                print(f\"  Epoch {epoch:4d} | Loss: {total_loss / n:.4f}\")\n        return self\n\n    def accuracy(self, X, y):\n        correct = sum(1 for i in range(len(y)) if self.predict(X[i]) == y[i])\n        return correct / len(y)\n\n\nrandom.seed(42)\nX_3class = []\ny_3class = []\n\ncenters = [(1, 1), (5, 1), (3, 5)]\nfor label, (cx, cy) in enumerate(centers):\n    for _ in range(50):\n        X_3class.append([random.gauss(cx, 0.8), random.gauss(cy, 0.8)])\n        y_3class.append(label)\n\ncombined = list(zip(X_3class, y_3class))\nrandom.shuffle(combined)\nX_3class, y_3class = zip(*combined)\nX_3class = list(X_3class)\ny_3class = list(y_3class)\n\nsplit_3 = int(0.8 * len(X_3class))\nX_train_3 = X_3class[:split_3]\ny_train_3 = y_3class[:split_3]\nX_test_3 = X_3class[split_3:]\ny_test_3 = y_3class[split_3:]\n\nprint(\"\\n=== Multi-class Softmax Regression (3 classes) ===\")\nsoftmax_model = SoftmaxRegression(n_features=2, n_classes=3, learning_rate=0.1)\nsoftmax_model.fit(X_train_3, y_train_3, epochs=1000, print_every=200)\nprint(f\"\\nTrain accuracy: {softmax_model.accuracy(X_train_3, y_train_3):.4f}\")\nprint(f\"Test accuracy:  {softmax_model.accuracy(X_test_3, y_test_3):.4f}\")\n\nprint(\"\\nSample predictions:\")\nfor i in range(5):\n    probs = softmax_model.predict_proba(X_test_3[i])\n    pred = softmax_model.predict(X_test_3[i])\n    print(f\"  True: {y_test_3[i]}, Predicted: {pred}, Probs: [{', '.join(f'{p:.3f}' for p in probs)}]\")\n```\n\n### Step 6: Threshold tuning\n\n```python\nprint(\"\\n=== Threshold Tuning ===\")\nprint(\"Default threshold: 0.5. Adjusting the threshold trades precision for recall.\\n\")\n\nthresholds = [0.3, 0.4, 0.5, 0.6, 0.7]\nprint(f\"{'Threshold':>10} {'Accuracy':>10} {'Precision':>10} {'Recall':>10} {'F1':>10}\")\nprint(\"-\" * 52)\n\nfor t in thresholds:\n    y_pred_t = [1 if model.predict_proba(x) >= t else 0 for x in X_test]\n    m = ClassificationMetrics(y_test, y_pred_t)\n    print(f\"{t:>10.1f} {m.accuracy():>10.4f} {m.precision():>10.4f} {m.recall():>10.4f} {m.f1():>10.4f}\")\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "Now the same thing with scikit-learn.\n\n```python\nfrom sklearn.linear_model import LogisticRegression as SklearnLR\nfrom sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score\nfrom sklearn.metrics import confusion_matrix, classification_report\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler\nimport numpy as np\n\nnp.random.seed(42)\nX_0 = np.random.randn(100, 2) + [2, 2]\nX_1 = np.random.randn(100, 2) + [5, 5]\nX_sk = np.vstack([X_0, X_1])\ny_sk = np.array([0] * 100 + [1] * 100)\n\nX_tr, X_te, y_tr, y_te = train_test_split(X_sk, y_sk, test_size=0.2, random_state=42)\n\nscaler = StandardScaler()\nX_tr_sc = scaler.fit_transform(X_tr)\nX_te_sc = scaler.transform(X_te)\n\nlr = SklearnLR()\nlr.fit(X_tr_sc, y_tr)\ny_pred = lr.predict(X_te_sc)\n\nprint(\"=== Scikit-learn Logistic Regression ===\")\nprint(f\"Accuracy:  {accuracy_score(y_te, y_pred):.4f}\")\nprint(f\"Precision: {precision_score(y_te, y_pred):.4f}\")\nprint(f\"Recall:    {recall_score(y_te, y_pred):.4f}\")\nprint(f\"F1:        {f1_score(y_te, y_pred):.4f}\")\nprint(f\"\\nConfusion Matrix:\\n{confusion_matrix(y_te, y_pred)}\")\nprint(f\"\\nClassification Report:\\n{classification_report(y_te, y_pred)}\")\n```\n\nYour from-scratch implementation produces the same decision boundary and metrics. Scikit-learn adds solver options (liblinear, lbfgs, saga), automatic regularization, multi-class strategies (one-vs-rest, multinomial), and numerical stability optimizations.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces:\n- `code/logistic_regression.py` - logistic regression from scratch with metrics",
+    "keyPoints": [
+      "`code/logistic_regression.py` - logistic regression from scratch with metrics"
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Generate a dataset that is NOT linearly separable (e.g., two concentric circles). Train logistic regression and observe its failure. Then add polynomial features (x1^2, x2^2, x1*x2) and train again. Show that the accuracy improves.\n2. Implement a multi-class confusion matrix for the 3-class softmax model. Compute per-class precision and recall. Which class is hardest to classify?\n3. Build an ROC curve from scratch. For 100 threshold values from 0 to 1, compute the true positive rate and false positive rate. Calculate the AUC (area under the curve) using the trapezoidal rule.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|----------------------|\n| Logistic regression | \"Regression for classification\" | A linear model followed by a sigmoid function that outputs class probabilities |\n| Sigmoid function | \"The S-curve\" | The function 1/(1+e^(-z)) that maps any real number to the range (0, 1) |\n| Binary cross-entropy | \"Log loss\" | The loss function -[y*log(p) + (1-y)*log(1-p)] that penalizes confident wrong predictions severely |\n| Decision boundary | \"The dividing line\" | The surface where the model's output probability equals 0.5, separating predicted classes |\n| Softmax | \"Multi-class sigmoid\" | A function that converts a vector of scores into probabilities that sum to 1 |\n| Precision | \"How many selected are relevant\" | TP / (TP + FP), the fraction of positive predictions that are actually positive |\n| Recall | \"How many relevant are selected\" | TP / (TP + FN), the fraction of actual positives that the model correctly identifies |\n| F1 score | \"Balanced accuracy\" | The harmonic mean of precision and recall: 2*P*R / (P+R) |\n| Confusion matrix | \"The error breakdown\" | A table showing TP, TN, FP, FN counts for each class pair |\n| Threshold | \"The cutoff\" | The probability value above which the model predicts class 1 (default 0.5, tunable) |\n| One-hot encoding | \"Binary columns for categories\" | Representing class k as a vector of zeros with a 1 at position k |\n| Categorical cross-entropy | \"Multi-class log loss\" | The extension of binary cross-entropy to k classes using one-hot encoded labels |",
+    "keyPoints": [],
+    "commands": []
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "id": "09-reinforcement-learning/05-dqn",
+  "slug": "05-dqn",
+  "phase": "09-reinforcement-learning",
+  "order": 5,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Deep Q-Networks (DQN)",
+    "zh": ""
+  },
+  "hook": "2013: Mnih trained one Q-learning network on raw pixels, beat every classical RL agent on seven Atari games. 2015: extended to 49 games, published in Nature, sparked the deep-RL era. DQN is Q-learning plus three tricks that make function approximation stable.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 · 03 (Backpropagation)",
+    "Phase 9 · 04 (Q-learning",
+    "SARSA)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

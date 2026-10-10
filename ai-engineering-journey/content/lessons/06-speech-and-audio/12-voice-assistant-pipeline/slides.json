@@ -1,0 +1,107 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Build a Voice Assistant Pipeline — The Phase 6 Capstone\n\n> Everything from lessons 01-11, stitched together. Build a voice assistant that listens, reasons, and talks back. In 2026 that is a solved engineering problem, not a research problem — but the integration details decide whether it ships.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 6 · 04, 05, 06, 07, 11; Phase 11 · 09 (Function Calling); Phase 14 · 01 (Agent Loop)\n**Time:** ~120 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "Build an end-to-end assistant:\n\n1. Captures mic input (16 kHz mono).\n2. Detects start/end of user speech.\n3. Transcribes streaming.\n4. Passes transcript to an LLM that can call tools (timer, weather, calendar).\n5. Streams LLM text to a TTS.\n6. Plays audio back to the user.\n7. Stops if the user interrupts mid-response.\n\nLatency target: first TTS audio byte within 800 ms of the user finishing their utterance on a laptop CPU. Quality target: no missed words, no hallucinated subtitles on silence, no voice cloning leakage, no prompt injection success.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Voice assistant pipeline: mic → VAD → STT → LLM+tools → TTS → speaker](../assets/voice-assistant.svg)\n\n### The seven components\n\n1. **Audio capture.** Mic → 16 kHz mono → 20 ms chunks. Usually `sounddevice` in Python or native AudioUnit/ALSA/WASAPI in production.\n2. **VAD (Lesson 11).** Silero VAD @ threshold 0.5, min speech 250 ms, silence hang-over 500 ms. Signals \"start\" and \"end.\"\n3. **Streaming STT (Lesson 4-5).** Whisper-streaming, Parakeet-TDT, or Deepgram Nova-3 (API). Partial + final transcripts.\n4. **LLM with tool calling.** GPT-4o / Claude 3.5 / Gemini 2.5 Flash. JSON schema for tools. Stream tokens.\n5. **Streaming TTS (Lesson 7).** Kokoro-82M (fastest open) or Cartesia Sonic (commercial). Start TTS after 20 LLM tokens.\n6. **Playback.** Speaker out; opus-encode for low-bandwidth networks.\n7. **Interruption handler.** If VAD fires during TTS playback, stop playback, cancel LLM, restart STT.\n\n### The three failure modes you will hit\n\n1. **First-word clip.** VAD starts a beat too late. User's \"hey\" is missing. Start threshold at 0.3, not 0.5.\n2. **Mid-response interrupt confusion.** LLM keeps generating after user interrupts; assistant talks over user. Wire VAD → cancel-LLM.\n3. **Silence hallucination.** Whisper outputs \"Thanks for watching\" on the silent warm-up frames. Always VAD-gate.\n\n### 2026 production reference stacks\n\n| Stack | Latency | License | Notes |\n|-------|---------|---------|-------|\n| LiveKit + Deepgram + GPT-4o + Cartesia | 350-500 ms | commercial API | Industry default 2026 |\n| Pipecat + Whisper-streaming + GPT-4o + Kokoro | 500-800 ms | mostly open | DIY-friendly |\n| Moshi (full-duplex) | 200-300 ms | CC-BY 4.0 | Single-model; different architecture, lesson 15 |\n| Vapi / Retell (managed) | 300-500 ms | commercial | Fastest to launch; limited customization |\n| Whisper.cpp + llama.cpp + Kokoro-ONNX | offline | open | Privacy / edge |\n\n```figure\nv4-voice-latency\n```",
+    "keyPoints": [
+      "Audio capture.",
+      "VAD (Lesson 11).",
+      "Streaming STT (Lesson 4-5).",
+      "LLM with tool calling.",
+      "Streaming TTS (Lesson 7).",
+      "Playback."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: mic capture with chunking (pseudocode)\n\n```python\nimport sounddevice as sd\n\ndef mic_stream(chunk_ms=20, sr=16000):\n    q = queue.Queue()\n    def cb(indata, frames, time, status):\n        q.put(indata.copy().flatten())\n    with sd.InputStream(channels=1, samplerate=sr, blocksize=int(sr * chunk_ms/1000), callback=cb):\n        while True:\n            yield q.get()\n```\n\n### Step 2: VAD-gated turn capture\n\n```python\ndef capture_turn(stream, vad, pre_roll_ms=300, silence_ms=500):\n    buf, pre, triggered = [], collections.deque(maxlen=pre_roll_ms // 20), False\n    silent = 0\n    for chunk in stream:\n        pre.append(chunk)\n        if vad(chunk):\n            if not triggered:\n                buf = list(pre)\n                triggered = True\n            buf.append(chunk)\n            silent = 0\n        elif triggered:\n            silent += 20\n            buf.append(chunk)\n            if silent >= silence_ms:\n                return b\"\".join(buf)\n```\n\n### Step 3: streaming STT → LLM → TTS\n\n```python\nasync def turn(audio_bytes):\n    transcript = await stt.transcribe(audio_bytes)\n    async for token in llm.stream(transcript):\n        async for audio in tts.stream(token):\n            await speaker.play(audio)\n```\n\n### Step 4: tool calling inside the LLM loop\n\n```python\ntools = [\n    {\"name\": \"get_weather\", \"parameters\": {\"location\": \"string\"}},\n    {\"name\": \"set_timer\", \"parameters\": {\"seconds\": \"int\"}},\n]\n\nasync for chunk in llm.stream(user_text, tools=tools):\n    if chunk.type == \"tool_call\":\n        result = dispatch(chunk.name, chunk.args)\n        continue_streaming(result)\n    if chunk.type == \"text\":\n        await tts.stream(chunk.text)\n```\n\n### Step 5: interruption handling\n\n```python\ntts_task = asyncio.create_task(tts_loop())\nwhile True:\n    chunk = await mic.get()\n    if vad(chunk):\n        tts_task.cancel()\n        await speaker.stop()\n        await new_turn()\n        break\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "See `code/main.py` for a runnable simulation that wires all seven components with stub models, so you can see the pipeline shape even without hardware. For a real implementation, swap stubs with:\n\n- `silero-vad` (`pip install silero-vad`)\n- `deepgram-sdk` or `openai-whisper`\n- `openai` (`gpt-4o`) or `anthropic`\n- `kokoro` or `cartesia`\n- `sounddevice` for I/O",
+    "keyPoints": [
+      "`silero-vad` (`pip install silero-vad`)",
+      "`deepgram-sdk` or `openai-whisper`",
+      "`openai` (`gpt-4o`) or `anthropic`",
+      "`kokoro` or `cartesia`",
+      "`sounddevice` for I/O"
+    ],
+    "commands": []
+  },
+  {
+    "id": "pitfalls",
+    "title": "Pitfalls",
+    "bodyMarkdown": "- **Logging PII forever.** Full-turn audio is PII in most jurisdictions. 30-day retention, encrypted at rest.\n- **No barge-in.** Users will interrupt. Your assistant must stop talking.\n- **TTS that blocks.** Synchronous TTS blocks the event loop. Use async or a separate thread.\n- **No tool-call error handling.** Tools fail. LLM must get back the error + retry once, then gracefully degrade.\n- **Overzealous hallucination filters.** Over-filter and the assistant repeats \"I can't help with that.\" Under-filter and it says anything. Calibrate on a held-out set.\n- **No wake-word option.** Always-listening is a privacy liability. Add a wake-word gate (Porcupine or openWakeWord).",
+    "keyPoints": [
+      "Logging PII forever.: Full-turn audio is PII in most jurisdictions. 30-day retention, encrypted at rest.",
+      "No barge-in.: Users will interrupt. Your assistant must stop talking.",
+      "TTS that blocks.: Synchronous TTS blocks the event loop. Use async or a separate thread.",
+      "No tool-call error handling.: Tools fail. LLM must get back the error + retry once, then gracefully degrade.",
+      "Overzealous hallucination filters.: Over-filter and the assistant repeats \"I can't help with that.\" Under-filter and it says anything. Calibrate on a held-out set.",
+      "No wake-word option.: Always-listening is a privacy liability. Add a wake-word gate (Porcupine or openWakeWord)."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Save as `outputs/skill-voice-assistant-architect.md`. Given budget + scale + language + compliance constraints, produce a full stack spec.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Run `code/main.py`. It simulates one full turn end-to-end with stub modules and prints per-stage latency.\n2. **Medium.** Replace the STT stub with a real Whisper model on a pre-recorded `.wav`. Measure WER and end-to-end latency.\n3. **Hard.** Add tool calling: implement `get_weather` (any API) and `set_timer`. Route the LLM through the tools and verify that when the user says \"set a 5 minute timer\" the right function fires and the spoken reply confirms it.",
+    "keyPoints": [
+      "Easy.",
+      "Medium."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| Turn | A user + assistant round-trip | One VAD-bounded user speech + one LLM-TTS response. |\n| Barge-in | Interruption | User speaks while assistant talks; assistant stops. |\n| Wake word | \"Hey assistant\" | Short keyword detector; Porcupine, Snowboy, openWakeWord. |\n| End-pointing | Turn ending | VAD + min-silence decision that user has finished. |\n| Pre-roll | Pre-speech buffer | Keep 200-400 ms of audio before VAD fires to avoid first-word clip. |\n| Tool call | Function invocation | LLM emits JSON; runtime dispatches; result feeds back in-loop. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [LiveKit — voice agent quickstart](https://docs.livekit.io/agents/) — production-grade reference.\n- [Pipecat — voice agent examples](https://github.com/pipecat-ai/pipecat) — DIY-friendly framework.\n- [OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime) — the managed voice-native path.\n- [Kyutai Moshi](https://github.com/kyutai-labs/moshi) — full-duplex reference (Lesson 15).\n- [Porcupine wake-word](https://picovoice.ai/products/porcupine/) — wake-word gating.\n- [Anthropic — tool use guide](https://docs.anthropic.com/en/docs/build-with-claude/tool-use) — LLM function calling.",
+    "keyPoints": [
+      "[LiveKit — voice agent quickstart](https://docs.livekit.io/agents/) — production-grade reference.",
+      "[Pipecat — voice agent examples](https://github.com/pipecat-ai/pipecat) — DIY-friendly framework.",
+      "[OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime) — the managed voice-native path.",
+      "[Kyutai Moshi](https://github.com/kyutai-labs/moshi) — full-duplex reference (Lesson 15).",
+      "[Porcupine wake-word](https://picovoice.ai/products/porcupine/) — wake-word gating.",
+      "[Anthropic — tool use guide](https://docs.anthropic.com/en/docs/build-with-claude/tool-use) — LLM function calling."
+    ],
+    "commands": []
+  }
+]

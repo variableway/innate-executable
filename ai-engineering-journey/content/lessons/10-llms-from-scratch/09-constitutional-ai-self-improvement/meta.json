@@ -1,0 +1,24 @@
+{
+  "id": "10-llms-from-scratch/09-constitutional-ai-self-improvement",
+  "slug": "09-constitutional-ai-self-improvement",
+  "phase": "10-llms-from-scratch",
+  "order": 9,
+  "phaseOrder": 10,
+  "title": {
+    "en": "Constitutional AI and Self-Improvement",
+    "zh": ""
+  },
+  "hook": "RLHF needs humans in the loop. Constitutional AI replaces most of them with the model itself. Write a list of principles, have the model critique its own outputs against those principles, and train on the critiques. DeepSeek-R1 pushed this further in 2025: let the model generate millions of reasoning traces, grade them with a rule, and run GRPO on the outcome. Most of the \"alignment work\" in a 2026 frontier model is the model alignment itself. This lesson builds both loops.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib + numpy)"
+  ],
+  "prerequisites": [
+    "Phase 10",
+    "Lessons 06-08 (SFT",
+    "RLHF",
+    "DPO)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

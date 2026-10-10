@@ -1,0 +1,117 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Conditional GANs & Pix2Pix\n\n> The first big unlock of 2014-2017 was controlling what a GAN makes. Attach a label, or an image, or a sentence. Pix2Pix did the image version and it still beats every generic text-to-image model on narrow image-to-image tasks.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 8 · 03 (GANs), Phase 4 · 06 (U-Net), Phase 3 · 07 (CNNs)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "An unconditional GAN samples arbitrary faces. Useful for a demo, useless in production. You want: *map a sketch to a photo*, *map a map to an aerial photo*, *map a daytime scene to nighttime*, *colorize a grayscale image*. In all of these, you are given an input image `x` and must output `y` with some semantic correspondence. There are many plausible `y`s per `x`. Mean-squared error flattens them into mush. An adversarial loss doesn't, because \"looks real\" is sharp.\n\nConditional GAN (Mirza & Osindero, 2014) adds a condition `c` as an input to both `G` and `D`. Pix2Pix (Isola et al., 2017) specialized this: condition is a full input image, generator is a U-Net, discriminator is a *patch-based* classifier (PatchGAN), and loss is adversarial + L1. That recipe outperforms from-scratch text-to-image models on narrow image-to-image domains even in 2026 because it is trained on *paired data* — you have exactly the signal you need.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Pix2Pix: U-Net generator, PatchGAN discriminator](../assets/pix2pix.svg)\n\n**Conditional G.** `G(x, z) → y`. In Pix2Pix, `z` is dropout inside G (no input noise — Isola found explicit noise got ignored).\n\n**Conditional D.** `D(x, y) → [0, 1]`. Input is the *pair* (condition, output). This is the key difference: D must judge whether `y` is consistent with `x`, not just whether `y` looks real.\n\n**U-Net generator.** Encoder-decoder with skip connections across the bottleneck. Critical for tasks where input and output share low-level structure (edges, silhouette). Without the skips, high-frequency detail vanishes.\n\n**PatchGAN discriminator.** Instead of outputting a single real/fake score, D outputs an `N×N` grid where each cell judges a receptive field of ~70×70 pixels. Averaged. This is a Markov random field assumption: realism is local. Much faster to train, fewer parameters, sharper output.\n\n**Loss.**\n\n```\nloss_G = -log D(x, G(x)) + λ · ||y - G(x)||_1\nloss_D = -log D(x, y) - log (1 - D(x, G(x)))\n```\n\nThe L1 term stabilizes training and pushes G toward the known target. L1 gives sharper edges than L2 (medians, not means). `λ = 100` was the Pix2Pix default.",
+    "keyPoints": [
+      "Conditional G.",
+      "Conditional D.",
+      "Loss."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "loss_G = -log D(x, G(x)) + λ · ||y - G(x)||_1\nloss_D = -log D(x, y) - log (1 - D(x, G(x)))"
+      }
+    ]
+  },
+  {
+    "id": "cyclegan-when-you-don-t-have-pairs",
+    "title": "CycleGAN — when you don't have pairs",
+    "bodyMarkdown": "Pix2Pix needs paired `(x, y)` data. CycleGAN (Zhu et al., 2017) drops this requirement at the cost of an extra loss: the *cycle consistency* loss. Two generators `G: X → Y` and `F: Y → X`. Train them so `F(G(x)) ≈ x` and `G(F(y)) ≈ y`. This lets you translate horses to zebras, summer to winter, without paired examples.\n\nIn 2026, unpaired image-to-image is mostly done via diffusion (ControlNet, IP-Adapter) rather than CycleGAN, but the cycle-consistency idea survives in almost every unpaired domain adaptation paper.\n\n```figure\ngx-patchgan\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements a tiny conditional GAN on 1-D data. The condition `c` is a class label (0 or 1). The task: produce a sample from the conditional distribution for the given class.\n\n### Step 1: append condition to both G and D inputs\n\n```python\ndef G(z, c, params):\n    return mlp(concat([z, one_hot(c)]), params)\n\ndef D(x, c, params):\n    return mlp(concat([x, one_hot(c)]), params)\n```\n\nOne-hot encoding is the simplest way. Larger models use learned embeddings, FiLM modulation, or cross-attention.\n\n### Step 2: train conditional\n\n```python\nfor step in range(steps):\n    x, c = sample_real_conditional()\n    noise = sample_noise()\n    update_D(x_real=x, x_fake=G(noise, c), c=c)\n    update_G(noise, c)\n```\n\nThe generator must match the real distribution *for the given condition*, not the marginal.\n\n### Step 3: verify per-class output\n\n```python\nfor c in [0, 1]:\n    samples = [G(noise, c) for noise in batch]\n    mean_c = mean(samples)\n    assert_near(mean_c, real_mean_for_class_c)\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "pitfalls",
+    "title": "Pitfalls",
+    "bodyMarkdown": "- **Condition ignored.** G learns to marginalize, D never penalizes because condition signal is weak. Fix: condition D more aggressively (early layer, not just late), use projection discriminator (Miyato & Koyama 2018).\n- **L1 weight too low.** G drifts to arbitrary real-looking outputs, not faithful ones. Start λ≈100 for Pix2Pix-style tasks.\n- **L1 weight too high.** G produces blurry outputs because L1 is still an L_p norm. Anneal down once training stabilizes.\n- **Ground-truth leakage in D.** Concatenate `(x, y)` as D input, not just `y`. Without this D cannot check consistency.\n- **Mode collapse per class.** Each class can collapse independently. Run class-conditional diversity checks.",
+    "keyPoints": [
+      "Condition ignored.: G learns to marginalize, D never penalizes because condition signal is weak. Fix: condition D more aggressively (early layer, not just late), use projection discriminator (Miyato & Koyama 2018).",
+      "L1 weight too low.: G drifts to arbitrary real-looking outputs, not faithful ones. Start λ≈100 for Pix2Pix-style tasks.",
+      "L1 weight too high.: G produces blurry outputs because L1 is still an L_p norm. Anneal down once training stabilizes.",
+      "Ground-truth leakage in D.: Concatenate `(x, y)` as D input, not just `y`. Without this D cannot check consistency.",
+      "Mode collapse per class.: Each class can collapse independently. Run class-conditional diversity checks."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "2026 state of image-to-image tasks:\n\n| Task | Best approach |\n|------|---------------|\n| Sketch → photo, same domain, paired data | Pix2Pix / Pix2PixHD (still fast, still sharp) |\n| Sketch → photo, unpaired | ControlNet with a Scribble conditioning model |\n| Semantic seg → photo | SPADE / GauGAN2 or SD + ControlNet-Seg |\n| Style transfer | Diffusion with IP-Adapter or LoRA; GAN methods are legacy |\n| Depth → photo | ControlNet-Depth over Stable Diffusion |\n| Super-resolution | Real-ESRGAN (GAN), ESRGAN-Plus, or SD-Upscale (diffusion) |\n| Colorization | ColTran, diffusion-based colorizers, or Pix2Pix-color |\n| Daytime → nighttime, seasons, weather | CycleGAN or ControlNet-based |\n\nPix2Pix remains the right tool when (a) you have thousands of paired examples, (b) the task is narrow and repeatable, and (c) you need fast inference. On generic open-domain tasks, diffusion wins.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Save `outputs/skill-img2img-chooser.md`. Skill takes a task description, data availability (paired vs unpaired, N samples), and latency/quality budget, then outputs: approach (Pix2Pix, CycleGAN, ControlNet variant, SDXL + IP-Adapter), training data requirements, inference cost, and eval protocol (LPIPS, FID, task-specific).",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Modify `code/main.py` to add a third class. Confirm G still maps each class's noise to the correct mode.\n2. **Medium.** Replace L1 with a perceptual-style loss in the 1-D setting (e.g. a small frozen D acting as feature extractor). Does it change sharpness of the conditional distribution?\n3. **Hard.** Sketch a CycleGAN in the 1-D setting: two distributions, two generators, cycle loss. Show that it learns to map between them with no paired data.",
+    "keyPoints": [
+      "Easy.",
+      "Medium.",
+      "Hard."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| Conditional GAN | \"GAN with labels\" | G(z, c), D(x, c). Both networks see the condition. |\n| Pix2Pix | \"Image-to-image GAN\" | Paired cGAN with U-Net G and PatchGAN D + L1 loss. |\n| U-Net | \"Encoder-decoder with skips\" | Symmetric conv network; skips preserve high-freq. |\n| PatchGAN | \"Local-realism classifier\" | D outputs per-patch score instead of global score. |\n| CycleGAN | \"Unpaired image translation\" | Two G's + cycle-consistency loss; no paired data. |\n| SPADE | \"GauGAN\" | Normalizes intermediate activations with the semantic map; segmentation-to-image. |\n| FiLM | \"Feature-wise linear modulation\" | Per-feature affine transform from the condition; cheap conditioning. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "production-note-pix2pix-as-a-latency-bound-baseline",
+    "title": "Production note: Pix2Pix as a latency-bound baseline",
+    "bodyMarkdown": "When you have paired data and a narrow task (sketch → render, semantic map → photo, day → night), Pix2Pix's one-shot inference beats diffusion by an order of magnitude on latency. The production comparison is usually:\n\n| Path | Steps | Typical latency at 512² on a single L4 |\n|------|-------|----------------------------------------|\n| Pix2Pix (U-Net forward) | 1 | ~30 ms |\n| SD-Inpaint or SD-Img2Img | 20 | ~1.2 s |\n| SDXL-Turbo Img2Img | 1-4 | ~0.15-0.35 s |\n| ControlNet + SDXL base | 20-30 | ~3-5 s |\n\nPix2Pix wins on throughput in static batches (every request is the same FLOPs). Diffusion wins on quality and generalization. The modern play is often to ship a Pix2Pix-style distilled model for the narrow task and a diffusion fallback for tail inputs.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Mirza & Osindero (2014). Conditional Generative Adversarial Nets](https://arxiv.org/abs/1411.1784) — the cGAN paper.\n- [Isola et al. (2017). Image-to-Image Translation with Conditional Adversarial Networks](https://arxiv.org/abs/1611.07004) — Pix2Pix.\n- [Zhu et al. (2017). Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/1703.10593) — CycleGAN.\n- [Wang et al. (2018). High-Resolution Image Synthesis with Conditional GANs](https://arxiv.org/abs/1711.11585) — Pix2PixHD.\n- [Park et al. (2019). Semantic Image Synthesis with Spatially-Adaptive Normalization](https://arxiv.org/abs/1903.07291) — SPADE / GauGAN.\n- [Miyato & Koyama (2018). cGANs with Projection Discriminator](https://arxiv.org/abs/1802.05637) — the projection D.",
+    "keyPoints": [
+      "[Mirza & Osindero (2014). Conditional Generative Adversarial Nets](https://arxiv.org/abs/1411.1784) — the cGAN paper.",
+      "[Isola et al. (2017). Image-to-Image Translation with Conditional Adversarial Networks](https://arxiv.org/abs/1611.07004) — Pix2Pix.",
+      "[Zhu et al. (2017). Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks](https://arxiv.org/abs/1703.10593) — CycleGAN.",
+      "[Wang et al. (2018). High-Resolution Image Synthesis with Conditional GANs](https://arxiv.org/abs/1711.11585) — Pix2PixHD.",
+      "[Park et al. (2019). Semantic Image Synthesis with Spatially-Adaptive Normalization](https://arxiv.org/abs/1903.07291) — SPADE / GauGAN.",
+      "[Miyato & Koyama (2018). cGANs with Projection Discriminator](https://arxiv.org/abs/1802.05637) — the projection D."
+    ],
+    "commands": []
+  }
+]

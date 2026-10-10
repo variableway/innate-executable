@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/15-topic-modeling",
+  "slug": "15-topic-modeling",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 15,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Topic Modeling — LDA and BERTopic",
+    "zh": ""
+  },
+  "hook": "LDA: documents are mixtures of topics, topics are distributions over words. BERTopic: documents cluster in embedding space, clusters are topics. Same goal, different decompositions.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 02 (BoW + TF-IDF)",
+    "Phase 5 · 03 (Word2Vec)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

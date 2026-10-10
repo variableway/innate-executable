@@ -1,0 +1,22 @@
+{
+  "id": "03-deep-learning-core/08-weight-initialization",
+  "slug": "08-weight-initialization",
+  "phase": "03-deep-learning-core",
+  "order": 8,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Weight Initialization and Training Stability",
+    "zh": ""
+  },
+  "hook": "Initialize wrong and training never starts. Initialize right and 50 layers train as smoothly as 3.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.04 (Activation Functions)",
+    "Lesson 03.07 (Regularization)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

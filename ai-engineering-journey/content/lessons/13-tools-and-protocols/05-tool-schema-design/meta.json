@@ -1,0 +1,23 @@
+{
+  "id": "13-tools-and-protocols/05-tool-schema-design",
+  "slug": "05-tool-schema-design",
+  "phase": "13-tools-and-protocols",
+  "order": 5,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Tool Schema Design — Naming, Descriptions, Parameter Constraints",
+    "zh": ""
+  },
+  "hook": "A correct tool fails silently when the model cannot tell when to use it. Naming, descriptions, and parameter shapes drive 10 to 20 percentage-point swings in tool-selection accuracy on benchmarks like StableToolBench and MCPToolBench++. This lesson names the design rules that separate a tool a model picks reliably from a tool a model mis-fires.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "tool schema linter)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 01 (the tool interface)",
+    "Phase 13 · 04 (structured output)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

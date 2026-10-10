@@ -1,0 +1,21 @@
+{
+  "id": "03-deep-learning-core/07-regularization",
+  "slug": "07-regularization",
+  "phase": "03-deep-learning-core",
+  "order": 7,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Regularization",
+    "zh": ""
+  },
+  "hook": "Your model gets 99% on training data and 60% on test data. It memorized instead of learning. Regularization is the tax you impose on complexity to force generalization.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.06 (Optimizers)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

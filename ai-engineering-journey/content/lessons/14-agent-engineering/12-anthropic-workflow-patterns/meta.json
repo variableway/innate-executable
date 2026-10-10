@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/12-anthropic-workflow-patterns",
+  "slug": "12-anthropic-workflow-patterns",
+  "phase": "14-agent-engineering",
+  "order": 12,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Anthropic's Workflow Patterns: Simple Over Complex",
+    "zh": ""
+  },
+  "hook": "Schluntz and Zhang (Anthropic, Dec 2024) distinguish workflows (predefined paths) from agents (dynamic tool-use). Five workflow patterns cover most cases. Start with direct API calls. Add agents only when steps cannot be predicted.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 01 (Agent Loop)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

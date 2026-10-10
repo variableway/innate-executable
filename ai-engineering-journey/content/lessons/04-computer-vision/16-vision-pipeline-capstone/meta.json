@@ -1,0 +1,21 @@
+{
+  "id": "04-computer-vision/16-vision-pipeline-capstone",
+  "slug": "16-vision-pipeline-capstone",
+  "phase": "04-computer-vision",
+  "order": 16,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Build a Complete Vision Pipeline — Capstone",
+    "zh": ""
+  },
+  "hook": "A production vision system is a chain of models and rules stitched with data contracts. The pieces are already in this phase; the capstone wires them together end-to-end.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lessons 01-15"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

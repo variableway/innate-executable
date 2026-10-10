@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/08-t5-bart-encoder-decoder",
+  "slug": "08-t5-bart-encoder-decoder",
+  "phase": "07-transformers-deep-dive",
+  "order": 8,
+  "phaseOrder": 7,
+  "title": {
+    "en": "T5, BART — Encoder-Decoder Models",
+    "zh": ""
+  },
+  "hook": "Encoders understand. Decoders generate. Put them back together and you get a model built for input → output tasks: translate, summarize, rewrite, transcribe.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 05 (Full Transformer)",
+    "Phase 7 · 06 (BERT)",
+    "Phase 7 · 07 (GPT)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

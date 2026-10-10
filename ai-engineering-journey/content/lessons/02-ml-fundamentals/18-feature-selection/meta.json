@@ -1,0 +1,21 @@
+{
+  "id": "02-ml-fundamentals/18-feature-selection",
+  "slug": "18-feature-selection",
+  "phase": "02-ml-fundamentals",
+  "order": 18,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Feature Selection",
+    "zh": ""
+  },
+  "hook": "More features is not better. The right features is better.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lessons 01-09",
+    "08 (feature engineering)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

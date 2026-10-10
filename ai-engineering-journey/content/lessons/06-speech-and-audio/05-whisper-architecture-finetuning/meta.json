@@ -1,0 +1,23 @@
+{
+  "id": "06-speech-and-audio/05-whisper-architecture-finetuning",
+  "slug": "05-whisper-architecture-finetuning",
+  "phase": "06-speech-and-audio",
+  "order": 5,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Whisper — Architecture & Fine-Tuning",
+    "zh": ""
+  },
+  "hook": "Whisper is a 30-second-window transformer encoder-decoder, trained on 680k hours of multilingual weakly-supervised audio-text pairs. One architecture, multiple tasks, robust across 99 languages. The 2026 reference ASR.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 04 (ASR)",
+    "Phase 5 · 10 (Attention)",
+    "Phase 7 · 05 (Full Transformer)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

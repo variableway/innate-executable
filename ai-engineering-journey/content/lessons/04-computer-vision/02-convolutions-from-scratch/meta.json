@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/02-convolutions-from-scratch",
+  "slug": "02-convolutions-from-scratch",
+  "phase": "04-computer-vision",
+  "order": 2,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Convolutions from Scratch",
+    "zh": ""
+  },
+  "hook": "A convolution is a tiny dense layer you slide across an image, sharing the same weights at every location.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 (Deep Learning Core)",
+    "Phase 4 Lesson 01 (Image Fundamentals)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

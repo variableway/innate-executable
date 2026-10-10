@@ -1,0 +1,100 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Chunking Strategies for RAG\n\n> Chunking configuration influences retrieval quality as much as the choice of embedding model (Vectara NAACL 2025). Get chunking wrong and no amount of reranking saves you.\n\n**Type:** Build\n**Languages:** Python\n**Prerequisites:** Phase 5 · 14 (Information Retrieval), Phase 5 · 22 (Embedding Models)\n**Time:** ~60 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "You put a 50-page contract into a RAG system. User asks: \"What is the termination clause?\" The retriever returns the cover page. Why? Because the model was trained on 512-token chunks and the termination clause sits 20 pages in, split across a page break, with no local keywords tying it to the query.\n\nThe fix is not \"buy a better embedding model.\" The fix is chunking. How big? Overlap? Where to split? With surrounding context?\n\nFeb 2026 benchmarks show surprising results:\n\n- Vectara's 2026 study: recursive 512-token chunking beat semantic chunking 69% → 54% accuracy.\n- SPLADE + Mistral-8B on Natural Questions: overlap provided zero measurable benefit.\n- Context cliff: response quality drops sharply around 2,500 tokens of context.\n\nThe \"obvious\" answer (semantic chunking, 20% overlap, 1000 tokens) is often wrong. This lesson builds intuition for six strategies and tells you when to reach for which.",
+    "keyPoints": [
+      "Vectara's 2026 study: recursive 512-token chunking beat semantic chunking 69% → 54% accuracy.",
+      "SPLADE + Mistral-8B on Natural Questions: overlap provided zero measurable benefit.",
+      "Context cliff: response quality drops sharply around 2,500 tokens of context."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "![Six chunking strategies visualized on one passage](../assets/chunking.svg)\n\n**Fixed chunking.** Split every N characters or tokens. Simplest baseline. Breaks mid-sentence. Good compression, bad coherence.\n\n**Recursive.** LangChain's `RecursiveCharacterTextSplitter`. Try splitting on `\\n\\n` first, then `\\n`, then `.`, then space. Falls back cleanly. The 2026 default.\n\n**Semantic.** Embed each sentence. Compute cosine similarity between adjacent sentences. Split where similarity drops below a threshold. Preserves topic coherence. Slower; sometimes produces tiny 40-token fragments that hurt retrieval.\n\n**Sentence.** Split on sentence boundaries. One sentence per chunk or a window of N sentences. Matches semantic chunking up to ~5k tokens at a fraction of the cost.\n\n**Parent-document.** Store small child chunks for retrieval *and* the larger parent chunk for context. Retrieve by child; return parent. Degrades gracefully: bad child chunks still return reasonable parents.\n\n**Late chunking (2024).** Embed the whole document at the token level first, then pool token embeddings into chunk embeddings. Preserves cross-chunk context. Works with long-context embedders (BGE-M3, Jina v3). Higher compute.\n\n**Contextual retrieval (Anthropic, 2024).** Prepend each chunk with an LLM-generated summary of its position in the document (\"This chunk is section 3.2 of the termination clauses...\"). 35-50% retrieval improvement in Anthropic's own benchmark. Expensive to index.\n\n### The rule that beats every default\n\nMatch the chunk size to the query type:\n\n| Query type | Chunk size |\n|------------|-----------|\n| Factoid (\"what is the CEO's name?\") | 256-512 tokens |\n| Analytical / multi-hop | 512-1024 tokens |\n| Whole-section comprehension | 1024-2048 tokens |\n\nNVIDIA's 2026 benchmark. The chunk should be big enough to contain the answer plus local context, small enough that the retriever's top-K returns focus on the answer rather than context noise.\n\n```figure\nn5-chunk-cuts\n```",
+    "keyPoints": [
+      "Fixed chunking.",
+      "Recursive.",
+      "Sentence."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### Step 1: fixed and recursive chunking\n\n```python\ndef chunk_fixed(text, size=512, overlap=0):\n    step = size - overlap\n    return [text[i:i + size] for i in range(0, len(text), step)]\n\n\ndef chunk_recursive(text, size=512, seps=(\"\\n\\n\", \"\\n\", \". \", \" \")):\n    if len(text) <= size:\n        return [text]\n    for sep in seps:\n        if sep not in text:\n            continue\n        parts = text.split(sep)\n        chunks = []\n        buf = \"\"\n        for p in parts:\n            if len(p) > size:\n                if buf:\n                    chunks.append(buf)\n                    buf = \"\"\n                chunks.extend(chunk_recursive(p, size=size, seps=seps[1:] or (\" \",)))\n                continue\n            candidate = buf + sep + p if buf else p\n            if len(candidate) <= size:\n                buf = candidate\n            else:\n                if buf:\n                    chunks.append(buf)\n                buf = p\n        if buf:\n            chunks.append(buf)\n        return [c for c in chunks if c.strip()]\n    return chunk_fixed(text, size)\n```\n\n### Step 2: semantic chunking\n\n```python\ndef chunk_semantic(text, encoder, threshold=0.6, min_chars=200, max_chars=2048):\n    sentences = split_sentences(text)\n    if not sentences:\n        return []\n    embs = encoder.encode(sentences, normalize_embeddings=True)\n    chunks = [[sentences[0]]]\n    for i in range(1, len(sentences)):\n        sim = float(embs[i] @ embs[i - 1])\n        current_len = sum(len(s) for s in chunks[-1])\n        if sim < threshold and current_len >= min_chars:\n            chunks.append([sentences[i]])\n        else:\n            chunks[-1].append(sentences[i])\n\n    result = []\n    for group in chunks:\n        text_group = \" \".join(group)\n        if len(text_group) > max_chars:\n            result.extend(chunk_recursive(text_group, size=max_chars))\n        else:\n            result.append(text_group)\n    return result\n```\n\nTune `threshold` on your domain. Too high → fragments. Too low → one giant chunk.\n\n### Step 3: parent-document\n\n```python\ndef chunk_parent_child(text, parent_size=2048, child_size=256):\n    parents = chunk_recursive(text, size=parent_size)\n    mapping = []\n    for p_idx, parent in enumerate(parents):\n        children = chunk_recursive(parent, size=child_size)\n        for child in children:\n            mapping.append({\"child\": child, \"parent_idx\": p_idx, \"parent\": parent})\n    return mapping\n\n\ndef retrieve_parent(child_query, mapping, encoder, top_k=3):\n    child_embs = encoder.encode([m[\"child\"] for m in mapping], normalize_embeddings=True)\n    q_emb = encoder.encode([child_query], normalize_embeddings=True)[0]\n    scores = child_embs @ q_emb\n    top = np.argsort(-scores)[:top_k]\n    seen, parents = set(), []\n    for i in top:\n        if mapping[i][\"parent_idx\"] not in seen:\n            parents.append(mapping[i][\"parent\"])\n            seen.add(mapping[i][\"parent_idx\"])\n    return parents\n```\n\nKey insight: dedupe parents. Multiple children can map to the same parent; returning all would waste context.\n\n### Step 4: contextual retrieval (Anthropic pattern)\n\n```python\ndef contextualize_chunks(document, chunks, llm):\n    context_prompts = [\n        f\"\"\"<document>{document}</document>\nHere is the chunk to situate: <chunk>{c}</chunk>\nWrite 50-100 words placing this chunk in the document's context.\"\"\"\n        for c in chunks\n    ]\n    contexts = llm.batch(context_prompts)\n    return [f\"{ctx}\\n\\n{c}\" for ctx, c in zip(contexts, chunks)]\n```\n\nIndex the contextualized chunks. At query time, retrieval benefits from the extra surrounding signal.\n\n### Step 5: evaluate\n\n```python\ndef recall_at_k(queries, corpus_chunks, encoder, k=5):\n    chunk_embs = encoder.encode(corpus_chunks, normalize_embeddings=True)\n    hits = 0\n    for q_text, gold_idxs in queries:\n        q_emb = encoder.encode([q_text], normalize_embeddings=True)[0]\n        top = np.argsort(-(chunk_embs @ q_emb))[:k]\n        if any(i in gold_idxs for i in top):\n            hits += 1\n    return hits / len(queries)\n```\n\nAlways benchmark. The \"best\" strategy for your corpus may not match any blog post.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "pitfalls",
+    "title": "Pitfalls",
+    "bodyMarkdown": "- **Chunking evaluated only on factoid queries.** Multi-hop queries reveal very different winners. Use a query-type-stratified eval set.\n- **Semantic chunking without a minimum size.** Produces 40-token fragments that hurt retrieval. Always enforce `min_tokens`.\n- **Overlap as cargo cult.** 2026 studies find overlap often provides zero benefit and doubles index cost. Measure, do not assume.\n- **No min/max enforcement.** Chunks of 5 tokens or 5000 tokens both break retrieval. Clamp.\n- **Cross-doc chunking.** Never let a chunk span two documents. Always chunk per-doc, then merge.",
+    "keyPoints": [
+      "Chunking evaluated only on factoid queries.: Multi-hop queries reveal very different winners. Use a query-type-stratified eval set.",
+      "Semantic chunking without a minimum size.: Produces 40-token fragments that hurt retrieval. Always enforce `min_tokens`.",
+      "Overlap as cargo cult.: 2026 studies find overlap often provides zero benefit and doubles index cost. Measure, do not assume.",
+      "No min/max enforcement.: Chunks of 5 tokens or 5000 tokens both break retrieval. Clamp.",
+      "Cross-doc chunking.: Never let a chunk span two documents. Always chunk per-doc, then merge."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "The 2026 stack:\n\n| Situation | Strategy |\n|-----------|----------|\n| First build, unknown corpus | Recursive, 512 tokens, no overlap |\n| Factoid QA | Recursive, 256-512 tokens |\n| Analytical / multi-hop | Recursive, 512-1024 tokens + parent-document |\n| Heavy cross-reference (contracts, papers) | Late chunking or contextual retrieval |\n| Conversational / dialog corpus | Turn-level chunks + speaker metadata |\n| Short utterances (tweets, reviews) | One document = one chunk |\n\nStart with recursive 512. Measure recall@5 on a 50-query eval set. Tune from there.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Save as `outputs/skill-chunker.md`:\n\n```markdown\n---\nname: chunker\ndescription: Pick a chunking strategy, size, and overlap for a given corpus and query distribution.\nversion: 1.0.0\nphase: 5\nlesson: 23\ntags: [nlp, rag, chunking]\n---\n\nGiven a corpus (document types, avg length, domain) and query distribution (factoid / analytical / multi-hop), output:\n\n1. Strategy. Recursive / sentence / semantic / parent-document / late / contextual. Reason.\n2. Chunk size. Token count. Reason tied to query type.\n3. Overlap. Default 0; justify if >0.\n4. Min/max enforcement. `min_tokens`, `max_tokens` guards.\n5. Evaluation plan. Recall@5 on 50-query stratified eval set (factoid, analytical, multi-hop).\n\nRefuse any chunking strategy without min/max chunk size enforcement. Refuse overlap above 20% without an ablation showing it helps. Flag semantic chunking recommendations without a min-token floor.\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. **Easy.** Chunk one 20-page document with fixed(512, 0), recursive(512, 0), and recursive(512, 100). Compare chunk counts and boundary quality.\n2. **Medium.** Build a 30-query eval set over 5 documents. Measure recall@5 for recursive, semantic, and parent-document. Which wins? Does it match the blog posts?\n3. **Hard.** Implement contextual retrieval. Measure MRR improvement over baseline recursive. Report index cost (LLM calls) vs accuracy gain.",
+    "keyPoints": [
+      "Easy.",
+      "Medium.",
+      "Hard."
+    ],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|-----------------------|\n| Chunk | A piece of a doc | Sub-document unit that gets embedded, indexed, and retrieved. |\n| Overlap | Safety margin | N tokens shared between adjacent chunks; often useless in 2026 benchmarks. |\n| Semantic chunking | Smart chunking | Split where adjacent-sentence embedding similarity drops. |\n| Parent-document | Two-level retrieval | Retrieve small children, return larger parents. |\n| Late chunking | Chunk after embedding | Embed full doc at token level, pool into chunk vectors. |\n| Contextual retrieval | Anthropic's trick | LLM-generated summary prepended to each chunk before indexing. |\n| Context cliff | 2500-token wall | Quality drop observed around 2.5k context tokens in RAG (Jan 2026). |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Yepes et al. / LangChain — Recursive Character Splitting docs](https://python.langchain.com/docs/how_to/recursive_text_splitter/) — the default in production.\n- [Vectara (2024, NAACL 2025). Chunking configurations analysis](https://arxiv.org/abs/2410.13070) — chunking matters as much as embedding choice.\n- [Jina AI — Late Chunking in Long-Context Embedding Models (2024)](https://jina.ai/news/late-chunking-in-long-context-embedding-models/) — the late chunking paper.\n- [Anthropic — Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval) — 35-50% retrieval improvement with LLM-generated context prefixes.\n- [NVIDIA 2026 chunk-size benchmark — Premai summary](https://blog.premai.io/rag-chunking-strategies-the-2026-benchmark-guide/) — chunk size by query type.",
+    "keyPoints": [
+      "[Yepes et al. / LangChain — Recursive Character Splitting docs](https://python.langchain.com/docs/how_to/recursive_text_splitter/) — the default in production.",
+      "[Vectara (2024, NAACL 2025). Chunking configurations analysis](https://arxiv.org/abs/2410.13070) — chunking matters as much as embedding choice.",
+      "[Anthropic — Contextual Retrieval](https://www.anthropic.com/news/contextual-retrieval) — 35-50% retrieval improvement with LLM-generated context prefixes.",
+      "[NVIDIA 2026 chunk-size benchmark — Premai summary](https://blog.premai.io/rag-chunking-strategies-the-2026-benchmark-guide/) — chunk size by query type."
+    ],
+    "commands": []
+  }
+]

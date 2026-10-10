@@ -1,0 +1,21 @@
+{
+  "id": "03-deep-learning-core/11-intro-to-pytorch",
+  "slug": "11-intro-to-pytorch",
+  "phase": "03-deep-learning-core",
+  "order": 11,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Introduction to PyTorch",
+    "zh": ""
+  },
+  "hook": "You built the engine from pistons and crankshafts. Now learn the one everyone actually drives.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Lesson 03.10 (Build Your Own Mini Framework)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

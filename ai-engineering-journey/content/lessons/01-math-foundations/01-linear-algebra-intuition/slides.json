@@ -1,0 +1,110 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# 线性代数直觉\n\n> 每个 AI 模型，不过是戴了顶花帽子的矩阵运算。\n\n**类型:** Learn\n**语言:** Python, Julia\n**先修:** Phase 0\n**时长:** ~60 分钟",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "学习目标",
+    "title": "学习目标",
+    "bodyMarkdown": "- 用 Python 从零实现向量与矩阵运算（加法、点积、矩阵乘法）\n- 从几何上解释点积、投影和 Gram-Schmidt 过程各自在做什么\n- 用行化简判断一组向量的线性无关性、秩（rank）和基（basis）\n- 把线性代数概念接到 AI 应用上：embedding、注意力分数和 LoRA",
+    "keyPoints": [
+      "用 Python 从零实现向量与矩阵运算（加法、点积、矩阵乘法）",
+      "从几何上解释点积、投影和 Gram-Schmidt 过程各自在做什么",
+      "用行化简判断一组向量的线性无关性、秩（rank）和基（basis）",
+      "把线性代数概念接到 AI 应用上：embedding、注意力分数和 LoRA"
+    ],
+    "commands": []
+  },
+  {
+    "id": "问题",
+    "title": "问题",
+    "bodyMarkdown": "翻开任何一篇 ML 论文，第一页就会出现向量、矩阵、点积和变换。没有线性代数直觉，这些只是符号；有了直觉，你就能看见神经网络真正在做什么——在空间里挪动点。\n\n你不需要成为数学家。你需要看清这些运算在几何上意味着什么，然后亲手把它们写出来。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "概念",
+    "title": "概念",
+    "bodyMarkdown": "### 向量就是点（也是方向）\n\n向量就是一串数字。但这些数字有含义——它们是空间中的坐标。\n\n**二维向量 [3, 2]：**\n\n| x | y | 点 |\n|---|---|-------|\n| 3 | 2 | 向量从原点 (0,0) 指向平面上的 (3, 2) |\n\n该向量的模长是 sqrt(3^2 + 2^2) = sqrt(13)，方向指向右上方。\n\n在 AI 里，向量表示一切：\n- 一个词 → 768 个数字的向量（它在 embedding 空间里的\"含义\"）\n- 一张图 → 上百万像素值组成的向量\n- 一个用户 → 偏好向量\n\n### 矩阵就是变换\n\n矩阵把一个向量变换成另一个向量。它可以旋转、缩放、拉伸或投影。\n\n```mermaid\ngraph LR\n    subgraph Before\n        A[\"Point A\"]\n        B[\"Point B\"]\n    end\n    subgraph Matrix[\"Matrix Multiplication\"]\n        M[\"M (transformation)\"]\n    end\n    subgraph After\n        A2[\"Point A'\"]\n        B2[\"Point B'\"]\n    end\n    A --> M\n    B --> M\n    M --> A2\n    M --> B2\n```\n\n在 AI 里，矩阵就是模型本身：\n- 神经网络权重 → 把输入变换成输出的矩阵\n- 注意力分数 → 决定该关注什么的矩阵\n- Embedding → 把词映射成向量的矩阵\n\n### 点积衡量相似度\n\n两个向量的点积（dot product）告诉你它们有多相似。\n\n```\na · b = a₁×b₁ + a₂×b₂ + ... + aₙ×bₙ\n\nSame direction:      a · b > 0  (similar)\nPerpendicular:       a · b = 0  (unrelated)\nOpposite direction:  a · b < 0  (dissimilar)\n```\n\n搜索引擎、推荐系统和 RAG 就是这么工作的——找出点积高的向量。\n\n### 线性无关\n\n如果集合里没有任何一个向量能写成其他向量的组合，这组向量就是线性无关（linearly independent）的。若 v1、v2、v3 互相独立，它们张成一个三维空间；若其中一个是另外两个的组合，它们只张成一个平面。\n\n对 AI 为何重要：特征矩阵的列应当线性无关。若两个特征完全相关（线性相关），模型就无法区分它们各自的效应。这会在回归里造成多重共线性——权重矩阵变得不稳定，输入的微小变化会引起输出剧烈波动。\n\n**具体例子：**\n\n```\nv1 = [1, 0, 0]\nv2 = [0, 1, 0]\nv3 = [2, 1, 0]   # v3 = 2*v1 + v2\n```\n\nv1 和 v2 独立——谁都不是谁的标量倍数或组合。但 v3 = 2*v1 + v2，所以 {v1, v2, v3} 是相关集合。这三个向量都落在 xy 平面内。无论怎么组合，都到不了 [0, 0, 1]。你有三个向量，却只有两个自由度。\n\n在数据集中：若 feature_3 = 2*feature_1 + feature_2，再加上 feature_3 对模型是零新增信息。更糟的是，它会让正规方程奇异——权重没有唯一解。\n\n### 基与秩\n\n基（basis）是张成整个空间的最小线性无关向量组。基向量的个数就是空间的维数。\n\n三维空间的标准基是 {[1,0,0], [0,1,0], [0,0,1]}。但三维空间中任意三个无关向量都构成合法的基。选基就是选坐标系。\n\n矩阵的秩（rank）= 线性无关的列数 = 线性无关的行数。若 rank < min(rows, cols)，矩阵就是秩亏的。这意味着：\n- 方程组有无穷多解（或无解）\n- 变换过程中信息丢失\n- 矩阵不可逆\n\n| 情形 | 秩 | 对 ML 的含义 |\n|-----------|------|---------------------|\n| 满秩（rank = min(m, n)） | 最大可能 | 存在唯一最小二乘解。模型条件良好。 |\n| 秩亏（rank < min(m, n)） | 低于最大 | 特征冗余。权重解无穷多。需要正则化。 |\n| 秩为 1 | 1 | 每一列都是同一个向量的缩放副本。所有数据落在一条直线上。 |\n| 近似秩亏（奇异值很小） | 数值上很低 | 矩阵病态。输入的微小噪声导致输出大幅变化。用 SVD 截断或岭回归。 |\n\n### 投影\n\n把向量 **a** 投影（projection）到向量 **b** 上，得到的是 **a** 在 **b** 方向上的分量：\n\n```\nproj_b(a) = (a dot b / b dot b) * b\n```\n\n残差（a - proj_b(a)）与 b 垂直。这种正交分解是最小二乘拟合的基础。\n\n投影在 ML 里无处不在：\n- 线性回归最小化观测点到列空间的距离——解本身就是一次投影\n- PCA 把数据投影到最大方差方向上\n- Transformer 里的注意力计算 query 在 key 上的投影\n\n```mermaid\ngraph LR\n    subgraph Projection[\"Projection of a onto b\"]\n        direction TB\n        O[\"Origin\"] --> |\"b (direction)\"| B[\"b\"]\n        O --> |\"a (original)\"| A[\"a\"]\n        O --> |\"proj_b(a)\"| P[\"projection\"]\n        A -.-> |\"residual (perpendicular)\"| P\n    end\n```\n\n**例子：** a = [3, 4], b = [1, 0]\n\nproj_b(a) = (3*1 + 4*0) / (1*1 + 0*0) * [1, 0] = 3 * [1, 0] = [3, 0]\n\n投影丢掉了 y 分量。这就是最简形式的降维——扔掉你不关心的方向。\n\n### Gram-Schmidt 过程\n\n把任意一组无关向量转换成标准正交基（orthonormal basis）。标准正交指每个向量长度为 1，且两两垂直。\n\n算法：\n1. 取第一个向量，归一化\n2. 取第二个向量，减去它在第一个上的投影，归一化\n3. 取第三个向量，减去它在所有前面向量上的投影，归一化\n4. 对剩余向量重复\n\n```\nInput:  v1, v2, v3, ... (linearly independent)\n\nu1 = v1 / |v1|\n\nw2 = v2 - (v2 dot u1) * u1\nu2 = w2 / |w2|\n\nw3 = v3 - (v3 dot u1) * u1 - (v3 dot u2) * u2\nu3 = w3 / |w3|\n\nOutput: u1, u2, u3, ... (orthonormal basis)\n```\n\nQR 分解内部就是这么工作的。Q 是标准正交基，R 记录投影系数。QR 分解用于：\n- 解线性方程组（比高斯消元更稳定）\n- 计算特征值（eigenvalue）（QR 算法）\n- 最小二乘回归（标准数值方法）\n\n```figure\neigen-directions\n```",
+    "keyPoints": [
+      "二维向量 [3, 2]：",
+      "一个词 → 768 个数字的向量（它在 embedding 空间里的\"含义\"）",
+      "一张图 → 上百万像素值组成的向量",
+      "一个用户 → 偏好向量",
+      "神经网络权重 → 把输入变换成输出的矩阵",
+      "注意力分数 → 决定该关注什么的矩阵"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "a · b = a₁×b₁ + a₂×b₂ + ... + aₙ×bₙ\n\nSame direction:      a · b > 0  (similar)\nPerpendicular:       a · b = 0  (unrelated)\nOpposite direction:  a · b < 0  (dissimilar)"
+      },
+      {
+        "lang": "text",
+        "code": "v1 = [1, 0, 0]\nv2 = [0, 1, 0]\nv3 = [2, 1, 0]   # v3 = 2*v1 + v2"
+      },
+      {
+        "lang": "text",
+        "code": "proj_b(a) = (a dot b / b dot b) * b"
+      },
+      {
+        "lang": "text",
+        "code": "Input:  v1, v2, v3, ... (linearly independent)\n\nu1 = v1 / |v1|\n\nw2 = v2 - (v2 dot u1) * u1\nu2 = w2 / |w2|\n\nw3 = v3 - (v3 dot u1) * u1 - (v3 dot u2) * u2\nu3 = w3 / |w3|\n\nOutput: u1, u2, u3, ... (orthonormal basis)"
+      }
+    ]
+  },
+  {
+    "id": "动手做",
+    "title": "动手做",
+    "bodyMarkdown": "### 步骤 1：从零实现向量（Python）\n\n```python\nclass Vector:\n    def __init__(self, components):\n        self.components = list(components)\n        self.dim = len(self.components)\n\n    def __add__(self, other):\n        return Vector([a + b for a, b in zip(self.components, other.components)])\n\n    def __sub__(self, other):\n        return Vector([a - b for a, b in zip(self.components, other.components)])\n\n    def dot(self, other):\n        return sum(a * b for a, b in zip(self.components, other.components))\n\n    def magnitude(self):\n        return sum(x**2 for x in self.components) ** 0.5\n\n    def normalize(self):\n        mag = self.magnitude()\n        return Vector([x / mag for x in self.components])\n\n    def cosine_similarity(self, other):\n        return self.dot(other) / (self.magnitude() * other.magnitude())\n\n    def __repr__(self):\n        return f\"Vector({self.components})\"\n\n\na = Vector([1, 2, 3])\nb = Vector([4, 5, 6])\n\nprint(f\"a + b = {a + b}\")\nprint(f\"a · b = {a.dot(b)}\")\nprint(f\"|a| = {a.magnitude():.4f}\")\nprint(f\"cosine similarity = {a.cosine_similarity(b):.4f}\")\n```\n\n### 步骤 2：从零实现矩阵（Python）\n\n```python\nclass Matrix:\n    def __init__(self, rows):\n        self.rows = [list(row) for row in rows]\n        self.shape = (len(self.rows), len(self.rows[0]))\n\n    def __matmul__(self, other):\n        if isinstance(other, Vector):\n            return Vector([\n                sum(self.rows[i][j] * other.components[j] for j in range(self.shape[1]))\n                for i in range(self.shape[0])\n            ])\n        rows = []\n        for i in range(self.shape[0]):\n            row = []\n            for j in range(other.shape[1]):\n                row.append(sum(\n                    self.rows[i][k] * other.rows[k][j]\n                    for k in range(self.shape[1])\n                ))\n            rows.append(row)\n        return Matrix(rows)\n\n    def transpose(self):\n        return Matrix([\n            [self.rows[j][i] for j in range(self.shape[0])]\n            for i in range(self.shape[1])\n        ])\n\n    def __repr__(self):\n        return f\"Matrix({self.rows})\"\n\n\nrotation_90 = Matrix([[0, -1], [1, 0]])\npoint = Vector([3, 1])\n\nrotated = rotation_90 @ point\nprint(f\"Original: {point}\")\nprint(f\"Rotated 90°: {rotated}\")\n```\n\n### 步骤 3：这对 AI 为何重要\n\n```python\nimport random\n\nrandom.seed(42)\nweights = Matrix([[random.gauss(0, 0.1) for _ in range(3)] for _ in range(2)])\ninput_vector = Vector([1.0, 0.5, -0.3])\n\noutput = weights @ input_vector\nprint(f\"Input (3D): {input_vector}\")\nprint(f\"Output (2D): {output}\")\nprint(\"This is what a neural network layer does -- matrix multiplication.\")\n```\n\n### 步骤 4：Julia 版本\n\n```julia\na = [1.0, 2.0, 3.0]\nb = [4.0, 5.0, 6.0]\n\nprintln(\"a + b = \", a + b)\nprintln(\"a · b = \", a ⋅ b)       # Julia supports unicode operators\nprintln(\"|a| = \", √(a ⋅ a))\nprintln(\"cosine = \", (a ⋅ b) / (√(a ⋅ a) * √(b ⋅ b)))\n\n# Matrix-vector multiplication\nW = [0.1 -0.2 0.3; 0.4 0.5 -0.1]\nx = [1.0, 0.5, -0.3]\nprintln(\"Wx = \", W * x)\nprintln(\"This is a neural network layer.\")\n```\n\n### 步骤 5：从零实现线性无关与投影（Python）\n\n```python\ndef is_linearly_independent(vectors):\n    n = len(vectors)\n    dim = len(vectors[0].components)\n    mat = Matrix([v.components[:] for v in vectors])\n    rows = [row[:] for row in mat.rows]\n    rank = 0\n    for col in range(dim):\n        pivot = None\n        for row in range(rank, len(rows)):\n            if abs(rows[row][col]) > 1e-10:\n                pivot = row\n                break\n        if pivot is None:\n            continue\n        rows[rank], rows[pivot] = rows[pivot], rows[rank]\n        scale = rows[rank][col]\n        rows[rank] = [x / scale for x in rows[rank]]\n        for row in range(len(rows)):\n            if row != rank and abs(rows[row][col]) > 1e-10:\n                factor = rows[row][col]\n                rows[row] = [rows[row][j] - factor * rows[rank][j] for j in range(dim)]\n        rank += 1\n    return rank == n\n\n\ndef project(a, b):\n    scalar = a.dot(b) / b.dot(b)\n    return Vector([scalar * x for x in b.components])\n\n\ndef gram_schmidt(vectors):\n    orthonormal = []\n    for v in vectors:\n        w = v\n        for u in orthonormal:\n            proj = project(w, u)\n            w = w - proj\n        if w.magnitude() < 1e-10:\n            continue\n        orthonormal.append(w.normalize())\n    return orthonormal\n\n\nv1 = Vector([1, 0, 0])\nv2 = Vector([1, 1, 0])\nv3 = Vector([1, 1, 1])\nbasis = gram_schmidt([v1, v2, v3])\nfor i, u in enumerate(basis):\n    print(f\"u{i+1} = {u}\")\n    print(f\"  |u{i+1}| = {u.magnitude():.6f}\")\n\nprint(f\"u1 · u2 = {basis[0].dot(basis[1]):.6f}\")\nprint(f\"u1 · u3 = {basis[0].dot(basis[2]):.6f}\")\nprint(f\"u2 · u3 = {basis[1].dot(basis[2]):.6f}\")\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "用起来",
+    "title": "用起来",
+    "bodyMarkdown": "现在用 NumPy 做同样的事——这才是你实践中真正会用的：\n\n```python\nimport numpy as np\n\na = np.array([1, 2, 3], dtype=float)\nb = np.array([4, 5, 6], dtype=float)\n\nprint(f\"a + b = {a + b}\")\nprint(f\"a · b = {np.dot(a, b)}\")\nprint(f\"|a| = {np.linalg.norm(a):.4f}\")\nprint(f\"cosine = {np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)):.4f}\")\n\nW = np.random.randn(2, 3) * 0.1\nx = np.array([1.0, 0.5, -0.3])\nprint(f\"Wx = {W @ x}\")\n```\n\n### 用 NumPy 做秩、投影和 QR\n\n```python\nimport numpy as np\n\nA = np.array([[1, 2], [2, 4]])\nprint(f\"Rank: {np.linalg.matrix_rank(A)}\")\n\na = np.array([3, 4])\nb = np.array([1, 0])\nproj = (np.dot(a, b) / np.dot(b, b)) * b\nprint(f\"Projection of {a} onto {b}: {proj}\")\n\nQ, R = np.linalg.qr(np.random.randn(3, 3))\nprint(f\"Q is orthogonal: {np.allclose(Q @ Q.T, np.eye(3))}\")\nprint(f\"R is upper triangular: {np.allclose(R, np.triu(R))}\")\n```\n\n### PyTorch——张量就是带自动微分的向量\n\n```python\nimport torch\n\nx = torch.randn(3, requires_grad=True)\ny = torch.tensor([1.0, 0.0, 0.0])\n\nsimilarity = torch.dot(x, y)\nsimilarity.backward()\n\nprint(f\"x = {x.data}\")\nprint(f\"y = {y.data}\")\nprint(f\"dot product = {similarity.item():.4f}\")\nprint(f\"d(dot)/dx = {x.grad}\")\n```\n\n点积关于 x 的梯度（gradient）就是 y 本身。PyTorch 自动算出了它。神经网络里的每个操作都由这类运算搭成——矩阵乘法、点积、投影——而自动微分会追踪贯穿其中的梯度。\n\n你刚从零写出了 NumPy 一行就能做完的事。现在你知道底层在发生什么了。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "交付",
+    "title": "交付",
+    "bodyMarkdown": "本课产出：\n- `outputs/prompt-linear-algebra-tutor.md` —— 一份让 AI 助手通过几何直觉教线性代数的提示词",
+    "keyPoints": [
+      "`outputs/prompt-linear-algebra-tutor.md` —— 一份让 AI 助手通过几何直觉教线性代数的提示词"
+    ],
+    "commands": []
+  },
+  {
+    "id": "联系",
+    "title": "联系",
+    "bodyMarkdown": "本课的一切都对应现代 AI 的具体部件：\n\n| 概念 | 出现在哪里 |\n|---------|------------------|\n| 点积 | Transformer 中的注意力分数，RAG 中的余弦相似度 |\n| 矩阵乘法 | 每一个神经网络层，每一次线性变换 |\n| 线性无关 | 特征选择，避免多重共线性 |\n| 秩 | 判断方程组是否可解，LoRA（低秩自适应） |\n| 投影 | 线性回归（投影到列空间），PCA |\n| Gram-Schmidt / QR | 数值求解器，特征值计算 |\n| 标准正交基 | 稳定的数值计算，白化变换 |\n\nLoRA 值得单独一提。它通过把权重更新分解成低秩矩阵来微调大语言模型。不是去更新一个 4096x4096 的权重矩阵（1600 万参数），LoRA 更新的是 4096x16 和 16x4096 两个矩阵（13.1 万参数）。秩为 16 的约束意味着 LoRA 假设权重更新落在完整 4096 维空间的一个 16 维子空间里。这就是线性代数在干实事。",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "练习",
+    "title": "练习",
+    "bodyMarkdown": "1. 实现 `Vector.angle_between(other)`，返回两个向量之间的角度（度）\n2. 创建一个二维缩放矩阵，把 x 坐标加倍、y 坐标变成三倍，然后作用到向量 [1, 1] 上\n3. 给定 5 个随机的类词向量（维度 50），用余弦相似度找出最相似的一对\n4. 验证 Gram-Schmidt 的输出确实是标准正交的：检查每对点积为 0，每个向量模长为 1\n5. 创建一个秩为 2 的 3x3 矩阵。用 `rank()` 方法验证。然后解释这些列张成了什么几何对象\n6. 把向量 [1, 2, 3] 投影到 [1, 1, 1] 上。结果在几何上代表什么？",
+    "keyPoints": [
+      "实现 `Vector.angle_between(other)`，返回两个向量之间的角度（度）",
+      "创建一个二维缩放矩阵，把 x 坐标加倍、y 坐标变成三倍，然后作用到向量 [1, 1] 上",
+      "给定 5 个随机的类词向量（维度 50），用余弦相似度找出最相似的一对",
+      "验证 Gram-Schmidt 的输出确实是标准正交的：检查每对点积为 0，每个向量模长为 1",
+      "创建一个秩为 2 的 3x3 矩阵。用 `rank()` 方法验证。然后解释这些列张成了什么几何对象",
+      "把向量 [1, 2, 3] 投影到 [1, 1, 1] 上。结果在几何上代表什么？"
+    ],
+    "commands": []
+  },
+  {
+    "id": "关键术语",
+    "title": "关键术语",
+    "bodyMarkdown": "| 术语 | 人们常说 | 它真正的意思 |\n|------|----------------|----------------------|\n| 向量（Vector） | \"一支箭\" | 一串数字，表示 n 维空间中的一个点或方向 |\n| 矩阵（Matrix） | \"一张数字表\" | 把向量从一个空间映射到另一个空间的变换 |\n| 点积（Dot product） | \"乘起来再加\" | 衡量两个向量对齐程度的量——相似度检索的核心 |\n| Embedding | \"某种 AI 魔法\" | 表示某个东西（词、图、用户）含义的向量 |\n| 线性无关（Linear independence） | \"它们不重叠\" | 集合中没有任何向量能写成其他向量的组合 |\n| 秩（Rank） | \"有多少维\" | 矩阵中线性无关的列（或行）的个数 |\n| 投影（Projection） | \"影子\" | 一个向量在另一个方向上的分量 |\n| 基（Basis） | \"坐标轴\" | 张成空间的最小无关向量组 |\n| 标准正交（Orthonormal） | \"垂直的单位向量\" | 两两垂直且每个长度为 1 的向量组 |",
+    "keyPoints": [],
+    "commands": []
+  }
+]

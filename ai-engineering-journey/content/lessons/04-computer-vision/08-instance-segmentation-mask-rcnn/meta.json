@@ -1,0 +1,22 @@
+{
+  "id": "04-computer-vision/08-instance-segmentation-mask-rcnn",
+  "slug": "08-instance-segmentation-mask-rcnn",
+  "phase": "04-computer-vision",
+  "order": 8,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Instance Segmentation — Mask R-CNN",
+    "zh": ""
+  },
+  "hook": "Add a tiny mask branch to a Faster R-CNN detector and you have instance segmentation. The hard part is RoIAlign, and it is harder than it looks.",
+  "type": "Build + Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 06 (YOLO)",
+    "Phase 4 Lesson 07 (U-Net)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

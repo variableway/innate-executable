@@ -1,0 +1,22 @@
+{
+  "id": "08-generative-ai/14-evaluation-fid-clip-score",
+  "slug": "14-evaluation-fid-clip-score",
+  "phase": "08-generative-ai",
+  "order": 14,
+  "phaseOrder": 8,
+  "title": {
+    "en": "Evaluation — FID, CLIP Score, Human Preference",
+    "zh": ""
+  },
+  "hook": "Every generative model leaderboard cites FID, CLIP score, and a win rate from a human-preference arena. Each number has a failure mode a determined researcher can game. If you do not know the failure modes, you cannot tell a real improvement from a gaming run.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 8 · 01 (Taxonomy)",
+    "Phase 2 · 04 (Evaluation Metrics)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

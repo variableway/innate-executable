@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/22-stochastic-processes",
+  "slug": "22-stochastic-processes",
+  "phase": "01-math-foundations",
+  "order": 22,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Stochastic Processes",
+    "zh": "随机过程"
+  },
+  "hook": "Randomness with structure. The math behind random walks, Markov chains, and diffusion models.",
+  "type": "Learn",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 06-07 (probability",
+    "Bayes)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": false
+}

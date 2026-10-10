@@ -1,0 +1,24 @@
+{
+  "id": "19-capstone-projects/34-transformer-block",
+  "slug": "34-transformer-block",
+  "phase": "19-capstone-projects",
+  "order": 34,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Transformer Block from Scratch",
+    "zh": ""
+  },
+  "hook": "One block is the unit of every modern decoder LLM. Layer norm, multi head attention, residual, MLP, residual. The pre-LN variant trains stably without warmup. The post-LN variant is what the original paper shipped. This lesson builds both, side by side, and shows which one survives a 12 layer stack at common learning rates.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 19 lessons 30 to 33 (tokenizer",
+    "embeddings",
+    "attention math",
+    "batched data loader)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

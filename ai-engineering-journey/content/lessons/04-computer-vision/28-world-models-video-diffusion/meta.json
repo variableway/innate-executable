@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/28-world-models-video-diffusion",
+  "slug": "28-world-models-video-diffusion",
+  "phase": "04-computer-vision",
+  "order": 28,
+  "phaseOrder": 4,
+  "title": {
+    "en": "World Models & Video Diffusion",
+    "zh": ""
+  },
+  "hook": "A video model that predicts the next seconds of a scene is a world simulator. Condition that prediction on actions and you have a learned game engine.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 10 (Diffusion)",
+    "Phase 4 Lesson 12 (Video Understanding)",
+    "Phase 4 Lesson 23 (DiT + Rectified Flow)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

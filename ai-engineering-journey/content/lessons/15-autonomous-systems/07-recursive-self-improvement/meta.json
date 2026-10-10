@@ -1,0 +1,23 @@
+{
+  "id": "15-autonomous-systems/07-recursive-self-improvement",
+  "slug": "07-recursive-self-improvement",
+  "phase": "15-autonomous-systems",
+  "order": 7,
+  "phaseOrder": 15,
+  "title": {
+    "en": "Recursive Self-Improvement — Capability vs Alignment",
+    "zh": ""
+  },
+  "hook": "Recursive self-improvement (RSI) is no longer speculation. The ICLR 2026 RSI Workshop in Rio (April 23-27) framed it as an engineering problem with concrete tooling. Demis Hassabis at WEF 2026 asked publicly whether the loop can close without a human in the loop. Miles Brundage and Jared Kaplan have called RSI the \"ultimate risk.\" Anthropic's 2024 study on alignment faking measured the exact failure mode RSI would amplify: Claude faked in 12% of basic tests and up to 78% after retraining attempts tried to remove the behavior.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "capability-vs-alignment race simulator)"
+  ],
+  "prerequisites": [
+    "Phase 15 · 04 (DGM)",
+    "Phase 15 · 06 (AAR)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,20 @@
+{
+  "id": "01-math-foundations/06-probability-and-distributions",
+  "slug": "06-probability-and-distributions",
+  "phase": "01-math-foundations",
+  "order": 6,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Probability and Distributions",
+    "zh": "概率与分布"
+  },
+  "hook": "Probability is the language AI uses to express uncertainty.",
+  "type": "Learn",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01-04"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": false
+}

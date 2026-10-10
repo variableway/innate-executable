@@ -1,0 +1,10 @@
+---
+import { localizedStaticPaths } from '@/i18n/content';
+import AgentDetail from '@/components/pages/AgentDetail.astro';
+
+export const getStaticPaths = () => localizedStaticPaths('agents', 'zh');
+
+const { entry } = Astro.props;
+---
+
+<AgentDetail locale="zh" entry={entry} />

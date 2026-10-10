@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/10-image-generation-diffusion",
+  "slug": "10-image-generation-diffusion",
+  "phase": "04-computer-vision",
+  "order": 10,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Image Generation — Diffusion Models",
+    "zh": ""
+  },
+  "hook": "A diffusion model learns to denoise. Train it to remove a tiny bit of noise from a noisy image, repeat that backwards a thousand times, and you have an image generator.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 07 (U-Net)",
+    "Phase 1 Lesson 06 (Probability)",
+    "Phase 3 Lesson 06 (Optimizers)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

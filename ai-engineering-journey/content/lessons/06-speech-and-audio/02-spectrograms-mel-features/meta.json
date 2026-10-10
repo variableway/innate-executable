@@ -1,0 +1,21 @@
+{
+  "id": "06-speech-and-audio/02-spectrograms-mel-features",
+  "slug": "02-spectrograms-mel-features",
+  "phase": "06-speech-and-audio",
+  "order": 2,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Spectrograms, Mel Scale & Audio Features",
+    "zh": ""
+  },
+  "hook": "Neural nets do not consume raw waveforms well. They consume spectrograms. They consume mel spectrograms even better. Every ASR, TTS, and audio classifier in 2026 lives or dies by this single preprocessing choice.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 01 (Audio Fundamentals)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

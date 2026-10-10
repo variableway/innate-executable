@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/30-eval-driven-agent-development",
+  "slug": "30-eval-driven-agent-development",
+  "phase": "14-agent-engineering",
+  "order": 30,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Eval-Driven Agent Development",
+    "zh": ""
+  },
+  "hook": "Anthropic's guidance: \"start with simple prompts, optimize them with comprehensive evaluation, and add multi-step agentic systems only when needed.\" Evaluation is not the last step. It's the outer loop that drives every other choice in Phase 14.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "All of Phase 14."
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,21 @@
+{
+  "id": "14-agent-engineering/08-memory-blocks-sleep-time-compute",
+  "slug": "08-memory-blocks-sleep-time-compute",
+  "phase": "14-agent-engineering",
+  "order": 8,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Memory Blocks and Sleep-Time Compute",
+    "zh": ""
+  },
+  "hook": "Discrete functional memory blocks the model can edit directly, and a sleep-time agent that consolidates memory asynchronously while the primary agent is idle. These two ideas are how you scale memory beyond one conversation.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 07 (MemGPT)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

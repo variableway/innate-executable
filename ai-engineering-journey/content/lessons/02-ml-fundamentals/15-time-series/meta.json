@@ -1,0 +1,20 @@
+{
+  "id": "02-ml-fundamentals/15-time-series",
+  "slug": "15-time-series",
+  "phase": "02-ml-fundamentals",
+  "order": 15,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Time Series Fundamentals",
+    "zh": ""
+  },
+  "hook": "Past performance does predict future results -- if you check for stationarity first.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lessons 01-09"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

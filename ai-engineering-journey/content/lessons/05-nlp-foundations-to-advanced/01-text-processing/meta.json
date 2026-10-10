@@ -1,0 +1,21 @@
+{
+  "id": "05-nlp-foundations-to-advanced/01-text-processing",
+  "slug": "01-text-processing",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 1,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Text Processing — Tokenization, Stemming, Lemmatization",
+    "zh": ""
+  },
+  "hook": "Language is continuous. Models are discrete. Preprocessing is the bridge.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 2 · 14 (Naive Bayes)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

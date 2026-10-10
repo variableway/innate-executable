@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/22-embedding-models-deep-dive",
+  "slug": "22-embedding-models-deep-dive",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 22,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Embedding Models — The 2026 Deep Dive",
+    "zh": ""
+  },
+  "hook": "Word2Vec gave you a vector per word. Modern embedding models give you a vector per passage, cross-lingual, with sparse, dense, and multi-vector views, sized to fit your index. Pick wrong and your RAG retrieves the wrong thing.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 03 (Word2Vec)",
+    "Phase 5 · 14 (Information Retrieval)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "19-capstone-projects/24-plan-execute-control-flow",
+  "slug": "24-plan-execute-control-flow",
+  "phase": "19-capstone-projects",
+  "order": 24,
+  "phaseOrder": 19,
+  "title": {
+    "en": "Plan-Execute Control Flow",
+    "zh": ""
+  },
+  "hook": "A plan that cannot survive a failure is a script. A script that can replan is an agent. Build the replanner first.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 lessons 01-07",
+    "Phase 14 lesson 01"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

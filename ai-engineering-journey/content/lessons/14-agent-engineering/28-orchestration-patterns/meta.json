@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/28-orchestration-patterns",
+  "slug": "28-orchestration-patterns",
+  "phase": "14-agent-engineering",
+  "order": 28,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Orchestration Patterns: Supervisor, Swarm, Hierarchical",
+    "zh": ""
+  },
+  "hook": "Four orchestration patterns recur across 2026 frameworks: supervisor-worker, swarm / peer-to-peer, hierarchical, debate. Anthropic's guidance: \"It's about building the right system for your needs.\" Start simple; add topology only when a single agent plus five workflow patterns is insufficient.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 12 (Workflow Patterns)",
+    "Phase 14 · 25 (Multi-Agent Debate)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

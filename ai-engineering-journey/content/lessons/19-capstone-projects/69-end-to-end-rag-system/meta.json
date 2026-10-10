@@ -1,0 +1,26 @@
+{
+  "id": "19-capstone-projects/69-end-to-end-rag-system",
+  "slug": "69-end-to-end-rag-system",
+  "phase": "19-capstone-projects",
+  "order": 69,
+  "phaseOrder": 19,
+  "title": {
+    "en": "End-to-End RAG System",
+    "zh": ""
+  },
+  "hook": "Six lessons of components. One pipeline. One eval loop. One self-terminating demo. This is the system you ship.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 lessons 06 (RAG)",
+    "10 (evaluation); Phase 19 Track B foundations (lessons 20-29); Phase 19 lessons 64",
+    "65",
+    "66",
+    "67",
+    "68"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

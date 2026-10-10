@@ -1,0 +1,20 @@
+{
+  "id": "01-math-foundations/07-bayes-theorem",
+  "slug": "07-bayes-theorem",
+  "phase": "01-math-foundations",
+  "order": 7,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Bayes' Theorem",
+    "zh": "贝叶斯定理"
+  },
+  "hook": "Probability is about what you expect. Bayes' theorem is about what you learn.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lesson 06 (Probability Fundamentals)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": false
+}

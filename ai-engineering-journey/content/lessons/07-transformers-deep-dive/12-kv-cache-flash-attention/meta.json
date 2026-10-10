@@ -1,0 +1,23 @@
+{
+  "id": "07-transformers-deep-dive/12-kv-cache-flash-attention",
+  "slug": "12-kv-cache-flash-attention",
+  "phase": "07-transformers-deep-dive",
+  "order": 12,
+  "phaseOrder": 7,
+  "title": {
+    "en": "KV Cache, Flash Attention & Inference Optimization",
+    "zh": ""
+  },
+  "hook": "Training is parallel and FLOP-bound. Inference is serial and memory-bound. Different bottleneck, different tricks.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 7 · 02 (Self-Attention)",
+    "Phase 7 · 05 (Full Transformer)",
+    "Phase 7 · 07 (GPT)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

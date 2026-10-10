@@ -1,0 +1,23 @@
+{
+  "id": "06-speech-and-audio/03-audio-classification",
+  "slug": "03-audio-classification",
+  "phase": "06-speech-and-audio",
+  "order": 3,
+  "phaseOrder": 6,
+  "title": {
+    "en": "Audio Classification — From k-NN on MFCCs to AST and BEATs",
+    "zh": ""
+  },
+  "hook": "Everything from \"dog barking vs siren\" to \"which language is this\" is audio classification. The features are mels. The architecture moves each decade. The evaluation stays AUC, F1, and per-class recall.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 6 · 02 (Spectrograms & Mel)",
+    "Phase 3 · 06 (CNNs)",
+    "Phase 5 · 08 (CNNs & RNNs for Text)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

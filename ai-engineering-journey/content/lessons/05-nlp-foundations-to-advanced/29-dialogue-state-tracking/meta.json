@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/29-dialogue-state-tracking",
+  "slug": "29-dialogue-state-tracking",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 29,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Dialogue State Tracking",
+    "zh": ""
+  },
+  "hook": "\"I want a cheap restaurant in the north... actually make it moderate... and add Italian.\" Three turns, three state updates. DST keeps the slot-value dict in sync so the booking works.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 17 (Chatbots)",
+    "Phase 5 · 20 (Structured Outputs)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

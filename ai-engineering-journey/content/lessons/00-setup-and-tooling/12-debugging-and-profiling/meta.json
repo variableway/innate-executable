@@ -1,0 +1,20 @@
+{
+  "id": "00-setup-and-tooling/12-debugging-and-profiling",
+  "slug": "12-debugging-and-profiling",
+  "phase": "00-setup-and-tooling",
+  "order": 12,
+  "phaseOrder": 0,
+  "title": {
+    "en": "Debugging and Profiling",
+    "zh": "调试与性能分析"
+  },
+  "hook": "The worst AI bugs don't crash. They train silently on garbage and report a beautiful loss curve.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Lesson 1 (Dev Environment)",
+    "basic PyTorch familiarity"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": false
+}

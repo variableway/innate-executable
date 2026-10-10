@@ -1,0 +1,114 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Turn Every Agent Correction into a System Improvement\n\n> A correction that lives only in chat fixes one run. A correction promoted into a test, boundary, example, or tool improves every later run.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lessons 37 to 41\n**Time:** ~65 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Convert agent corrections into durable controls.\n- Place each control at the earliest layer that can prevent recurrence.\n- Deduplicate repeated lessons with stable fingerprints.\n- Retire controls that no longer protect a real risk.",
+    "keyPoints": [
+      "Convert agent corrections into durable controls.",
+      "Place each control at the earliest layer that can prevent recurrence.",
+      "Deduplicate repeated lessons with stable fingerprints.",
+      "Retire controls that no longer protect a real risk."
+    ],
+    "commands": []
+  },
+  {
+    "id": "corrections-are-evidence",
+    "title": "Corrections Are Evidence",
+    "bodyMarkdown": "When you tell an agent “do not edit that file,” you have learned that the scope boundary was not executable. When you say “this output shape is wrong,” you have learned that an example or test was missing. When setup fails again, you have learned that environment knowledge belongs in automation.\n\nTreat the correction as an observation about the work system, not as a prompt-writing failure.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "promote-to-the-earliest-effective-layer",
+    "title": "Promote to the Earliest Effective Layer",
+    "bodyMarkdown": "Use this order:\n\n| Recurring failure | Durable destination |\n|---|---|\n| Wrong result or regression | Test or evaluation |\n| Off-scope or unsafe action | Scope or permission policy |\n| Repeated setup or command mistake | Automation or tool |\n| Repeated output-format mistake | Canonical example plus validator |\n| Ambiguous local convention | Instruction with a scenario check |\n| Product disagreement | Human decision record |\n\nEarlier controls are cheaper. A type that prevents an invalid state is stronger than a review comment that catches it later. A focused test is stronger than a paragraph asking the agent to remember.\n\n```mermaid\nflowchart LR\n  O[Observed correction] --> C[Find root cause]\n  C --> T{Earliest owner}\n  T --> E[Example or type]\n  T --> V[Test or evaluation]\n  T --> S[Scope or policy]\n  T --> A[Automation]\n  T --> H[Human decision]\n  E --> N[Next run starts stronger]\n  V --> N\n  S --> N\n  A --> N\n  H --> N\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-ratchet-record",
+    "title": "The Ratchet Record",
+    "bodyMarkdown": "Capture:\n\n- symptom;\n- root cause;\n- consequence;\n- recurrence count;\n- chosen control;\n- verification for the control;\n- owner;\n- date to review or retire it.\n\nDo not promote every one-off preference. Promote a correction when recurrence or consequence justifies permanent complexity.",
+    "keyPoints": [
+      "root cause;",
+      "consequence;",
+      "recurrence count;",
+      "chosen control;",
+      "verification for the control;",
+      "date to review or retire it."
+    ],
+    "commands": []
+  },
+  {
+    "id": "separate-cause-from-symptom",
+    "title": "Separate Cause from Symptom",
+    "bodyMarkdown": "“The agent edited README” is a symptom. Possible causes include:\n\n- the task allowed the repository root;\n- docs were implicitly considered safe;\n- the plan bundled implementation and documentation;\n- two workers had overlapping ownership.\n\nEach cause belongs to a different control. A rule that merely repeats the symptom will fail in the next slightly different case.",
+    "keyPoints": [
+      "the task allowed the repository root;",
+      "docs were implicitly considered safe;",
+      "the plan bundled implementation and documentation;",
+      "two workers had overlapping ownership."
+    ],
+    "commands": []
+  },
+  {
+    "id": "controls-also-decay",
+    "title": "Controls Also Decay",
+    "bodyMarkdown": "Old controls can conflict, bloat context, and encode a system that no longer exists. Every promoted rule needs a retirement check. Remove or rewrite it when:\n\n- the underlying architecture changed;\n- a stronger executable control replaced it;\n- the failure has not recurred across a meaningful window;\n- the control creates more friction than the risk it prevents.\n\nThe goal is not the longest instruction file. It is the smallest system that preserves hard-won judgment.",
+    "keyPoints": [
+      "the underlying architecture changed;",
+      "a stronger executable control replaced it;",
+      "the failure has not recurred across a meaningful window;",
+      "the control creates more friction than the risk it prevents."
+    ],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab classifies corrections, promotes them into controls, fingerprints duplicates, and writes `outputs/feedback-ratchet.json`.\n\nRun:\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nAdd two differently worded corrections with the same cause. Improve the normalization until they collapse into one control without collapsing unrelated failures.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Take five corrections from a recent coding session and classify their real owners.\n2. Replace one prose rule with an executable test.\n3. Add consequence weighting so a severe first occurrence can be promoted immediately.\n4. Add an owner and retirement date to the lab output.\n5. Review one existing agent instruction and delete it only after proving a stronger control exists.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Basili, Caldiera, and Rombach, The Goal Question Metric Approach](https://www.cs.toronto.edu/~sme/CSC444F/handouts/GQM-paper.pdf), for turning goals into questions and operational measurements.\n- [Shinn et al., Reflexion](https://arxiv.org/abs/2303.11366), for using feedback traces to improve later decisions without changing model weights.\n- [Madaan et al., Self-Refine](https://arxiv.org/abs/2303.17651), for iterative feedback and revision inside a task loop.",
+    "keyPoints": [
+      "[Shinn et al., Reflexion](https://arxiv.org/abs/2303.11366), for using feedback traces to improve later decisions without changing model weights.",
+      "[Madaan et al., Self-Refine](https://arxiv.org/abs/2303.17651), for iterative feedback and revision inside a task loop."
+    ],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/feedback-ratchet.json`. It is the durable end of the Agent-Assisted Engineering path and the input to future workbench changes.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

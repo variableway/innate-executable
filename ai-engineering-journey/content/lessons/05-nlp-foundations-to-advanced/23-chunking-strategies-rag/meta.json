@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/23-chunking-strategies-rag",
+  "slug": "23-chunking-strategies-rag",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 23,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Chunking Strategies for RAG",
+    "zh": ""
+  },
+  "hook": "Chunking configuration influences retrieval quality as much as the choice of embedding model (Vectara NAACL 2025). Get chunking wrong and no amount of reranking saves you.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 14 (Information Retrieval)",
+    "Phase 5 · 22 (Embedding Models)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

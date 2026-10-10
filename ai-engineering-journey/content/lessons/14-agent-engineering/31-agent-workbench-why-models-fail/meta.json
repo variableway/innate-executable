@@ -1,0 +1,22 @@
+{
+  "id": "14-agent-engineering/31-agent-workbench-why-models-fail",
+  "slug": "31-agent-workbench-why-models-fail",
+  "phase": "14-agent-engineering",
+  "order": 31,
+  "phaseOrder": 14,
+  "title": {
+    "en": "Agent Workbench Engineering: Why Capable Models Still Fail",
+    "zh": ""
+  },
+  "hook": "A capable model is not enough. Reliable agents need a workbench: instructions, state, scope, feedback, verification, review, and handoff. Strip those away and even a frontier model produces work that is unsafe to ship.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python (stdlib)"
+  ],
+  "prerequisites": [
+    "Phase 14 · 01 (Agent Loop)",
+    "Phase 14 · 26 (Failure Modes)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

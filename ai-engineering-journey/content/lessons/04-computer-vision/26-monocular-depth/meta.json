@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/26-monocular-depth",
+  "slug": "26-monocular-depth",
+  "phase": "04-computer-vision",
+  "order": 26,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Monocular Depth & Geometry Estimation",
+    "zh": ""
+  },
+  "hook": "A depth map is a single-channel image where each pixel is a distance from the camera. Predicting it from one RGB frame used to be impossible without stereo or LiDAR. In 2026 a frozen ViT encoder plus a lightweight head gets within a few percent of ground truth.",
+  "type": "Build + Use",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 14 (ViT)",
+    "Phase 4 Lesson 17 (Self-Supervised Vision)",
+    "Phase 4 Lesson 07 (U-Net)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": true
+}

@@ -1,0 +1,20 @@
+{
+  "id": "01-math-foundations/13-numerical-stability",
+  "slug": "13-numerical-stability",
+  "phase": "01-math-foundations",
+  "order": 13,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Numerical Stability",
+    "zh": "数值稳定性"
+  },
+  "hook": "Floating point is a leaky abstraction. It will bite you during training, and you will not see it coming.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 01-04"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": false
+}

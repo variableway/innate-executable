@@ -1,0 +1,23 @@
+{
+  "id": "09-reinforcement-learning/10-multi-agent-rl",
+  "slug": "10-multi-agent-rl",
+  "phase": "09-reinforcement-learning",
+  "order": 10,
+  "phaseOrder": 9,
+  "title": {
+    "en": "Multi-Agent RL",
+    "zh": ""
+  },
+  "hook": "Single-agent RL assumes the environment is stationary. Put two learning agents in the same world and that assumption breaks: each agent is part of the other's environment, and both are changing. Multi-agent RL is the set of tricks to make learning converge when the Markov assumption no longer holds.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 9 · 04 (Q-learning)",
+    "Phase 9 · 06 (REINFORCE)",
+    "Phase 9 · 07 (Actor-Critic)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

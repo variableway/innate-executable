@@ -1,0 +1,22 @@
+{
+  "id": "13-tools-and-protocols/11-mcp-sampling",
+  "slug": "11-mcp-sampling",
+  "phase": "13-tools-and-protocols",
+  "order": 11,
+  "phaseOrder": 13,
+  "title": {
+    "en": "MCP Model Input: Sampling Migration and Stateless MRTR",
+    "zh": ""
+  },
+  "hook": "MCP 2026-07-28 deprecates Sampling for new designs and removes the server-to-client request channel. If an existing workflow still needs the client's model, the server returns an `input_required` result and the client retries the original request with the model output. The reasoning loop becomes explicit, bounded, and stateless at the protocol layer.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 13 · 07 (MCP server)",
+    "Phase 13 · 10 (resources and prompts)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

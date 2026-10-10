@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/25-vision-language-models",
+  "slug": "25-vision-language-models",
+  "phase": "04-computer-vision",
+  "order": 25,
+  "phaseOrder": 4,
+  "title": {
+    "en": "Vision-Language Models — The ViT-MLP-LLM Pattern",
+    "zh": ""
+  },
+  "hook": "A vision encoder converts an image into tokens. An MLP projector maps those tokens into the LLM's embedding space. A language model does the rest. That pattern — ViT-MLP-LLM — is every production VLM in 2026.",
+  "type": "Learn + Use",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 4 Lesson 14 (ViT)",
+    "Phase 4 Lesson 18 (CLIP)",
+    "Phase 7 Lesson 02 (Self-Attention)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "02-ml-fundamentals/03-logistic-regression",
+  "slug": "03-logistic-regression",
+  "phase": "02-ml-fundamentals",
+  "order": 3,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Logistic Regression",
+    "zh": ""
+  },
+  "hook": "Logistic regression bends a straight line into an S-curve to answer yes-or-no questions with probabilities.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 2 Lesson 1-2 (What Is ML",
+    "Linear Regression)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "11-llm-engineering/17-agent-framework-tradeoffs",
+  "slug": "17-agent-framework-tradeoffs",
+  "phase": "11-llm-engineering",
+  "order": 17,
+  "phaseOrder": 11,
+  "title": {
+    "en": "Agent Framework Tradeoffs — Graph, Role, and Actor Orchestration",
+    "zh": ""
+  },
+  "hook": "Every framework sells the same demo (research agent builds a report) and hides the same bug (state schema fights with the orchestration layer). Pick the framework whose abstractions match the shape of your problem; everything else is glue you write twice.",
+  "type": "Learn",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 11 · 09 (Function Calling)",
+    "Phase 11 · 16 (LangGraph)"
+  ],
+  "timeMinutes": 45,
+  "needsTranslation": true
+}

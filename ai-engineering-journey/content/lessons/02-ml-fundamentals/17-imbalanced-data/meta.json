@@ -1,0 +1,20 @@
+{
+  "id": "02-ml-fundamentals/17-imbalanced-data",
+  "slug": "17-imbalanced-data",
+  "phase": "02-ml-fundamentals",
+  "order": 17,
+  "phaseOrder": 2,
+  "title": {
+    "en": "Handling Imbalanced Data",
+    "zh": ""
+  },
+  "hook": "When 99% of your data is \"normal,\" accuracy is a lie.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 2",
+    "Lessons 01-09 (especially evaluation metrics)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,22 @@
+{
+  "id": "03-deep-learning-core/02-multi-layer-networks",
+  "slug": "02-multi-layer-networks",
+  "phase": "03-deep-learning-core",
+  "order": 2,
+  "phaseOrder": 3,
+  "title": {
+    "en": "Multi-Layer Networks and Forward Pass",
+    "zh": ""
+  },
+  "hook": "One neuron draws a line. Stack them, and you can draw anything.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 01 (Math Foundations)",
+    "Lesson 03.01 (The Perceptron)"
+  ],
+  "timeMinutes": 90,
+  "needsTranslation": true
+}

@@ -1,0 +1,159 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Capstone 13: Stateless MCP Server with Registry and Governance\n\n> Production MCP is not one server process. It is a chain of contracts: publishable metadata, live discovery, a stateless request envelope, authorization, policy, audit, and deployment evidence.\n\n**Type:** Capstone\n**Languages:** Python and TypeScript reference models; any production language\n**Prerequisites:** Phase 11, Phase 13, Phase 14, Phase 17, and Phase 18\n**Required MCP deep dives:** [Lesson 28: Tool Contracts](../../../13-tools-and-protocols/28-mcp-tool-contracts-and-content/docs/en.md), [Lesson 29: Reliability](../../../13-tools-and-protocols/29-mcp-reliability-cancellation-and-flow-control/docs/en.md), [Lesson 30: Registry Supply Chain](../../../13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift/docs/en.md), and [Lesson 31: Conformance Operations](../../../13-tools-and-protocols/31-mcp-conformance-versioning-and-operations/docs/en.md)\n**Protocol target:** MCP `2026-07-28`\n**Time:** ~25 hours",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Protocol target:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Implement the stateless MCP request and result envelope.\n- Keep Registry metadata separate from live protocol discovery.\n- Build deterministic, cache-aware tool discovery.\n- Enforce issuer, audience, scope, and approval policy for every tool call.\n- Deploy Streamable HTTP without session affinity.\n- Prove behavior at the wire, authorization, policy, registry, and audit boundaries.",
+    "keyPoints": [
+      "Implement the stateless MCP request and result envelope.",
+      "Keep Registry metadata separate from live protocol discovery.",
+      "Build deterministic, cache-aware tool discovery.",
+      "Enforce issuer, audience, scope, and approval policy for every tool call.",
+      "Deploy Streamable HTTP without session affinity.",
+      "Prove behavior at the wire, authorization, policy, registry, and audit boundaries."
+    ],
+    "commands": []
+  },
+  {
+    "id": "required-mcp-prerequisite-path",
+    "title": "Required MCP Prerequisite Path",
+    "bodyMarkdown": "Complete the four linked Phase 13 lessons in order before treating this capstone as production-ready:\n\n1. [Lesson 28](../../../13-tools-and-protocols/28-mcp-tool-contracts-and-content/docs/en.md) defines the tool, schema, content, pagination, completion, routing, and error contracts this server must expose.\n2. [Lesson 29](../../../13-tools-and-protocols/29-mcp-reliability-cancellation-and-flow-control/docs/en.md) defines cancellation races, deadlines, idempotency, backpressure, retry, and reconnect behavior.\n3. [Lesson 30](../../../13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift/docs/en.md) defines namespace, provenance, admission pin, Registry status, drift, ledger, and rollback evidence.\n4. [Lesson 31](../../../13-tools-and-protocols/31-mcp-conformance-versioning-and-operations/docs/en.md) defines golden and negative transcripts, strict version eras, SDK differential checks, proxy proof, redaction, health, and release gating.\n\nThe capstone integrates those artifacts. It does not replace them with one happy-path SDK test.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "An internal platform needs read-only data tools and a small set of state-changing tools. Developers must be able to discover the server, understand how to connect, inspect its live capabilities, and call only the operations they are authorized to use.\n\nThe difficult part is not registering a function. The difficult part is keeping six different truths aligned:\n\n1. `server.json` says where the server can be installed or reached.\n2. `server/discover` says what the live process supports now.\n3. Every request says which protocol revision and client capabilities it uses.\n4. Authorization binds a caller to the correct issuer, resource, and scopes.\n5. Policy decides whether this specific action may run.\n6. Audit evidence records what crossed the boundary without leaking secrets or sensitive payloads.\n\nIf any one of these drifts, the platform may list a server that cannot be reached, route an incompatible client, accept a token minted for another resource, or expose a destructive action without the expected review.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-two-discovery-layers",
+    "title": "The Two Discovery Layers",
+    "bodyMarkdown": "The Registry and the live MCP server answer different questions.\n\n| Layer | Contract | Question it answers |\n|---|---|---|\n| Publication | `server.json` and Registry API | What is this server, where is its package or remote endpoint, and how is it configured? |\n| Runtime | `server/discover` | Which protocol versions, capabilities, extensions, and server identity does this process support? |\n\nThe official Registry uses a versioned `server.json` schema. A remote entry can name a Streamable HTTP URL:\n\n```json\n{\n  \"$schema\": \"https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json\",\n  \"name\": \"com.example/internal-readonly\",\n  \"title\": \"Internal Read-Only Tools\",\n  \"description\": \"Read-only incident and data lookup tools.\",\n  \"version\": \"1.0.0\",\n  \"remotes\": [\n    {\n      \"type\": \"streamable-http\",\n      \"url\": \"https://mcp.internal.example.com/readonly\"\n    }\n  ]\n}\n```\n\nThe Registry schema version and the MCP protocol revision are independent. Do not rewrite one date to match the other. Validate each document against its own contract.\n\nSchema validity does not prove namespace ownership. A publisher verified for `example.com` uses the reverse-DNS namespace `com.example/*` or one of its child namespaces. The Registry authentication flow proves that ownership. Keeping the domain labels in their ordinary order names a different namespace.\n\nThe stdlib model's `validate_registry_document` function is intentionally a partial remote-profile validator. It checks the official required `name`, `description`, and `version` fields; the optional `title`; the published name and length constraints; concrete-version shape; and each `streamable-http` or `sse` remote's HTTP(S) URL shape. It additionally requires a non-empty `remotes` list because this capstone always live-probes a remote. `validate_publisher_namespace` separately checks the name against the verified publisher domain, while `validate_runtime_alignment` compares the publication name and version with live `serverInfo`. The official schema also supports package-only records and more remote fields. Before publication, validate the entire document with the pinned official JSON Schema or `mcp-publisher`; do not present this dependency-free subset as full schema validation.\n\nThe server must implement `server/discover`; a client may call it before other methods. This capstone client does so after resolving the endpoint, and receives the current protocol revision and live capabilities:\n\n```json\n{\n  \"resultType\": \"complete\",\n  \"supportedVersions\": [\"2026-07-28\"],\n  \"capabilities\": {\n    \"tools\": {\n      \"listChanged\": false\n    }\n  },\n  \"_meta\": {\n    \"io.modelcontextprotocol/serverInfo\": {\n      \"name\": \"com.example/internal-readonly\",\n      \"version\": \"1.0.0\"\n    }\n  },\n  \"ttlMs\": 3600000,\n  \"cacheScope\": \"public\"\n}\n```\n\nA private catalog may index extra ownership, review, or lifecycle data, but it must not invent that data as MCP wire fields or root `server.json` fields. Store organizational policy beside the published record. When public custom metadata is necessary, use the Registry's `_meta.io.modelcontextprotocol.registry/publisher-provided` extension and stay within its 4 KB limit.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "stateless-mcp-core",
+    "title": "Stateless MCP Core",
+    "bodyMarkdown": "MCP revision `2026-07-28` removes protocol sessions and the `initialize` / `notifications/initialized` handshake. It also removes `Mcp-Session-Id`.\n\nEvery request carries protocol context in `params._meta`:\n\n```json\n{\n  \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n  \"io.modelcontextprotocol/clientCapabilities\": {},\n  \"io.modelcontextprotocol/clientInfo\": {\n    \"name\": \"internal-platform-client\",\n    \"version\": \"1.0.0\"\n  }\n}\n```\n\nThe version and capabilities are request facts, not connection facts. A load balancer may send consecutive requests to different healthy replicas because either replica can validate the request from the message itself.\n\nOrdinary results include `resultType: \"complete\"`. Servers should place their identity in `_meta.io.modelcontextprotocol/serverInfo` on each result. A missing or non-string protocol version is invalid params `-32602`. Error `-32022` is only for a supplied string that is unsupported, with exactly `{\"supported\": [\"2026-07-28\"], \"requested\": \"...\"}` as its data.\n\n### Cacheable discovery\n\n`tools/list` must be deterministic for the same effective tool set. The result includes:\n\n- `ttlMs`, a freshness hint for the client;\n- `cacheScope`, either `public` or `private`;\n- a stable tool order so identical lists can reuse prompt caches;\n- `resultType: \"complete\"` and server identity metadata.\n\nPer-user authorization should normally produce `cacheScope: \"private\"`. Do not put user-specific tool visibility behind a shared public cache.",
+    "keyPoints": [
+      "`ttlMs`, a freshness hint for the client;",
+      "`cacheScope`, either `public` or `private`;",
+      "a stable tool order so identical lists can reuse prompt caches;",
+      "`resultType: \"complete\"` and server identity metadata."
+    ],
+    "commands": []
+  },
+  {
+    "id": "streamable-http",
+    "title": "Streamable HTTP",
+    "bodyMarkdown": "A network server exposes one MCP endpoint that accepts POST. Each JSON-RPC request or notification gets its own POST.\n\nFor a request, the server returns either one JSON object or an SSE stream scoped to that request. A long-lived `subscriptions/listen` request carries opted-in change notifications. There is no standalone GET stream, session DELETE, session header, or `Last-Event-ID` replay in the current transport.\n\nEach request includes:\n\n- `MCP-Protocol-Version`, matching the body metadata;\n- `Mcp-Method`, matching the JSON-RPC method;\n- `Mcp-Name` for `tools/call`, `resources/read`, and `prompts/get`;\n- `Accept: application/json, text/event-stream`.\n\nReject mismatched mirrored headers with the specified `-32020` error. Validate `Origin`, bind local development servers to loopback, authenticate remote clients, and treat a closed request-scoped SSE response as cancellation.\n\n```mermaid\nflowchart LR\n  R[Registry API] --> J[server.json]\n  J --> C[MCP client]\n  C --> D[server/discover]\n  C --> L[tools/list]\n  C --> G[Authorization and policy gateway]\n  G --> RO[Read-only MCP replicas]\n  G --> RW[State-changing MCP replicas]\n  RO --> A[Audit sink]\n  RW --> H[Approval record]\n  RW --> A\n```\n\n```figure\ncf-mcp-gate\n```",
+    "keyPoints": [
+      "`MCP-Protocol-Version`, matching the body metadata;",
+      "`Mcp-Method`, matching the JSON-RPC method;",
+      "`Mcp-Name` for `tools/call`, `resources/read`, and `prompts/get`;",
+      "`Accept: application/json, text/event-stream`."
+    ],
+    "commands": []
+  },
+  {
+    "id": "authorization-and-policy",
+    "title": "Authorization and Policy",
+    "bodyMarkdown": "Transport metadata is not authorization. Validate authorization on every call.\n\nFor remote servers:\n\n1. Discover protected-resource metadata.\n2. Select the authorization server for that resource.\n3. Prefer Client ID Metadata Documents for client registration. Treat Dynamic Client Registration as compatibility support.\n4. Send the resource indicator during authorization.\n5. Validate a returned `iss` value against the authorization server recorded for the flow.\n6. Key client credentials by issuer. Never reuse registration data across issuers.\n7. Validate token issuer, audience or resource, expiry, and scopes at the MCP server.\n8. Apply a second policy decision to the concrete tool and arguments.\n\nTool annotations such as `readOnlyHint` and `destructiveHint` help clients present risk. They are not trusted authorization controls.\n\n### Approval is a record, not a magic scope\n\nA state-changing call needs an approval record bound to the actor, tool, normalized arguments or digest, target environment, expiry, and one-time or repeat-use policy. A chat message alone is not proof of approval.\n\nThe Python model hashes canonical JSON with sorted keys, then binds that digest with the token subject, tool name, server URL, and expiry. Replaying the record after changing even one argument fails before the handler runs. Approval is separate evidence, not a scope added to the access token.\n\nKeep high-risk tools on a separately reviewable surface when that materially reduces blast radius. Separation is useful only if credentials, policy, deployment identity, and audit controls are also separate.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "### 1. Model publication metadata\n\nCreate and schema-validate `server.json`. Include a stable name inside the namespace authenticated for the publisher, plus version, description, official `repository` or `packages` metadata when applicable, and a remote or stdio transport. Keep secrets as declared environment-variable inputs, never literal values.\n\n### 2. Implement live discovery\n\nImplement `server/discover` before any feature RPC. Advertise supported protocol versions, capabilities, extensions, and server identity. Add a version rejection case using `-32022`.\n\n### 3. Implement the stateless envelope\n\nRequire protocol version and client capabilities in every request. Return `resultType` and server identity in every result. Remove initialization state, connection-scoped capability caches, and session identifiers.\n\n### 4. Build the tool surface\n\nStart with two read-only tools and one state-changing tool. Give each a bounded JSON Schema, precise description, deterministic result shape, and honest annotations. Add output schemas when clients rely on structured results.\n\n### 5. Add cache-aware listing\n\nReturn tools in stable order with `ttlMs` and `cacheScope`. Exercise cache expiry and list-change notification behavior separately.\n\n### 6. Add authorization and policy\n\nValidate issuer, audience, expiry, and scope. Run a policy decision for every tool call. Bind approvals to exact high-risk actions. Deny missing or stale approvals before executing a handler.\n\n### 7. Separate registry and runtime validation\n\nValidate the static `server.json` record, then probe the remote endpoint with `server/discover`. Report drift when the published remote, identity, version, or required capabilities disagree with the live process.\n\n### 8. Add audit evidence\n\nRecord actor, issuer, resource, tool, policy decision, request identifier, trace context, latency, and outcome. Redact or digest sensitive arguments and results before persistence. Keep the audit sink outside model-visible context.\n\n### 9. Exercise horizontal scaling\n\nPlace two stateless replicas behind a load balancer. Send at least 100 concurrent requests. Demonstrate that correctness does not depend on affinity. If a tool needs cross-call state, mint an explicit opaque handle and store it in a shared durable system.\n\n### 10. Cross the real wire\n\nRun conformance checks against the actual server binary. Capture request headers and JSON bodies, not only SDK objects. Exercise wrong version, header mismatch, missing scope, wrong audience, malformed arguments, handler failure, cancellation, and cache expiry.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "required-evidence-pack",
+    "title": "Required Evidence Pack",
+    "bodyMarkdown": "A submission is incomplete until it contains all five evidence classes:\n\n| Evidence | Minimum proof | Source lesson |\n|---|---|---|\n| Wire | Redacted raw headers and JSON-RPC bodies for golden and negative cases, including metadata type failure, header mismatch, unsupported version, missing or unknown `resultType`, notification no-response, and response ID matching | [Lesson 31](../../../13-tools-and-protocols/31-mcp-conformance-versioning-and-operations/docs/en.md) |\n| Proxy | The same stable case run directly and through the deployed intermediary, with ingress, origin, and egress status and body digests; prove protocol errors are not collapsed into generic 500 responses and streaming is not buffered | [Lessons 29](../../../13-tools-and-protocols/29-mcp-reliability-cancellation-and-flow-control/docs/en.md) and [31](../../../13-tools-and-protocols/31-mcp-conformance-versioning-and-operations/docs/en.md) |\n| Admission | Verified publisher namespace, immutable Registry record digest, artifact or remote provenance, live `server/discover` identity and capability observation, descriptor pin, current Registry status, and admission-ledger event | [Lesson 30](../../../13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift/docs/en.md) |\n| Retry | A cancellation-versus-completion race, explicit timeout, safe read retry, mutation idempotency key, reconnect refetch, and proof that request cancellation cannot silently become durable task cancellation | [Lesson 29](../../../13-tools-and-protocols/29-mcp-reliability-cancellation-and-flow-control/docs/en.md) |\n| Rollback | Exact previous version, admission and artifact digests, descriptor pin, active Registry status, current health window, route restoration result, and redacted decision evidence | [Lessons 30](../../../13-tools-and-protocols/30-mcp-registry-supply-chain-and-drift/docs/en.md) and [31](../../../13-tools-and-protocols/31-mcp-conformance-versioning-and-operations/docs/en.md) |\n\nStore a digest of the redacted pack with the release. If any class is missing, hold the release. Do not infer proxy behavior from an in-process dispatcher, admission from Registry presence, retry safety from a new JSON-RPC id, or rollback readiness from “the previous deployment.”",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "local-reference-models",
+    "title": "Local Reference Models",
+    "bodyMarkdown": "The Python model demonstrates registry metadata, reverse-DNS publisher namespace validation, publication-to-runtime identity checks, live discovery, deterministic tool listing, per-request metadata, trusted-issuer, audience, expiry, and scope checks, action-bound approvals, a documented partial Registry validator, policy, and audit without opening a network socket:\n\n```bash\ncd phases/19-capstone-projects/13-mcp-server-with-registry\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v\n```\n\nThe TypeScript project exposes the stateless JSON-RPC shape over stdio without an MCP SDK. Its `tools/call` path enforces the same bounded input schemas advertised by `tools/list`; invalid arguments for a known tool return a complete result with `isError: true` without invoking the executor:\n\n```bash\ncd phases/19-capstone-projects/13-mcp-server-with-registry/code/ts\nnpm install\nnpm run typecheck\nnpm test\nnpm run demo\n```\n\nThese models prove local contract logic. They do not prove HTTP headers, OAuth exchange, Registry publication, OPA integration, load balancing, or collector receipt.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "cd phases/19-capstone-projects/13-mcp-server-with-registry\npython3 code/main.py\npython3 -m unittest discover -s code/tests -v"
+      },
+      {
+        "lang": "bash",
+        "code": "cd phases/19-capstone-projects/13-mcp-server-with-registry/code/ts\nnpm install\nnpm run typecheck\nnpm test\nnpm run demo"
+      }
+    ]
+  },
+  {
+    "id": "wire-example",
+    "title": "Wire Example",
+    "bodyMarkdown": "```http\nPOST /mcp HTTP/1.1\nHost: mcp.internal.example.com\nContent-Type: application/json\nAccept: application/json, text/event-stream\nMCP-Protocol-Version: 2026-07-28\nMcp-Method: tools/call\nMcp-Name: postgres.readonly\nAuthorization: Bearer REDACTED\n\n{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 42,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"postgres.readonly\",\n    \"arguments\": {\"sql\": \"SELECT 1\"},\n    \"_meta\": {\n      \"io.modelcontextprotocol/protocolVersion\": \"2026-07-28\",\n      \"io.modelcontextprotocol/clientCapabilities\": {},\n      \"io.modelcontextprotocol/clientInfo\": {\n        \"name\": \"internal-platform-client\",\n        \"version\": \"1.0.0\"\n      }\n    }\n  }\n}\n```",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Ship a repository containing:\n\n- a schema-valid `server.json`;\n- read-only and state-changing server surfaces;\n- `server/discover`, deterministic `tools/list`, and policy-gated `tools/call`;\n- a Streamable HTTP deployment with two interchangeable replicas;\n- authorization and approval integration;\n- a Registry publisher or private Registry API adapter;\n- policy definitions and action-bound approval records;\n- redacted audit output and trace propagation;\n- wire and proxy failure evidence;\n- admission, retry, health, and rollback evidence with a digest of the redacted pack.\n\n| Weight | Criterion | Evidence |\n|---:|---|---|\n| 25 | Protocol correctness | Stateless request metadata, discovery, results, headers, and negative cases |\n| 20 | Authorization | Issuer, audience, expiry, scope, and action-bound approval cases |\n| 15 | Registry integrity | Valid `server.json`, publication record, live discovery probe, and drift report |\n| 15 | Policy and safety | Allow, deny, malformed, stale approval, and sensitive-data cases |\n| 15 | Scale and reliability | Two replicas, no affinity dependency, cancellation, timeout, and recovery |\n| 10 | Auditability | Redacted receiver-side audit and trace evidence |",
+    "keyPoints": [
+      "a schema-valid `server.json`;",
+      "read-only and state-changing server surfaces;",
+      "`server/discover`, deterministic `tools/list`, and policy-gated `tools/call`;",
+      "a Streamable HTTP deployment with two interchangeable replicas;",
+      "authorization and approval integration;",
+      "a Registry publisher or private Registry API adapter;"
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Change the published remote URL while leaving the live server unchanged. Make the registry validation report the exact drift.\n2. Send `tools/list` twice with identical inputs and prove byte-stable tool order. Then expire `ttlMs` and refresh.\n3. Send a valid body with a different `MCP-Protocol-Version` header. Return `-32020` and do not invoke policy or the tool.\n4. Mint a token for the read-only server and present it to the state-changing server. Prove audience validation fails before the handler runs.\n5. Bind an approval to one normalized argument digest. Change one field and prove the approval cannot be replayed.\n6. Route consecutive calls to alternating replicas. Replace hidden process memory with an explicit shared handle wherever the workflow needs persistence.\n7. Break a request-scoped SSE connection and retry with a new JSON-RPC request ID. Verify that no `Last-Event-ID` recovery path is used.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|---|---|---|\n| Stateless MCP | \"No state anywhere\" | No protocol session; cross-call state is explicit and server-managed |\n| `server.json` | \"The tool manifest\" | Registry metadata for naming, packaging, configuration, and transports |\n| `server/discover` | \"The handshake\" | A normal mandatory RPC for live versions and capabilities, not a session initializer |\n| Cache scope | \"Can I cache it?\" | Whether a cacheable result is safe for shared or private reuse |\n| Policy decision | \"The token allows it\" | A separate decision over actor, tool, target, arguments, and context |\n| Approval record | \"A human clicked yes\" | Evidence bound to one actor and consequential action under an expiry policy |\n| Explicit handle | \"A session ID\" | Ordinary application data for named server-managed state, not protocol connection state |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [MCP 2026-07-28 key changes](https://modelcontextprotocol.io/specification/2026-07-28/changelog)\n- [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)\n- [Server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)\n- [MCP authorization](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)\n- [Official Registry server.json requirements](https://github.com/modelcontextprotocol/registry/blob/main/docs/reference/server-json/official-registry-requirements.md)\n- [Official Registry OpenAPI contract](https://registry.modelcontextprotocol.io/openapi.yaml)",
+    "keyPoints": [
+      "[MCP 2026-07-28 key changes](https://modelcontextprotocol.io/specification/2026-07-28/changelog)",
+      "[Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http)",
+      "[Server discovery](https://modelcontextprotocol.io/specification/2026-07-28/server/discover)",
+      "[MCP authorization](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)",
+      "[Official Registry OpenAPI contract](https://registry.modelcontextprotocol.io/openapi.yaml)"
+    ],
+    "commands": []
+  }
+]

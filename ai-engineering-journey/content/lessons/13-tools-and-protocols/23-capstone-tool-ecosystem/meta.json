@@ -1,0 +1,23 @@
+{
+  "id": "13-tools-and-protocols/23-capstone-tool-ecosystem",
+  "slug": "23-capstone-tool-ecosystem",
+  "phase": "13-tools-and-protocols",
+  "order": 23,
+  "phaseOrder": 13,
+  "title": {
+    "en": "Capstone: Stateless Tool Ecosystem",
+    "zh": ""
+  },
+  "hook": "A production agent system is a set of boundaries, not a pile of features. This capstone separates a readable in-process simulation from the protocol clients, authorization server, sandbox, and telemetry exporter a real deployment still needs.",
+  "type": "Build",
+  "languages": [
+    "Python (stdlib",
+    "in-process simulation)"
+  ],
+  "prerequisites": [
+    "Phase 13 · 01 through 22",
+    "using MCP revision `2026-07-28`"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

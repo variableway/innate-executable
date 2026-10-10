@@ -1,0 +1,21 @@
+{
+  "id": "01-math-foundations/15-statistics-for-ml",
+  "slug": "15-statistics-for-ml",
+  "phase": "01-math-foundations",
+  "order": 15,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Statistics for Machine Learning",
+    "zh": "机器学习统计"
+  },
+  "hook": "Statistics is how you know if your model actually works or just got lucky.",
+  "type": "Build",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lessons 06 (Probability and Distributions)",
+    "07 (Bayes' Theorem)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": false
+}

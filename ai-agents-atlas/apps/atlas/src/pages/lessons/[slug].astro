@@ -1,0 +1,11 @@
+---
+import { localizedStaticPaths } from '@/i18n/content';
+import LessonDetail from '@/components/pages/LessonDetail.astro';
+
+export const getStaticPaths = () =>
+  localizedStaticPaths('lessons', 'zh', ({ data }) => !data.draft);
+
+const { entry } = Astro.props;
+---
+
+<LessonDetail locale="zh" entry={entry} slug={Astro.params.slug} />

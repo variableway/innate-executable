@@ -1,0 +1,92 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Video-Language Models: Temporal Tokens and Grounding\n\n> Video is not a stack of photos. A 5-second clip has causal ordering, action verbs, and event timing that an image model cannot represent. Video-LLaMA (Zhang et al., June 2023) shipped the first open video-LLM with audio-visual grounding. VideoChat and Video-LLaVA scaled the pattern. By 2025 Qwen2.5-VL's TMRoPE closed the gap with frontier proprietary models. Each system solved temporal tokens differently — Q-former per clip, concat-pool per frame, TMRoPE per token. This lesson reads the patterns, builds a uniform-vs-dynamic frame sampler, and evaluates on temporal grounding tasks.\n\n**Type:** Build\n**Languages:** Python (stdlib, frame sampler + temporal-grounding evaluator)\n**Prerequisites:** Phase 12 · 08 (LLaVA-OneVision)\n**Time:** ~180 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Explain why temporal positional encoding changes video VLM performance independently of the vision encoder.\n- Compare uniform, dynamic-FPS, and event-driven frame sampling on tokens-per-second vs grounding accuracy.\n- Describe Q-former-per-clip (Video-LLaMA) vs pooled-per-frame (Video-LLaVA) vs M-RoPE-per-token (Qwen2.5-VL) designs.\n- Name the four video benchmarks: VideoMME, TempCompass, EgoSchema, Video-MMMU.",
+    "keyPoints": [
+      "Explain why temporal positional encoding changes video VLM performance independently of the vision encoder.",
+      "Compare uniform, dynamic-FPS, and event-driven frame sampling on tokens-per-second vs grounding accuracy.",
+      "Describe Q-former-per-clip (Video-LLaMA) vs pooled-per-frame (Video-LLaVA) vs M-RoPE-per-token (Qwen2.5-VL) designs.",
+      "Name the four video benchmarks: VideoMME, TempCompass, EgoSchema, Video-MMMU."
+    ],
+    "commands": []
+  },
+  {
+    "id": "the-problem",
+    "title": "The Problem",
+    "bodyMarkdown": "A 1-minute video at 30 FPS is 1800 frames. At 196 visual tokens per frame (ViT-B at 224), that is 352k tokens — larger than any 2024-era LLM context.\n\nThree reduction strategies exist:\n\n1. Subsample frames (1-8 FPS depending on content).\n2. Pool each frame's patch tokens aggressively (3x3 or 4x4 bilinear pool).\n3. Compress via a Q-former that takes a 16-frame clip and outputs 64 tokens.\n\nEach trade-off is different. Subsampling loses temporal detail. Pooling loses spatial detail. Q-former loses both a little but saves tokens.\n\nTemporal position encoding is the other axis: how does the model know frame 5 came before frame 6? Options include simple 1D temporal RoPE (Video-LLaMA), learned temporal embeddings (Video-LLaVA), and TMRoPE (Qwen2.5-VL, full 3D).",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "the-concept",
+    "title": "The Concept",
+    "bodyMarkdown": "### Video-LLaMA: Q-former per clip + audio branch\n\nVideo-LLaMA (2023) was the first open video-LLM. Architecture:\n\n- 16-frame clips at 2 FPS (so 8 seconds).\n- Per-frame ViT features -> Video Q-former that cross-attends over all 16 frames -> 32 learned queries -> LLM.\n- Parallel audio branch: waveform -> ImageBind audio encoder -> Audio Q-former -> 32 queries -> LLM.\n\nStrength: audio-visual joint reasoning. Weakness: fixed clip length, no arbitrary time grounding.\n\n### VideoChat and Video-LLaVA\n\nVideoChat kept the Video-LLaMA idea but dropped audio and simplified. Video-LLaVA (Lin et al., 2023) trained a single visual encoder on both images and video frames (\"alignment before projection\"), giving a unified representation. Both are frozen-CLIP-encoder + MLP + LLM.\n\nNeither handles long video. Both are 8-16 frame systems.\n\n### Qwen2.5-VL and TMRoPE\n\nQwen2.5-VL introduced TMRoPE — Temporal-Modality Rotary Position Embedding. Each patch token carries an (t, h, w) position where t is the actual timestamp (not frame index).\n\nKey differences from simple temporal embedding:\n\n- Absolute time, not index. The model sees \"at 4.2 seconds\" not \"at frame 15.\"\n- Per-token rotation, not per-clip. Each visual token rotates independently by its timestamp.\n- Compatible with dynamic FPS. If you sample at 2 FPS here and 4 FPS there, TMRoPE handles the uneven spacing natively.\n\nTMRoPE enables \"at what second does the cat jump?\" queries. The model can output \"at 4.2 seconds.\" Video-LLaMA could only say \"early in the clip.\"\n\n### Frame sampling strategies\n\nUniform: sample N frames evenly over duration. Simple, loses motion peaks.\n\nDynamic FPS: sample adaptively based on motion intensity. Optical flow or frame differencing picks high-motion segments for denser sampling. Qwen2.5-VL trains on this.\n\nEvent-driven: run a lightweight detector, sample more where action happens. Used by VideoAgent.\n\nKeyframe + context: sample at shot boundaries + a few adjacent frames. Used for cinematic content.\n\n### Pooling per frame\n\nAt 1 FPS and 576 tokens per frame, a 5-minute clip is 172,800 tokens. Doable with Qwen2.5-VL-72B's 128k context but expensive.\n\n3x3 bilinear pool reduces to 64 tokens per frame -> 19,200 tokens for 5 minutes. Sweet spot for most tasks.\n\nPool more aggressively (6x6 -> 16 tokens per frame) for agent workflows where spatial detail matters less.\n\n### The four video benchmarks\n\n- VideoMME: comprehensive video understanding, short + medium + long.\n- TempCompass: fine-grained temporal reasoning, \"before\" / \"after\" questions.\n- EgoSchema: long-horizon first-person video.\n- Video-MMMU: multimodal multi-discipline video questions.\n\nA full video-VLM evaluation hits all four. They stress different axes — TempCompass is all about ordering, EgoSchema is about 3+ minute reasoning, VideoMME spans durations.\n\n### Grounding output formats\n\nOutput formats for temporal grounding:\n\n- Free text: \"The cat jumps around the 4-second mark.\" Easy to parse but imprecise.\n- Structured JSON: `{\"event\": \"jump\", \"start\": 4.1, \"end\": 4.3}`. Qwen2.5-VL trains this.\n- Token-based: special `<time>4.1</time>` tokens interleaved with the answer. Qwen2.5-VL's internal format.\n\nToken-based is most accurate for downstream use. Qwen2.5-VL's JSON output format parses directly.\n\n### 2026 best practice\n\nFor video VLMs in 2026:\n\n- Encoder: SigLIP 2 with M-RoPE or TMRoPE (Qwen2.5-VL).\n- Frame sampling: dynamic FPS (1-4 depending on motion) with max-frame cap.\n- Per-frame pooling: 3x3 bilinear.\n- Output: structured JSON with time + event fields.\n- Benchmarks: VideoMME + TempCompass for general; EgoSchema for long-horizon.\n\n```figure\nvideo-temporal-patches\n```",
+    "keyPoints": [
+      "16-frame clips at 2 FPS (so 8 seconds).",
+      "Per-frame ViT features -> Video Q-former that cross-attends over all 16 frames -> 32 learned queries -> LLM.",
+      "Parallel audio branch: waveform -> ImageBind audio encoder -> Audio Q-former -> 32 queries -> LLM.",
+      "Absolute time, not index. The model sees \"at 4.2 seconds\" not \"at frame 15.\"",
+      "Per-token rotation, not per-clip. Each visual token rotates independently by its timestamp.",
+      "Compatible with dynamic FPS. If you sample at 2 FPS here and 4 FPS there, TMRoPE handles the uneven spacing natively."
+    ],
+    "commands": []
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`code/main.py` includes:\n\n- Uniform and dynamic-FPS frame samplers.\n- A toy temporal-grounding evaluator: given a \"ground truth\" event at time T and a model output, score accuracy with tolerance.\n- A comparison across Video-LLaMA (16 frames, Q-former), Video-LLaVA (8 frames, MLP), Qwen2.5-VL (dynamic FPS + TMRoPE).",
+    "keyPoints": [
+      "Uniform and dynamic-FPS frame samplers.",
+      "A toy temporal-grounding evaluator: given a \"ground truth\" event at time T and a model output, score accuracy with tolerance.",
+      "A comparison across Video-LLaMA (16 frames, Q-former), Video-LLaVA (8 frames, MLP), Qwen2.5-VL (dynamic FPS + TMRoPE)."
+    ],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "This lesson produces `outputs/skill-video-vlm-frame-planner.md`. Given a video task (monitoring, action recognition, temporal grounding, summarization), it picks the frame sampler, pooling factor, output format, and expected accuracy tier.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. For a 3-minute cooking demo, pick uniform vs dynamic FPS. Justify with a token count.\n\n2. TMRoPE adds what specifically that a simple temporal embedding table cannot do?\n\n3. Write a JSON schema for temporal grounding that a VLM can learn to emit. Include error cases.\n\n4. Read Video-LLaVA's Section 3 on \"Alignment Before Projection.\" Why is this better than training separate image and video encoders?\n\n5. Given the VideoMME leaderboard, what is the gap between the top open model and the top proprietary model as of 2026? How much of that gap is attributable to temporal encoding vs base LLM scale?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|-----------------|------------------------|\n| Temporal grounding | \"Time-localized answers\" | VLM outputs a specific timestamp range for when an event happens |\n| TMRoPE | \"Time-Multimodal RoPE\" | 3D rotary position with absolute timestamps, used by Qwen2.5-VL |\n| Dynamic FPS | \"Motion-aware sampling\" | Sample more frames in high-motion segments, fewer in static ones |\n| Frame pooling | \"Spatial compress per frame\" | Reduce patches per frame with bilinear interpolation before the LLM |\n| Video Q-former | \"Clip compressor\" | Cross-attention bottleneck mapping N frames to K learned queries |\n| VideoMME | \"Video bench\" | Comprehensive short/medium/long video benchmark, 2500+ samples |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Zhang et al. — Video-LLaMA (arXiv:2306.02858)](https://arxiv.org/abs/2306.02858)\n- [Li et al. — VideoChat (arXiv:2305.06355)](https://arxiv.org/abs/2305.06355)\n- [Lin et al. — Video-LLaVA (arXiv:2311.10122)](https://arxiv.org/abs/2311.10122)\n- [Qwen Team — Qwen2.5-VL (arXiv:2502.13923)](https://arxiv.org/abs/2502.13923)\n- [Lin et al. — VILA-1.5 (arXiv:2312.07533)](https://arxiv.org/abs/2312.07533)",
+    "keyPoints": [
+      "[Zhang et al. — Video-LLaMA (arXiv:2306.02858)](https://arxiv.org/abs/2306.02858)",
+      "[Li et al. — VideoChat (arXiv:2305.06355)](https://arxiv.org/abs/2305.06355)",
+      "[Lin et al. — Video-LLaVA (arXiv:2311.10122)](https://arxiv.org/abs/2311.10122)",
+      "[Qwen Team — Qwen2.5-VL (arXiv:2502.13923)](https://arxiv.org/abs/2502.13923)",
+      "[Lin et al. — VILA-1.5 (arXiv:2312.07533)](https://arxiv.org/abs/2312.07533)"
+    ],
+    "commands": []
+  }
+]

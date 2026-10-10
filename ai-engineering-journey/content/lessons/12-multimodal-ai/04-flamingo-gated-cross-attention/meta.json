@@ -1,0 +1,22 @@
+{
+  "id": "12-multimodal-ai/04-flamingo-gated-cross-attention",
+  "slug": "04-flamingo-gated-cross-attention",
+  "phase": "12-multimodal-ai",
+  "order": 4,
+  "phaseOrder": 12,
+  "title": {
+    "en": "Flamingo and Gated Cross-Attention for Few-Shot VLMs",
+    "zh": ""
+  },
+  "hook": "DeepMind's Flamingo (2022) did two things before anyone else. It showed a single model could process arbitrarily interleaved sequences of images, videos, and text. And it showed VLMs could learn in-context — give a few-shot prompt with three example (image, caption) pairs and the model captions a new image without any gradient step. The mechanism: gated cross-attention layers, inserted between the frozen LLM's existing layers, with a learned tanh gate that starts at zero so the LLM's text capability is preserved at initialization. This lesson walks Flamingo's Perceiver resampler and gated cross-attention architecture — the ancestor of Gemini's interleaved inputs and Idefics2's visual tokens.",
+  "type": "Learn",
+  "languages": [
+    "Python (stdlib",
+    "gated cross-attention + Perceiver resampler demo)"
+  ],
+  "prerequisites": [
+    "Phase 12 · 03 (BLIP-2 Q-Former)"
+  ],
+  "timeMinutes": 120,
+  "needsTranslation": true
+}

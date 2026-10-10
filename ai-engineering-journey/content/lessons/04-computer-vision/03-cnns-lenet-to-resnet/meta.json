@@ -1,0 +1,23 @@
+{
+  "id": "04-computer-vision/03-cnns-lenet-to-resnet",
+  "slug": "03-cnns-lenet-to-resnet",
+  "phase": "04-computer-vision",
+  "order": 3,
+  "phaseOrder": 4,
+  "title": {
+    "en": "CNNs — LeNet to ResNet",
+    "zh": ""
+  },
+  "hook": "Every major CNN of the last thirty years is the same conv–nonlinearity–downsample recipe with one new idea bolted on. Learn the ideas in order.",
+  "type": "Learn + Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 3 Lesson 11 (PyTorch)",
+    "Phase 4 Lesson 01 (Image Fundamentals)",
+    "Phase 4 Lesson 02 (Convolutions from Scratch)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

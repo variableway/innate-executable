@@ -1,0 +1,109 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# A2A — The Agent-to-Agent Protocol\n\n> Google announced A2A in April 2025; by April 2026 the spec is at https://a2a-protocol.org/latest/specification/ and 150+ organizations back it. A2A is the horizontal complement to MCP (Lesson 13): where MCP is vertical (agent ↔ tools), A2A is peer-to-peer (agent ↔ agent). It defines Agent Cards (discovery), tasks with artifacts (text, structured data, video), opaque task lifecycles, and auth. Production systems increasingly pair MCP with A2A. Google Cloud rolled A2A support into Vertex AI Agent Builder during 2025-2026.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib, `http.server`, `json`)\n**Prerequisites:** Phase 16 · 04 (Primitive Model)\n**Time:** ~75 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "problem",
+    "title": "Problem",
+    "bodyMarkdown": "Your agent needs to call another agent on another system. How? You can expose an HTTP endpoint, define a bespoke JSON schema, and hope the other side speaks it. Every pair of agents becomes a custom integration.\n\nA2A is the universal wire protocol for that call. Standard discovery, standard task model, standard transport, standard artifacts. Like HTTP+REST but for agents as first-class citizens.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "concept",
+    "title": "Concept",
+    "bodyMarkdown": "### The four elements\n\n**Agent Card.** A JSON document at `/.well-known/agent.json` describing the agent: name, skills, endpoints, supported modalities, auth requirements. Discovery happens by reading the card.\n\n```\nGET https://agent.example.com/.well-known/agent.json\n→ {\n    \"name\": \"code-review-agent\",\n    \"skills\": [\"review-python\", \"review-typescript\"],\n    \"endpoints\": {\n      \"tasks\": \"https://agent.example.com/tasks\"\n    },\n    \"auth\": {\"type\": \"bearer\"},\n    \"modalities\": [\"text\", \"structured\"]\n  }\n```\n\n**Task.** The unit of work. An async, stateful object with a lifecycle: `submitted → working → completed / failed / canceled`. A client sends a task, polls or subscribes for updates.\n\n**Artifact.** The result type produced by a task. Text, structured JSON, image, video, audio. Artifacts are typed so different modalities are first-class.\n\n**Opaque lifecycle.** A2A does not prescribe *how* the remote agent solves the task. The client sees state transitions and artifacts; the implementation is free to use any framework.\n\n### The MCP/A2A split\n\n- **MCP** (Lesson 13): agent ↔ tool. The agent reads/writes via JSON-RPC to a tool server. Stateless by default.\n- **A2A**: agent ↔ agent. Peer protocol; both sides are agents with their own reasoning.\n\nProduction multi-agent systems use both. An A2A peer calls MCP tools on its side. The split keeps the two concerns clean.\n\n### Discovery flow\n\n```\nClient                     Agent server\n  ├──GET /.well-known/agent.json──>\n  <──Agent Card JSON─────────────\n  ├──POST /tasks {skill, input}──>\n  <──201 task_id, state=submitted\n  ├──GET /tasks/{id}──────────────>\n  <──state=working, 42% done──────\n  ├──GET /tasks/{id}──────────────>\n  <──state=completed, artifacts──\n```\n\nOr with streaming: SSE subscription to `/tasks/{id}/events` for push updates.\n\n### Auth\n\nA2A supports three common patterns:\n\n- **Bearer token** — OAuth2 or opaque.\n- **mTLS** — mutual TLS; organizations prove identity to each other.\n- **Signed requests** — HMAC over the payload.\n\nAuth is declared in the Agent Card; clients discover and comply.\n\n### 150+ organizations by April 2026\n\nEnterprise adoption drove A2A scale. The headline: A2A became the way enterprise agent systems cross trust boundaries. Google Cloud shipped Vertex AI Agent Builder A2A support; Microsoft Agent Framework supports it; most major frameworks (LangGraph, CrewAI, AutoGen) ship A2A adapters.\n\n### Where A2A wins\n\n- **Cross-organization calls.** Agent at company A calls agent at company B. Without A2A, every pair is a bespoke contract.\n- **Heterogeneous frameworks.** LangGraph agent calls CrewAI agent calls custom Python agent. A2A normalizes.\n- **Typed artifacts.** Video result, structured JSON, audio — all first-class.\n- **Long-running tasks.** Opaque lifecycle + polling makes hours-long tasks straightforward.\n\n### Where A2A struggles\n\n- **Latency-sensitive micro-calls.** A2A's lifecycle is async. Sub-millisecond agent-to-agent does not fit; use direct RPC.\n- **Tight-coupled in-process agents.** If both agents run in the same Python process, A2A's HTTP round-trip is overkill.\n- **Small teams.** Spec overhead is real; internal-only agents may not need the formality.\n\n### A2A vs ACP, ANP, NLIP\n\nSeveral related specs emerged in 2024-2026:\n\n- **ACP** (IBM/Linux Foundation) — predecessor to A2A, narrower scope.\n- **ANP** (Agent Network Protocol) — peer-discovery-heavy, decentralized-first.\n- **NLIP** (Ecma Natural Language Interaction Protocol, standardized December 2025) — natural-language content type.\n\nA2A is the most-adopted peer protocol as of April 2026. See arXiv:2505.02279 (Liu et al., \"A Survey of Agent Interoperability Protocols\") for the comparison.\n\n```figure\nsw-agent-card-discovery\n```",
+    "keyPoints": [
+      "Agent Card.",
+      "Task.",
+      "Artifact.",
+      "Opaque lifecycle.",
+      "MCP: (Lesson 13): agent ↔ tool. The agent reads/writes via JSON-RPC to a tool server. Stateless by default.",
+      "A2A: agent ↔ agent. Peer protocol; both sides are agents with their own reasoning."
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "GET https://agent.example.com/.well-known/agent.json\n→ {\n    \"name\": \"code-review-agent\",\n    \"skills\": [\"review-python\", \"review-typescript\"],\n    \"endpoints\": {\n      \"tasks\": \"https://agent.example.com/tasks\"\n    },\n    \"auth\": {\"type\": \"bearer\"},\n    \"modalities\": [\"text\", \"structured\"]\n  }"
+      },
+      {
+        "lang": "text",
+        "code": "Client                     Agent server\n  ├──GET /.well-known/agent.json──>\n  <──Agent Card JSON─────────────\n  ├──POST /tasks {skill, input}──>\n  <──201 task_id, state=submitted\n  ├──GET /tasks/{id}──────────────>\n  <──state=working, 42% done──────\n  ├──GET /tasks/{id}──────────────>\n  <──state=completed, artifacts──"
+      }
+    ]
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "`code/main.py` implements an A2A-minimal server and client using `http.server` and JSON. The server:\n\n- exposes `/.well-known/agent.json`,\n- accepts `POST /tasks`,\n- manages task state,\n- returns artifacts on `GET /tasks/{id}`.\n\nThe client:\n\n- fetches the Agent Card,\n- submits a task,\n- polls until completion,\n- reads the artifact.\n\nRun:\n\n```\npython3 code/main.py\n```\n\nThe script starts the server in a background thread, then runs the client against it. You see the complete flow: discovery, submit, poll, artifact.",
+    "keyPoints": [
+      "exposes `/.well-known/agent.json`,",
+      "accepts `POST /tasks`,",
+      "manages task state,",
+      "returns artifacts on `GET /tasks/{id}`.",
+      "fetches the Agent Card,",
+      "submits a task,"
+    ],
+    "commands": [
+      {
+        "lang": "text",
+        "code": "python3 code/main.py"
+      }
+    ]
+  },
+  {
+    "id": "use-it",
+    "title": "Use It",
+    "bodyMarkdown": "`outputs/skill-a2a-integrator.md` designs an A2A integration: Agent Card contents, task schemas, auth choice, streaming vs polling.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "ship-it",
+    "title": "Ship It",
+    "bodyMarkdown": "Checklist:\n\n- **Pin the spec version.** A2A is still evolving; the Agent Card should declare the protocol version.\n- **Idempotent task creation.** Duplicate submissions (network retries) should produce one task.\n- **Artifact schemas.** Declare what shapes the agent returns; consumers should validate.\n- **Rate limits + auth.** A2A is public-facing; apply standard web security.\n- **Dead-letter for failed tasks.** Inspect patterns over time for recurring failure types.",
+    "keyPoints": [
+      "Pin the spec version.: A2A is still evolving; the Agent Card should declare the protocol version.",
+      "Idempotent task creation.: Duplicate submissions (network retries) should produce one task.",
+      "Artifact schemas.: Declare what shapes the agent returns; consumers should validate.",
+      "Rate limits + auth.: A2A is public-facing; apply standard web security.",
+      "Dead-letter for failed tasks.: Inspect patterns over time for recurring failure types."
+    ],
+    "commands": []
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Run `code/main.py`. Confirm the client discovers the server and receives the correct artifact.\n2. Add a second skill to the server (e.g., \"summarize\"). Update the Agent Card. Write a client that picks the skill based on task type.\n3. Implement an SSE streaming endpoint: `/tasks/{id}/events` that emits state changes. What does the client need to do differently?\n4. Read the A2A spec (https://a2a-protocol.org/latest/specification/). Identify three things the spec mandates that this demo does not implement.\n5. Compare A2A (Agent Card discovery) to MCP (server-side capability listing via `listTools`). What is the tradeoff between self-describing agents and capability-probing?",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "key-terms",
+    "title": "Key Terms",
+    "bodyMarkdown": "| Term | What people say | What it actually means |\n|------|----------------|------------------------|\n| A2A | \"Agent-to-agent\" | Peer protocol for agents to call other agents across systems. Google 2025. |\n| Agent Card | \"The agent's business card\" | JSON at `/.well-known/agent.json` describing skills, endpoints, auth. |\n| Task | \"The unit of work\" | Async stateful object with a lifecycle; artifacts produced on completion. |\n| Artifact | \"The result\" | Typed output: text, structured JSON, image, video, audio. First-class media. |\n| Opaque lifecycle | \"How it's solved is the agent's business\" | Client sees state transitions; server is free to choose framework/tools. |\n| Discovery | \"Finding the agent\" | `GET /.well-known/agent.json` returns the card. |\n| MCP vs A2A | \"Tools vs peers\" | MCP: vertical agent ↔ tool. A2A: horizontal agent ↔ agent. |\n| ACP / ANP / NLIP | \"Sibling protocols\" | Adjacent specs; A2A is the most-adopted 2026. |",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [A2A specification](https://a2a-protocol.org/latest/specification/) — the canonical spec\n- [Google Developers Blog — A2A announcement](https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/) — April 2025 launch post\n- [A2A GitHub repo](https://github.com/a2aproject/A2A) — reference implementations and SDKs\n- [Liu et al. — A Survey of Agent Interoperability Protocols](https://arxiv.org/html/2505.02279v1) — MCP, ACP, A2A, ANP comparison",
+    "keyPoints": [
+      "[A2A specification](https://a2a-protocol.org/latest/specification/) — the canonical spec",
+      "[Google Developers Blog — A2A announcement](https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/) — April 2025 launch post",
+      "[A2A GitHub repo](https://github.com/a2aproject/A2A) — reference implementations and SDKs",
+      "[Liu et al. — A Survey of Agent Interoperability Protocols](https://arxiv.org/html/2505.02279v1) — MCP, ACP, A2A, ANP comparison"
+    ],
+    "commands": []
+  }
+]

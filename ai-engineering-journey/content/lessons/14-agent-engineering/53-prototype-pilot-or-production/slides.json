@@ -1,0 +1,114 @@
+[
+  {
+    "id": "intro",
+    "title": "Intro",
+    "bodyMarkdown": "# Choose Prototype, Pilot, or Production Deliberately\n\n> These are different learning environments, not levels of polish. Choose the stage that answers the current unknown with the least unnecessary consequence.\n\n**Type:** Learn + Build\n**Languages:** Python (stdlib)\n**Prerequisites:** Phase 14 lessons 50 to 52\n**Time:** ~70 minutes",
+    "keyPoints": [
+      "Type:",
+      "Languages:",
+      "Prerequisites:",
+      "Time:"
+    ],
+    "commands": []
+  },
+  {
+    "id": "learning-objectives",
+    "title": "Learning Objectives",
+    "bodyMarkdown": "- Choose a build stage from the unknown, audience, data, consequence, and readiness.\n- Define stage-specific controls and exit criteria.\n- Prevent prototypes from quietly becoming production systems.\n- Delay real authority until evidence and operations justify it.",
+    "keyPoints": [
+      "Choose a build stage from the unknown, audience, data, consequence, and readiness.",
+      "Define stage-specific controls and exit criteria.",
+      "Prevent prototypes from quietly becoming production systems.",
+      "Delay real authority until evidence and operations justify it."
+    ],
+    "commands": []
+  },
+  {
+    "id": "three-different-questions",
+    "title": "Three Different Questions",
+    "bodyMarkdown": "| Stage | Primary question |\n|---|---|\n| Prototype | Can this mechanism produce the evidence at all? |\n| Pilot | Does it work safely with a bounded real audience and real conditions? |\n| Production | Can we own it continuously at the promised reliability and risk level? |\n\nA prototype can be technically complete and still be disposable. A pilot can use production data while remaining limited in audience and authority. Production begins when the organization accepts ongoing responsibility.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "prototype",
+    "title": "Prototype",
+    "bodyMarkdown": "Use a prototype when the unknown does not require real users or real data. Keep it:\n\n- discardable;\n- isolated;\n- narrow in behavior;\n- explicit about the learning question;\n- free of false operational guarantees.\n\nDo not optimize architecture before the mechanism earns another stage.",
+    "keyPoints": [
+      "discardable;",
+      "isolated;",
+      "narrow in behavior;",
+      "explicit about the learning question;",
+      "free of false operational guarantees."
+    ],
+    "commands": []
+  },
+  {
+    "id": "pilot",
+    "title": "Pilot",
+    "bodyMarkdown": "Use a pilot when the unknown requires real behavior, realistic data, or a real workflow, but consequence or readiness is not yet compatible with broad release.\n\nA pilot needs:\n\n- a named audience;\n- a human owner;\n- bounded duration and authority;\n- audit and rollback;\n- outcome and guardrail thresholds;\n- exit criteria for expand, revise, or stop.",
+    "keyPoints": [
+      "a named audience;",
+      "a human owner;",
+      "bounded duration and authority;",
+      "audit and rollback;",
+      "outcome and guardrail thresholds;",
+      "exit criteria for expand, revise, or stop."
+    ],
+    "commands": []
+  },
+  {
+    "id": "production",
+    "title": "Production",
+    "bodyMarkdown": "Production needs more than deployment:\n\n- service level objective;\n- on-call and incident ownership;\n- security and privacy review;\n- cost and capacity controls;\n- rollback and recovery;\n- continuous monitoring;\n- a retirement path.\n\n```mermaid\nflowchart LR\n  U[Unknown] --> R{Needs real users or data?}\n  R -->|No| P[Prototype]\n  R -->|Yes| C{Consequence bounded and operations ready?}\n  C -->|No| L[Pilot]\n  C -->|Yes| D[Production]\n```",
+    "keyPoints": [
+      "service level objective;",
+      "on-call and incident ownership;",
+      "security and privacy review;",
+      "cost and capacity controls;",
+      "rollback and recovery;",
+      "continuous monitoring;"
+    ],
+    "commands": []
+  },
+  {
+    "id": "stage-drift",
+    "title": "Stage Drift",
+    "bodyMarkdown": "Prototype code becomes dangerous when it acquires users, data, or authority without acquiring ownership. Mark prototype and pilot boundaries in configuration, access control, telemetry, and documentation. A warning banner is not enough.\n\nThe stage should be observable from the system itself.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "build-it",
+    "title": "Build It",
+    "bodyMarkdown": "The lab chooses a stage from the decision context, returns required controls, and writes `outputs/stage-decisions.json`.\n\n```bash\npython3 code/main.py\npython3 -m unittest discover code/tests -v\n```\n\nChange the pilot example to low consequence with operational readiness. Explain what additional evidence would justify production.",
+    "keyPoints": [],
+    "commands": [
+      {
+        "lang": "bash",
+        "code": "python3 code/main.py\npython3 -m unittest discover code/tests -v"
+      }
+    ]
+  },
+  {
+    "id": "exercises",
+    "title": "Exercises",
+    "bodyMarkdown": "1. Classify three current projects by learning stage, not deployment status.\n2. Write pilot exit criteria that include a stop decision.\n3. Add a technical control that prevents a prototype from reaching production data.\n4. Identify the first operational responsibility that makes the build production.\n5. Design a rollback receipt for the bounded pilot.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "further-reading",
+    "title": "Further Reading",
+    "bodyMarkdown": "- [Barry Boehm, A Spiral Model of Software Development and Enhancement](https://dl.acm.org/doi/10.1145/12944.12948), for matching each iteration’s commitment to resolved risk.\n- [Fagerholm et al., Building Blocks for Continuous Experimentation](https://doi.org/10.1145/2601248.2601276), for the organizational and technical conditions required to run experiments continuously.",
+    "keyPoints": [],
+    "commands": []
+  },
+  {
+    "id": "what-you-keep",
+    "title": "What You Keep",
+    "bodyMarkdown": "Keep `outputs/stage-decisions.json`. It records why each stage is justified and which controls must exist before the next one.",
+    "keyPoints": [],
+    "commands": []
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "id": "05-nlp-foundations-to-advanced/05-sentiment-analysis",
+  "slug": "05-sentiment-analysis",
+  "phase": "05-nlp-foundations-to-advanced",
+  "order": 5,
+  "phaseOrder": 5,
+  "title": {
+    "en": "Sentiment Analysis",
+    "zh": ""
+  },
+  "hook": "The canonical NLP task. Most of what you need to know about classical text classification shows up here.",
+  "type": "Build",
+  "languages": [
+    "Python"
+  ],
+  "prerequisites": [
+    "Phase 5 · 02 (BoW + TF-IDF)",
+    "Phase 2 · 14 (Naive Bayes)"
+  ],
+  "timeMinutes": 75,
+  "needsTranslation": true
+}

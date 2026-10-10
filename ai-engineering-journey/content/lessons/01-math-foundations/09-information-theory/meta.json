@@ -1,0 +1,20 @@
+{
+  "id": "01-math-foundations/09-information-theory",
+  "slug": "09-information-theory",
+  "phase": "01-math-foundations",
+  "order": 9,
+  "phaseOrder": 1,
+  "title": {
+    "en": "Information Theory",
+    "zh": "信息论"
+  },
+  "hook": "Information theory measures surprise. Loss functions are built on it.",
+  "type": "Learn",
+  "languages": [],
+  "prerequisites": [
+    "Phase 1",
+    "Lesson 06 (Probability)"
+  ],
+  "timeMinutes": 60,
+  "needsTranslation": false
+}
